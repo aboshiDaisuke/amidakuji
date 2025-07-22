@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FTLアゲアゲお土産あみだくじ（スマホ対応）</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 20px; }
+    canvas {
+      border: 1px solid #ccc;
+      background: #fff;
+      margin-top: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #result { margin-top: 20px; font-size: 1.5em; font-weight: bold; color: green; }
+    input[type="text"] { width: 90%; padding: 10px; font-size: 1em; }
+    button { margin: 10px; padding: 10px 20px; font-size: 1em; }
+    .start-button { margin: 5px; }
+  </style>
+</head>
+<body>
+
+<h1>🎯 FTLアゲアゲお土産あみだくじ(スマホ対応) 🎯</h1>
+<p>景品（形式：A:2,B:1,C:3）<br><input type="text" id="prizes" placeholder="1等:1,2等:2,参加賞:3"></p>
+<button id="setupButton">くじを準備！</button>
+
+<div id="buttons"></div>
+<canvas id="canvas"></canvas>
+<div id="result"></div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+// Retina・高DPIディスプレイ対応
+const scale = window.devicePixelRatio || 1;
+const displayWidth = 700;
+const displayHeight = 500;
+canvas.width = displayWidth * scale;
+canvas.height = displayHeight * scale;
+canvas.style.width = displayWidth + "px";
+canvas.style.height = displayHeight + "px";
+ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+let lines = [];
+let prizes = [];
+let spacingX, spacingY, rows;
+
+document.getElementById("setupButton").addEventListener("click", setupAmidakuji);
+
+function setupAmidakuji() {
+  const prizeInput = document.getElementById("prizes").value.trim();
+  const parsed = [];
+  prizeInput.split(",").forEach(entry => {
+    const [label, count] = entry.split(":").map(s => s.trim());
+    const num = parseInt(count || "1");
+    if (label && !isNaN(num)) {
+      for (let i = 0; i < num; i++) parsed.push(label);
+    }
+  });
+
+  if (parsed.length < 2) {
+    alert("景品は2つ以上必要です！");
+    return;
+  }
+
+  prizes = shuffleArray(parsed);
+  spacingX = displayWidth / (prizes.length + 1);
+  spacingY = 50;
+  rows = 9;
+  lines = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < prizes.length; i++) {
+    const x = spacingX * (i + 1);
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.font = "16px sans-serif";
+    ctx.fillText(`${i + 1}番`, x, 20);
+    ctx.fillText("？？？", x, spacingY * rows + 30);
+  }
+
+  for (let i = 0; i < prizes.length; i++) {
+    const x = spacingX * (i + 1);
+    ctx.beginPath();
+    ctx.moveTo(x, spacingY);
+    ctx.lineTo(x, spacingY * rows);
+    ctx.stroke();
+  }
+
+  for (let r = 2; r < rows - 1; r++) {
+    let used = new Set();
+    for (let c = 0; c < prizes.length - 1; c++) {
+      if (used.has(c) || used.has(c + 1)) continue;
+      if (Math.random() > 0.4) {
+        const x1 = spacingX * (c + 1);
+        const x2 = spacingX * (c + 2);
+        const y = spacingY * r;
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+        lines.push({ x1, x2, y });
+        used.add(c); used.add(c + 1);
+      }
+    }
+  }
+
+  const buttonsDiv = document.getElementById("buttons");
+  buttonsDiv.innerHTML = "<p>どの列から引くか選んでください👇</p>";
+  for (let i = 0; i < prizes.length; i++) {
+    const btn = document.createElement("button");
+    btn.innerText = `${i + 1} 番を引く`;
+    btn.className = "start-button";
+    btn.setAttribute("data-index", i);
+    btn.addEventListener("click", (e) => {
+      const index = parseInt(e.target.getAttribute("data-index"));
+      animate(index);
+    });
+    buttonsDiv.appendChild(btn);
+  }
+
+  document.getElementById("result").innerHTML = "";
+}
+
+function animate(startCol) {
+  let x = spacingX * (startCol + 1);
+  let y = spacingY;
+  const path = buildPath(x, y, spacingX, spacingY * rows);
+  let index = 0;
+
+  document.getElementById("result").innerHTML = `👉 ${startCol + 1} 番を引いています...`;
+
+  function step() {
+    if (index >= path.length - 1) {
+      const finalCol = Math.round(path[path.length - 1].x / spacingX) - 1;
+      const prize = prizes[finalCol];
+      document.getElementById("result").innerHTML = `🎉 結果は…「<span style="color: red;">${prize}</span>」でした！`;
+      return;
+    }
+
+    const current = path[index];
+    const next = path[index + 1];
+    const dx = (next.x - current.x) / 10;
+    const dy = (next.y - current.y) / 10;
+    let stepCount = 0;
+
+    function move() {
+      if (stepCount >= 10) {
+        index++;
+        step();
+        return;
+      }
+      ctx.beginPath();
+      ctx.arc(current.x + dx * stepCount, current.y + dy * stepCount, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "red";
+      ctx.fill();
+      stepCount++;
+      setTimeout(move, 10);
+    }
+
+    move();
+  }
+
+  step();
+}
+
+function buildPath(x, y, spacingX, maxY) {
+  const path = [{ x, y }];
+  let currentX = x;
+  let currentY = y;
+
+  while (currentY < maxY) {
+    let moved = false;
+    for (const l of lines) {
+      if (Math.abs(currentY - l.y) < 5) {
+        if (Math.abs(currentX - l.x1) < 2) {
+          path.push({ x: l.x2, y: currentY });
+          currentX = l.x2;
+          moved = true;
+          break;
+        } else if (Math.abs(currentX - l.x2) < 2) {
+          path.push({ x: l.x1, y: currentY });
+          currentX = l.x1;
+          moved = true;
+          break;
+        }
+      }
+    }
+    currentY += 10;
+    path.push({ x: currentX, y: currentY });
+  }
+
+  return path;
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+</script>
+
+</body>
+</html>
