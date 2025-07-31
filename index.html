@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,7 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FTLアゲアゲお土産あみだくじ</title>
   <style>
-    body { font-family: sans-serif; text-align: center; margin: 20px; }
+    body {
+  font-family: sans-serif;
+  text-align: center;
+  margin: 20px;
+  background-image: url("https://sudachiminori.com/wp-content/uploads/2024/10/%E3%81%9A%E3%82%93%E3%81%A0%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B32.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat;
+}
     canvas {
       border: 1px solid #ccc;
       background: #fff;
@@ -17,7 +26,7 @@
       max-width: 100%;
       height: auto;
     }
-    #result { margin-top: 20px; font-size: 1.5em; font-weight: bold; color: green; }
+    #result { margin-top: 20px; font-size: 1.5em; font-weight: bold; color: green; text-align: center;}
     input[type="text"] { width: 90%; padding: 10px; font-size: 1em; }
     button { margin: 10px; padding: 10px 20px; font-size: 1em; }
     .start-button { margin: 5px; }
@@ -50,6 +59,10 @@ ctx.setTransform(scale, 0, 0, scale, 0, 0);
 let lines = [];
 let prizes = [];
 let spacingX, spacingY, rows;
+let results = [];         // ← 追加：各参加者の結果を保存
+let drawCount = 0;        // ← 追加：くじを引いた人数カウント
+let totalCount = 0;       // ← 追加：くじ総数（＝景品数）
+
 
 document.getElementById("setupButton").addEventListener("click", setupAmidakuji);
 
@@ -70,6 +83,7 @@ function setupAmidakuji() {
   }
 
   prizes = shuffleArray(parsed);
+  totalCount = prizes.length;  // ← 全員分のくじの数を記録（あとで引いた人数と比較するため）
   spacingX = displayWidth / (prizes.length + 1);
   spacingY = 50;
   rows = 9;
@@ -137,12 +151,20 @@ function animate(startCol) {
   document.getElementById("result").innerHTML = `👉 ${startCol + 1} 番を引いています...`;
 
   function step() {
-    if (index >= path.length - 1) {
-      const finalCol = Math.round(path[path.length - 1].x / spacingX) - 1;
-      const prize = prizes[finalCol];
-      document.getElementById("result").innerHTML = `🎉 結果は…「<span style="color: red;">${prize}</span>」でした！`;
-      return;
+  if (index >= path.length - 1) {
+    const finalCol = Math.round(path[path.length - 1].x / spacingX) - 1;
+    const prize = prizes[finalCol];
+    document.getElementById("result").innerHTML = `🎉 結果は…「<span style="color: red;">${prize}</span>」でした！`;
+
+    drawCount++; // ← 追加：くじを引いた人数を記録
+
+    if (drawCount === totalCount) {
+      showAllResults(); // ← 追加：全員引いたら一覧表示
     }
+
+    return;
+  }
+
 
     const current = path[index];
     const next = path[index + 1];
@@ -206,6 +228,47 @@ function shuffleArray(array) {
   }
   return array;
 }
+
+function showAllResults() {
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = "<h2>🎊 全員の結果発表 🎊</h2><ul style='list-style: none; padding: 0; text-align: center;'>";
+
+  prizes.forEach((prize, index) => {
+    resultDiv.innerHTML += `<li>${index + 1} 番 → <strong>${prize}</strong></li>`;
+  });
+
+  resultDiv.innerHTML += "</ul>";
+}
+
+</script>
+<script>
+  // === 画像ドロップで背景変更 ===
+  document.addEventListener("DOMContentLoaded", () => {
+    document.body.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      document.body.style.opacity = "0.8";
+    });
+    document.body.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      document.body.style.opacity = "1";
+    });
+    document.body.addEventListener("drop", (e) => {
+      e.preventDefault();
+      document.body.style.opacity = "1";
+
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith("image/")) {
+        alert("画像ファイルをドロップしてください！");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        document.body.style.backgroundImage = `url("${event.target.result}")`;
+      };
+      reader.readAsDataURL(file);
+    });
+  });
 </script>
 
 </body>
