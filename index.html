@@ -134,6 +134,7 @@ function setupAmidakuji() {
     btn.setAttribute("data-index", i);
     btn.addEventListener("click", (e) => {
       const index = parseInt(e.target.getAttribute("data-index"));
+      e.target.style.display = "none"; // 選んだボタンを非表示にする（2回押せないように）
       animate(index);
     });
     buttonsDiv.appendChild(btn);
@@ -154,8 +155,8 @@ function animate(startCol) {
   if (index >= path.length - 1) {
     const finalCol = Math.round(path[path.length - 1].x / spacingX) - 1;
     const prize = prizes[finalCol];
-    document.getElementById("result").innerHTML = `🎉 結果は…「<span style="color: red;">${prize}</span>」でした！`;
-
+    //結果を追記表示
+    document.getElementById("result").innerHTML += `🎉 ${startCol + 1} 番 → <span style="color: red;">${prize}</span><br>`;
     drawCount++; // ← 追加：くじを引いた人数を記録
 
     if (drawCount === totalCount) {
