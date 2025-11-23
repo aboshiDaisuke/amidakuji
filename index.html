@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FTLおみやげ配布☆あみだくじ</title>
+    <title>あみだくじアプリ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -20,19 +20,18 @@
         .canvas-container {
             position: relative;
             width: 100%;
-            /* overflow-x: auto; 削除: 画面に収めるためスクロールさせない */
+            overflow-x: auto; /* スクロール可能にする */
             background: rgba(255, 255, 255, 0.9);
             border: 4px solid #f9a8d4;
             border-radius: 1.5rem;
             box-shadow: 0 10px 15px -3px rgba(249, 168, 212, 0.3);
-            overflow: hidden; /* はみ出し防止 */
+            /* overflow: hidden; 削除 */
         }
 
         canvas {
             cursor: pointer;
             touch-action: none;
-            width: 100%; /* 親要素に合わせる */
-            height: 100%;
+            display: block; /* 余白防止 */
         }
 
         /* ぷるんとしたボタンアニメーション */
@@ -57,6 +56,7 @@
 
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
+            height: 8px; /* 横スクロールバーの高さ */
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #fff0f5;
@@ -65,6 +65,19 @@
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #f9a8d4;
             border-radius: 4px;
+        }
+        
+        /* Chrome等のスクロールバーカスタマイズ（全体） */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fdf2f8;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f472b6;
+            border-radius: 5px;
         }
 
         /* モーダル用オーバーレイ */
@@ -78,7 +91,7 @@
 
     <header class="mb-8 text-center animate-fade-in">
         <h1 class="text-3xl md:text-5xl font-black text-pink-500 mb-2 drop-shadow-sm tracking-wide">
-            <i class="fas fa-star text-yellow-400 mr-2 rotate-12"></i>FTLおみやげ配布☆あみだくじ<i class="fas fa-heart text-red-400 ml-2 -rotate-12"></i>
+            <i class="fas fa-star text-yellow-400 mr-2 rotate-12"></i>あみだくじ<i class="fas fa-heart text-red-400 ml-2 -rotate-12"></i>
         </h1>
         <p class="text-gray-500 font-bold bg-white/80 inline-block px-4 py-1 rounded-full shadow-sm text-sm md:text-base">
             わくわくドキドキの抽選タイム！
@@ -97,11 +110,12 @@
                     参加人数を決めてね
                 </label>
                 <div class="flex items-center bg-pink-50 rounded-2xl p-2 shadow-inner gap-4 border-2 border-pink-100">
-                    <button onclick="changeCount(-1)" class="btn-pop w-12 h-12 rounded-xl bg-white text-pink-500 font-black text-2xl shadow-sm border border-pink-100">-</button>
-                    <span id="count-display" class="w-20 text-center font-black text-4xl text-gray-700">4</span>
-                    <button onclick="changeCount(1)" class="btn-pop w-12 h-12 rounded-xl bg-white text-pink-500 font-black text-2xl shadow-sm border border-pink-100">+</button>
+                    <button onclick="changeCount(-1)" class="btn-pop w-12 h-12 rounded-xl bg-white text-pink-500 font-black text-2xl shadow-sm border border-pink-100 flex-shrink-0">-</button>
+                    <!-- 直接入力可能なインプットに変更 -->
+                    <input type="number" id="count-input" value="4" min="2" max="100" onchange="updateCountFromInput()" class="w-24 text-center font-black text-4xl text-gray-700 bg-transparent focus:outline-none focus:bg-white rounded-lg p-1">
+                    <button onclick="changeCount(1)" class="btn-pop w-12 h-12 rounded-xl bg-white text-pink-500 font-black text-2xl shadow-sm border border-pink-100 flex-shrink-0">+</button>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">※最大20人まで</p>
+                <p class="text-xs text-gray-400 mt-2">※多いときは横スクロールできるよ</p>
             </div>
 
             <!-- 中段：商品設定 -->
@@ -174,7 +188,7 @@
                 </div>
             </div>
 
-            <div class="canvas-container p-2 md:p-6 overflow-hidden text-center bg-white">
+            <div class="canvas-container p-2 md:p-6 overflow-x-auto text-center bg-white custom-scrollbar">
                 <canvas id="amidaCanvas"></canvas>
             </div>
 
@@ -222,7 +236,7 @@
     <script>
         // --- 設定値 ---
         const MIN_COUNT = 2;
-        const MAX_COUNT = 20; // 最大20人に調整
+        const MAX_COUNT = 100; // 上限を100人に緩和
         let currentCount = 4;
         
         // --- データ ---
@@ -239,7 +253,7 @@
         const headerHeight = 70;
         const footerHeight = 70; 
         
-        // パディングを動的に変更するための変数
+        // パディング
         let paddingX = 40;
         
         // パステルカラーパレット
@@ -266,7 +280,7 @@
         }
 
         function updateDisplays() {
-            document.getElementById('count-display').textContent = currentCount;
+            document.getElementById('count-input').value = currentCount;
         }
         
         function changeCount(delta) {
@@ -274,6 +288,15 @@
             if (newCount >= MIN_COUNT && newCount <= MAX_COUNT) {
                 currentCount = newCount;
                 updateDisplays();
+            }
+        }
+        
+        function updateCountFromInput() {
+            const val = parseInt(document.getElementById('count-input').value);
+            if (!isNaN(val) && val >= MIN_COUNT && val <= MAX_COUNT) {
+                currentCount = val;
+            } else {
+                updateDisplays(); // 元に戻す
             }
         }
 
@@ -384,7 +407,8 @@
 
             // 横線を生成
             horizontalLines = [];
-            const segments = 12; 
+            // 人数が多い場合はセグメントを増やす（混ざりやすくする）
+            const segments = Math.max(12, Math.floor(currentCount * 0.8)); 
             
             for (let s = 0; s < segments; s++) {
                 const gaps = currentCount - 1;
@@ -399,6 +423,7 @@
                     if(g > 0 && used[g-1]) continue;
                     if(g < gaps-1 && used[g+1]) continue;
 
+                    // 線の密度調整
                     if(Math.random() > 0.3) {
                         const segmentHeight = 0.8 / segments;
                         const baseY = 0.1 + (s * segmentHeight);
@@ -447,17 +472,19 @@
 
         function resizeCanvas() {
             const container = document.querySelector('.canvas-container');
+            const containerWidth = container.clientWidth;
             
-            // パディングを人数や画面幅に合わせて動的に調整
-            // 人数が多い、または画面が狭いときはパディングを減らす
-            if (currentCount > 10 || container.clientWidth < 500) {
-                paddingX = 15;
+            // 必要な最低幅を計算（人数が多い場合に広げる）
+            const minColWidth = 50; 
+            const requiredWidth = (currentCount * minColWidth) + (paddingX * 2);
+
+            // 画面幅と必要幅の大きい方を採用
+            if (requiredWidth > containerWidth) {
+                canvasWidth = requiredWidth;
             } else {
-                paddingX = 40;
+                canvasWidth = containerWidth;
             }
 
-            // 画面幅いっぱいに収める (スクロールなし)
-            canvasWidth = container.clientWidth;
             canvasHeight = Math.max(400, window.innerHeight * 0.6); 
 
             const dpr = window.devicePixelRatio || 1;
@@ -471,7 +498,6 @@
         }
 
         function getColX(index) {
-            // 全体を均等割り
             const usableWidth = canvasWidth - (paddingX * 2);
             const spacing = usableWidth / Math.max(1, currentCount - 1);
             return paddingX + index * spacing;
@@ -489,11 +515,9 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // 列の間隔（クリック判定などに使用）
             const colSpacing = (canvasWidth - paddingX * 2) / Math.max(1, currentCount - 1);
             
-            // 要素サイズを動的に調整
-            // 20px 〜 48px の範囲で調整
+            // 要素サイズ調整
             const baseSize = Math.max(20, Math.min(48, colSpacing * 0.8));
             const radius = baseSize / 2;
             const fontSize = Math.max(10, Math.min(16, radius * 0.8));
@@ -509,7 +533,7 @@
                 ctx.arc(x, 40, radius, 0, Math.PI * 2);
                 ctx.fillStyle = revealed[i] ? '#e5e7eb' : bgColor;
                 ctx.fill();
-                ctx.lineWidth = 2; // 線幅も少し細く
+                ctx.lineWidth = 2;
                 ctx.strokeStyle = revealed[i] ? '#d1d5db' : '#fff';
                 ctx.stroke();
                 
@@ -539,7 +563,6 @@
                 ctx.strokeStyle = isRevealed ? '#f9a8d4' : '#fbcfe8';
                 ctx.lineWidth = 2;
                 
-                // ボックスサイズも調整
                 const boxW = Math.max(30, colSpacing * 0.9);
                 
                 ctx.beginPath();
@@ -551,11 +574,8 @@
                 if (isRevealed) {
                     ctx.fillStyle = '#db2777'; 
                     const result = results[i];
-                    // 幅に合わせてフォントサイズ調整
-                    let resFontSize = Math.max(8, Math.min(12, boxW / 4));
+                    let resFontSize = Math.max(10, Math.min(12, boxW / 4));
                     ctx.font = `bold ${resFontSize}px "M PLUS Rounded 1c"`;
-                    
-                    // 文字数が多い場合は省略
                     const maxChars = Math.floor(boxW / resFontSize) + 1;
                     ctx.fillText(result.substring(0, maxChars), x, lineBottom + 10 + footerHeight/2);
                 } else {
@@ -566,7 +586,7 @@
             }
 
             // 縦線
-            ctx.lineWidth = Math.max(2, 40 / currentCount); // 人数が多いと線を細く
+            ctx.lineWidth = Math.max(2, 40 / currentCount);
             ctx.strokeStyle = '#fce7f3'; 
             for (let i = 0; i < currentCount; i++) {
                 const x = getColX(i);
@@ -589,7 +609,6 @@
             }
 
             // パス
-            // パスの太さも調整
             const pathWidth = Math.max(3, 100 / currentCount);
             
             paths.forEach(p => {
@@ -674,8 +693,6 @@
             const duration = 4000; 
             const startTime = performance.now();
             const color = lineColors[pathData.startIndex % lineColors.length];
-            
-            // アニメーション時の線幅も動的に
             const pathWidth = Math.max(3, 100 / currentCount);
             
             function loop(now) {
@@ -710,7 +727,6 @@
                 ctx.stroke();
                 ctx.shadowBlur = 0;
 
-                // 先頭にキラキラ
                 if (currentDist > 0 && currentDist < totalLength) {
                     let headX, headY;
                     let distRem2 = currentDist;
@@ -775,7 +791,6 @@
         function checkAllRevealed() {
             const allRevealed = revealed.every(r => r === true);
             if (allRevealed) {
-                // 少し待ってからモーダル表示
                 setTimeout(() => {
                     showSummary();
                 }, 1500);
@@ -787,10 +802,7 @@
             const list = document.getElementById('summary-list');
             list.innerHTML = '';
 
-            // 全ての結果を計算して表示
             for (let i = 0; i < currentCount; i++) {
-                // start地点 i からのゴールを探す
-                // 既に計算済みのパスがあればそれを使う、なければ再計算
                 const pathData = calculatePath(i);
                 const result = results[pathData.endIndex];
                 
@@ -824,9 +836,8 @@
             if (clickY < headerHeight + 60) {
                 let clickedCol = -1;
                 
-                // 動的なクリック判定幅の計算
                 const spacing = (canvasWidth - paddingX * 2) / Math.max(1, currentCount - 1);
-                const threshold = spacing / 2; // 隣の列との中間までを判定基準に
+                const threshold = spacing / 2;
 
                 for(let i=0; i<currentCount; i++) {
                     const cx = getColX(i);
