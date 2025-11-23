@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>あみだくじアプリ</title>
+    <title>FTLおみやげ配布⭐️あみだくじ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -20,18 +20,25 @@
         .canvas-container {
             position: relative;
             width: 100%;
-            overflow-x: auto; /* スクロール可能にする */
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             border: 4px solid #f9a8d4;
             border-radius: 1.5rem;
             box-shadow: 0 10px 15px -3px rgba(249, 168, 212, 0.3);
-            /* overflow: hidden; 削除 */
+            overflow: hidden;
+            /* 高さはJSでcanvasに合わせて調整されるため固定しない */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
         }
 
         canvas {
             cursor: pointer;
             touch-action: none;
-            display: block; /* 余白防止 */
+            display: block;
+            width: 100%; /* コンテナ幅に合わせる */
+            height: auto; /* アスペクト比を維持して高さ自動調整 */
+            max-width: 100%;
         }
 
         /* ぷるんとしたボタンアニメーション */
@@ -56,7 +63,7 @@
 
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
-            height: 8px; /* 横スクロールバーの高さ */
+            height: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #fff0f5;
@@ -67,20 +74,6 @@
             border-radius: 4px;
         }
         
-        /* Chrome等のスクロールバーカスタマイズ（全体） */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #fdf2f8;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #f472b6;
-            border-radius: 5px;
-        }
-
-        /* モーダル用オーバーレイ */
         .modal-overlay {
             background-color: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(4px);
@@ -91,10 +84,10 @@
 
     <header class="mb-8 text-center animate-fade-in">
         <h1 class="text-3xl md:text-5xl font-black text-pink-500 mb-2 drop-shadow-sm tracking-wide">
-            <i class="fas fa-star text-yellow-400 mr-2 rotate-12"></i>あみだくじ<i class="fas fa-heart text-red-400 ml-2 -rotate-12"></i>
+            <i class="fas fa-star text-yellow-400 mr-2 rotate-12"></i>FTLおみやげ配布⭐️あみだくじ<i class="fas fa-heart text-red-400 ml-2 -rotate-12"></i>
         </h1>
         <p class="text-gray-500 font-bold bg-white/80 inline-block px-4 py-1 rounded-full shadow-sm text-sm md:text-base">
-            わくわくドキドキの抽選タイム！
+            ドキドキ！何が当たるかな？
         </p>
     </header>
 
@@ -111,11 +104,10 @@
                 </label>
                 <div class="flex items-center bg-pink-50 rounded-2xl p-2 shadow-inner gap-4 border-2 border-pink-100">
                     <button onclick="changeCount(-1)" class="btn-pop w-12 h-12 rounded-xl bg-white text-pink-500 font-black text-2xl shadow-sm border border-pink-100 flex-shrink-0">-</button>
-                    <!-- 直接入力可能なインプットに変更 -->
                     <input type="number" id="count-input" value="4" min="2" max="100" onchange="updateCountFromInput()" class="w-24 text-center font-black text-4xl text-gray-700 bg-transparent focus:outline-none focus:bg-white rounded-lg p-1">
                     <button onclick="changeCount(1)" class="btn-pop w-12 h-12 rounded-xl bg-white text-pink-500 font-black text-2xl shadow-sm border border-pink-100 flex-shrink-0">+</button>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">※多いときは横スクロールできるよ</p>
+                <p class="text-xs text-gray-400 mt-2">※画面に合わせて縮小表示されます</p>
             </div>
 
             <!-- 中段：商品設定 -->
@@ -124,7 +116,6 @@
                     <i class="fas fa-gift mr-1"></i> 商品リスト
                 </div>
 
-                <!-- 追加フォーム -->
                 <div class="flex flex-wrap gap-3 mb-4 items-end mt-2">
                     <div class="flex-1 min-w-[140px]">
                         <label class="text-xs text-yellow-700 font-bold ml-2">なにが当たる？</label>
@@ -139,7 +130,6 @@
                     </button>
                 </div>
 
-                <!-- リスト表示 -->
                 <div class="bg-white rounded-2xl p-4 shadow-inner border border-yellow-100 min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar">
                     <ul id="bulk-list" class="space-y-2">
                         <li class="text-gray-300 text-center py-6 flex flex-col items-center font-bold">
@@ -188,11 +178,13 @@
                 </div>
             </div>
 
-            <div class="canvas-container p-2 md:p-6 overflow-x-auto text-center bg-white custom-scrollbar">
+            <!-- キャンバスエリア -->
+            <div class="canvas-container">
+                <!-- キャンバス自体はstyle="width:100%"で縮小表示される -->
                 <canvas id="amidaCanvas"></canvas>
             </div>
 
-            <!-- 結果表示エリア (一時的) -->
+            <!-- 結果表示エリア -->
             <div id="result-message" class="hidden bg-white p-6 rounded-[2rem] shadow-xl border-4 border-pink-300 animate-fade-in text-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-yellow-300 to-blue-300"></div>
                 <p id="result-text" class="text-xl text-gray-700 font-bold relative z-10"></p>
@@ -202,78 +194,60 @@
         <!-- 結果一覧モーダル -->
         <div id="summary-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4 animate-fade-in">
             <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl border-4 border-pink-200 relative max-h-[90vh] flex flex-col">
-                
-                <!-- ヘッダー -->
                 <div class="p-6 text-center border-b-2 border-dashed border-pink-100">
                     <h2 class="text-3xl font-black text-pink-500">
                         <i class="fas fa-crown text-yellow-400 mr-2"></i>結果発表
                     </h2>
                     <p class="text-gray-400 font-bold text-sm mt-1">みんなの結果が出揃いました！</p>
                 </div>
-
-                <!-- リスト -->
                 <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
-                    <ul id="summary-list" class="space-y-3">
-                        <!-- JSで生成 -->
-                    </ul>
+                    <ul id="summary-list" class="space-y-3"></ul>
                 </div>
-
-                <!-- フッター -->
                 <div class="p-6 text-center bg-pink-50 rounded-b-[2rem]">
                     <button onclick="closeSummary()" class="btn-pop bg-pink-400 text-white font-bold px-8 py-3 rounded-full shadow-lg border-b-4 border-pink-500 active:border-b-0 active:translate-y-1">
                         閉じる
                     </button>
                 </div>
-
-                <!-- 紙吹雪用（装飾） -->
-                <div class="absolute -top-2 -right-2 text-4xl animate-bounce" style="animation-delay: 0.1s">🎉</div>
-                <div class="absolute -bottom-2 -left-2 text-4xl animate-bounce" style="animation-delay: 0.3s">✨</div>
             </div>
         </div>
 
     </main>
 
     <script>
-        // --- 設定値 ---
         const MIN_COUNT = 2;
-        const MAX_COUNT = 100; // 上限を100人に緩和
+        const MAX_COUNT = 100; 
         let currentCount = 4;
         
-        // --- データ ---
         let names = []; 
         let results = [];
         let horizontalLines = []; 
-        
         let bulkItems = [];
 
-        // --- キャンバス関連 ---
         const canvas = document.getElementById('amidaCanvas');
         const ctx = canvas.getContext('2d');
-        let canvasWidth, canvasHeight;
-        const headerHeight = 70;
-        const footerHeight = 70; 
         
-        // パディング
-        let paddingX = 40;
+        // 内部解像度用の変数
+        let logicalWidth, logicalHeight;
+        const COL_WIDTH = 60; // 1列あたりの理想幅
+        const MIN_LOGICAL_WIDTH = 300;
+        const HEADER_HEIGHT = 80;
+        const FOOTER_HEIGHT = 100; // 結果が見切れないように十分確保
+        const PADDING_SIDE = 40;
         
-        // パステルカラーパレット
         const colors = [
             '#ff99c8', '#fcf6bd', '#d0f4de', '#a9def9', '#e4c1f9', 
             '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff'
         ];
-        // 線の色は濃いめにする
         const lineColors = [
             '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', 
             '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e'
         ];
 
-        // 状態管理
         let paths = []; 
         let isAnimating = false;
         let revealed = new Array(MAX_COUNT).fill(false); 
         let revealedResults = new Array(MAX_COUNT).fill(false); 
 
-        // --- 初期化 ---
         function init() {
             updateDisplays();
             updateBulkList();
@@ -296,28 +270,20 @@
             if (!isNaN(val) && val >= MIN_COUNT && val <= MAX_COUNT) {
                 currentCount = val;
             } else {
-                updateDisplays(); // 元に戻す
+                updateDisplays();
             }
         }
-
-        // --- 一括設定ツール用ロジック ---
 
         function addBulkItem() {
             const nameInput = document.getElementById('bulk-name');
             const countInput = document.getElementById('bulk-count');
-            
             const name = nameInput.value.trim();
             const count = parseInt(countInput.value);
-
-            if (!name) return;
-            if (count < 1) return;
-
+            if (!name || count < 1) return;
             bulkItems.push({ name, count });
-            
             nameInput.value = '';
             countInput.value = 1;
             nameInput.focus();
-
             updateBulkList();
         }
 
@@ -329,108 +295,57 @@
         function updateBulkList() {
             const listEl = document.getElementById('bulk-list');
             listEl.innerHTML = '';
-
             if (bulkItems.length === 0) {
-                listEl.innerHTML = `
-                    <li class="text-gray-300 text-center py-6 flex flex-col items-center font-bold">
-                        <i class="fas fa-magic mb-2 text-yellow-200 text-3xl"></i>
-                        <span>ここに商品を追加してね！</span>
-                    </li>`;
+                listEl.innerHTML = `<li class="text-gray-300 text-center py-6 flex flex-col items-center font-bold"><i class="fas fa-magic mb-2 text-yellow-200 text-3xl"></i><span>ここに商品を追加してね！</span></li>`;
                 return;
             }
-
             bulkItems.forEach((item, index) => {
                 const li = document.createElement('li');
                 li.className = 'flex justify-between items-center bg-yellow-50 px-4 py-3 rounded-xl border border-yellow-200 shadow-sm animate-fade-in';
-                li.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-full bg-white border-2 border-yellow-200 flex items-center justify-center text-yellow-500 font-bold text-lg shadow-sm"><i class="fas fa-gift"></i></span>
-                        <span class="font-bold text-gray-700 text-lg">${item.name}</span>
-                        <span class="text-yellow-600 text-xs font-bold bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">× ${item.count}</span>
-                    </div>
-                    <button onclick="removeBulkItem(${index})" class="text-red-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition"><i class="fas fa-times"></i></button>
-                `;
+                li.innerHTML = `<div class="flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-white border-2 border-yellow-200 flex items-center justify-center text-yellow-500 font-bold text-lg shadow-sm"><i class="fas fa-gift"></i></span><span class="font-bold text-gray-700 text-lg">${item.name}</span><span class="text-yellow-600 text-xs font-bold bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">× ${item.count}</span></div><button onclick="removeBulkItem(${index})" class="text-red-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition"><i class="fas fa-times"></i></button>`;
                 listEl.appendChild(li);
             });
         }
 
-        // --- あみだくじ生成ロジック ---
-
         function generateAmida() {
-            // ゴール(results)を生成
             results = [];
-
             bulkItems.forEach(item => {
-                for(let i=0; i<item.count; i++) {
-                    results.push(item.name);
-                }
+                for(let i=0; i<item.count; i++) results.push(item.name);
             });
-
             const currentLen = results.length;
             if (currentLen < currentCount) {
-                for(let i=currentLen; i<currentCount; i++) {
-                    results.push("★"); // キラキラ
-                }
+                for(let i=currentLen; i<currentCount; i++) results.push("★");
             } else if (currentLen > currentCount) {
                 results.sort(() => 0.5 - Math.random());
                 results = results.slice(0, currentCount);
             }
-
-            // 最後に配置をシャッフル
             results.sort(() => 0.5 - Math.random());
             
-            // ラインナップ集計
             const summary = {};
             let hasItem = false;
-            results.forEach(r => {
-                if (r !== "★") {
-                    summary[r] = (summary[r] || 0) + 1;
-                    hasItem = true;
-                }
-            });
-            
-            let summaryText;
-            if (!hasItem) {
-                summaryText = "（商品なし...？）";
-            } else {
-                summaryText = Object.entries(summary)
-                    .map(([name, count]) => `${name}×${count}`)
-                    .join(' / ');
-            }
+            results.forEach(r => { if (r !== "★") { summary[r] = (summary[r] || 0) + 1; hasItem = true; } });
+            const summaryText = !hasItem ? "（商品なし...？）" : Object.entries(summary).map(([n, c]) => `${n}×${c}`).join(' / ');
             document.getElementById('lineup-text').textContent = summaryText;
 
-            // 名前（上）の準備
             names = [];
-            for(let i=0; i<currentCount; i++) {
-                names[i] = `${i+1}`;
-            }
+            for(let i=0; i<currentCount; i++) names[i] = `${i+1}`;
 
-            // 横線を生成
             horizontalLines = [];
-            // 人数が多い場合はセグメントを増やす（混ざりやすくする）
             const segments = Math.max(12, Math.floor(currentCount * 0.8)); 
-            
             for (let s = 0; s < segments; s++) {
                 const gaps = currentCount - 1;
                 let candidates = [];
                 for(let g=0; g<gaps; g++) candidates.push(g);
                 candidates.sort(() => 0.5 - Math.random());
-                
                 let used = new Array(gaps).fill(false);
-                
                 for(let g of candidates) {
                     if(used[g]) continue;
                     if(g > 0 && used[g-1]) continue;
                     if(g < gaps-1 && used[g+1]) continue;
-
-                    // 線の密度調整
                     if(Math.random() > 0.3) {
                         const segmentHeight = 0.8 / segments;
                         const baseY = 0.1 + (s * segmentHeight);
-                        horizontalLines.push({
-                            col: g,
-                            y: baseY + (Math.random() * 0.02)
-                        });
+                        horizontalLines.push({ col: g, y: baseY + (Math.random() * 0.02) });
                         used[g] = true;
                     }
                 }
@@ -468,46 +383,47 @@
             drawBoard();
         }
 
-        // --- 描画処理 ---
+        // --- 描画・リサイズ処理（核心部分） ---
 
         function resizeCanvas() {
             const container = document.querySelector('.canvas-container');
-            const containerWidth = container.clientWidth;
             
-            // 必要な最低幅を計算（人数が多い場合に広げる）
-            const minColWidth = 50; 
-            const requiredWidth = (currentCount * minColWidth) + (paddingX * 2);
-
-            // 画面幅と必要幅の大きい方を採用
-            if (requiredWidth > containerWidth) {
-                canvasWidth = requiredWidth;
-            } else {
-                canvasWidth = containerWidth;
-            }
-
-            canvasHeight = Math.max(400, window.innerHeight * 0.6); 
-
+            // 1. 必要な「論理的な幅」を計算 (人数 * 1列幅 + 余白)
+            // 人数が多くても1列60pxは確保して描画する（文字が潰れないように）
+            logicalWidth = Math.max(MIN_LOGICAL_WIDTH, (currentCount * COL_WIDTH) + (PADDING_SIDE * 2));
+            
+            // 2. 高さはアスペクト比を考慮して適当に決める（または固定）
+            // 横に長い場合は高さもある程度確保しないと線が詰まりすぎる
+            // 逆に縦長すぎても見にくいのでバランスを取る
+            logicalHeight = Math.max(600, logicalWidth * 0.6); 
+            // ただし高すぎるとスマホで縦スクロールが必要になるので上限キャップも考慮したいが、
+            // 「全体を表示」が優先なのでアスペクト比優先。
+            
+            // 3. キャンバスの解像度を設定（これが描画されるピクセル数）
+            // Retina対応は後で行うが、まずは論理サイズ
             const dpr = window.devicePixelRatio || 1;
-            canvas.width = canvasWidth * dpr;
-            canvas.height = canvasHeight * dpr;
-            canvas.style.width = `${canvasWidth}px`;
-            canvas.style.height = `${canvasHeight}px`;
+            canvas.width = logicalWidth * dpr;
+            canvas.height = logicalHeight * dpr;
+            
+            // 4. コンテキストのスケール調整
+            ctx.resetTransform();
             ctx.scale(dpr, dpr);
 
             drawBoard();
         }
 
         function getColX(index) {
-            const usableWidth = canvasWidth - (paddingX * 2);
+            // 論理幅の中でのX座標
+            const usableWidth = logicalWidth - (PADDING_SIDE * 2);
             const spacing = usableWidth / Math.max(1, currentCount - 1);
-            return paddingX + index * spacing;
+            return PADDING_SIDE + index * spacing;
         }
 
         function drawBoard() {
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            ctx.clearRect(0, 0, logicalWidth, logicalHeight);
             
-            const lineTop = headerHeight + 20;
-            const lineBottom = canvasHeight - footerHeight - 20;
+            const lineTop = HEADER_HEIGHT;
+            const lineBottom = logicalHeight - FOOTER_HEIGHT;
             const lineHeight = lineBottom - lineTop;
 
             ctx.lineCap = 'round';
@@ -515,12 +431,12 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            const colSpacing = (canvasWidth - paddingX * 2) / Math.max(1, currentCount - 1);
+            const colSpacing = (logicalWidth - (PADDING_SIDE * 2)) / Math.max(1, currentCount - 1);
             
-            // 要素サイズ調整
-            const baseSize = Math.max(20, Math.min(48, colSpacing * 0.8));
+            // 要素サイズ（論理座標系なので、人数が多くても小さくなりすぎない）
+            const baseSize = Math.min(48, colSpacing * 0.8);
             const radius = baseSize / 2;
-            const fontSize = Math.max(10, Math.min(16, radius * 0.8));
+            const fontSize = Math.max(12, radius * 0.8); // 最小フォントサイズ確保
 
             for (let i = 0; i < currentCount; i++) {
                 const x = getColX(i);
@@ -528,28 +444,27 @@
                 const bgColor = colors[colorIdx];
                 const lineColor = lineColors[colorIdx];
                 
-                // --- 名前 (上) ---
+                // 名前 (上)
                 ctx.beginPath();
-                ctx.arc(x, 40, radius, 0, Math.PI * 2);
+                ctx.arc(x, HEADER_HEIGHT / 2, radius, 0, Math.PI * 2);
                 ctx.fillStyle = revealed[i] ? '#e5e7eb' : bgColor;
                 ctx.fill();
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 3;
                 ctx.strokeStyle = revealed[i] ? '#d1d5db' : '#fff';
                 ctx.stroke();
                 
                 ctx.fillStyle = revealed[i] ? '#9ca3af' : '#78350f'; 
                 ctx.font = `bold ${fontSize}px "M PLUS Rounded 1c"`;
-                ctx.fillText(`${i+1}`, x, 40);
+                ctx.fillText(`${i+1}`, x, HEADER_HEIGHT / 2);
                 
                 // スタート地点
                 ctx.beginPath();
-                ctx.arc(x, lineTop, Math.max(3, radius * 0.25), 0, Math.PI * 2);
+                ctx.arc(x, lineTop, 4, 0, Math.PI * 2);
                 ctx.fillStyle = revealed[i] ? '#d1d5db' : lineColor;
                 ctx.fill();
 
-                // --- 結果 (下) ---
+                // 結果 (下)
                 const isRevealed = revealedResults[i];
-
                 if (isRevealed) {
                     ctx.fillStyle = '#fff';
                     ctx.shadowColor = "rgba(0,0,0,0.1)";
@@ -563,10 +478,12 @@
                 ctx.strokeStyle = isRevealed ? '#f9a8d4' : '#fbcfe8';
                 ctx.lineWidth = 2;
                 
-                const boxW = Math.max(30, colSpacing * 0.9);
+                const boxW = Math.max(40, colSpacing * 0.9); // 幅確保
+                const boxH = FOOTER_HEIGHT - 20;
+                const boxY = lineBottom + 10;
                 
                 ctx.beginPath();
-                ctx.roundRect(x - boxW/2, lineBottom + 10, boxW, footerHeight, 8);
+                ctx.roundRect(x - boxW/2, boxY, boxW, boxH, 8);
                 ctx.fill();
                 ctx.shadowColor = "transparent"; 
                 ctx.stroke();
@@ -574,19 +491,24 @@
                 if (isRevealed) {
                     ctx.fillStyle = '#db2777'; 
                     const result = results[i];
-                    let resFontSize = Math.max(10, Math.min(12, boxW / 4));
+                    let resFontSize = Math.min(16, boxW / 4); // フォントサイズ調整
                     ctx.font = `bold ${resFontSize}px "M PLUS Rounded 1c"`;
-                    const maxChars = Math.floor(boxW / resFontSize) + 1;
-                    ctx.fillText(result.substring(0, maxChars), x, lineBottom + 10 + footerHeight/2);
+                    
+                    // 縦書きっぽく表示 (簡易)
+                    // 幅が狭いときは1文字ずつ改行するなど工夫が必要だが、
+                    // 今回は横書きで省略表示
+                    const maxChars = Math.floor(boxW / resFontSize);
+                    const displayResult = result.length > maxChars ? result.substring(0, maxChars) + '.' : result;
+                    ctx.fillText(displayResult, x, boxY + boxH/2);
                 } else {
                     ctx.fillStyle = '#f472b6';
-                    ctx.font = `bold ${Math.max(12, fontSize * 1.5)}px "M PLUS Rounded 1c"`;
-                    ctx.fillText("?", x, lineBottom + 10 + footerHeight/2);
+                    ctx.font = `bold ${Math.min(24, boxW/2)}px "M PLUS Rounded 1c"`;
+                    ctx.fillText("?", x, boxY + boxH/2);
                 }
             }
 
             // 縦線
-            ctx.lineWidth = Math.max(2, 40 / currentCount);
+            ctx.lineWidth = 4;
             ctx.strokeStyle = '#fce7f3'; 
             for (let i = 0; i < currentCount; i++) {
                 const x = getColX(i);
@@ -609,10 +531,8 @@
             }
 
             // パス
-            const pathWidth = Math.max(3, 100 / currentCount);
-            
             paths.forEach(p => {
-                drawPathLine(p.coords, lineColors[p.startIndex % lineColors.length], pathWidth);
+                drawPathLine(p.coords, lineColors[p.startIndex % lineColors.length]);
             });
         }
 
@@ -620,16 +540,14 @@
             let col = startIndex;
             let currentY = 0;
             const coords = [];
-            
-            const lineTop = headerHeight + 20;
-            const lineBottom = canvasHeight - footerHeight - 20;
+            const lineTop = HEADER_HEIGHT;
+            const lineBottom = logicalHeight - FOOTER_HEIGHT;
             const lineHeight = lineBottom - lineTop;
 
             coords.push({ x: getColX(col), y: lineTop });
 
             for (let i = 0; i < horizontalLines.length; i++) {
                 const line = horizontalLines[i];
-                
                 if (line.y > currentY) {
                     if (line.col === col - 1) {
                         const yPixel = lineTop + (line.y * lineHeight);
@@ -648,64 +566,48 @@
                 }
             }
             coords.push({ x: getColX(col), y: lineBottom });
-
-            return {
-                startIndex: startIndex,
-                endIndex: col,
-                coords: coords
-            };
+            return { startIndex, endIndex: col, coords };
         }
 
-        function drawPathLine(coords, color, width) {
-            ctx.lineWidth = width;
+        function drawPathLine(coords, color) {
+            ctx.lineWidth = 5; // 太く見やすく
             ctx.strokeStyle = color;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.shadowBlur = 0;
-            
             ctx.beginPath();
             if(coords.length > 0) ctx.moveTo(coords[0].x, coords[0].y);
-            
-            for (let i = 1; i < coords.length; i++) {
-                ctx.lineTo(coords[i].x, coords[i].y);
-            }
+            for (let i = 1; i < coords.length; i++) ctx.lineTo(coords[i].x, coords[i].y);
             ctx.stroke();
         }
 
         function animateSinglePath(pathData, onComplete) {
             isAnimating = true;
-            
             let totalLength = 0;
             const segments = [];
             for(let i=0; i<pathData.coords.length-1; i++) {
                 const dx = pathData.coords[i+1].x - pathData.coords[i].x;
                 const dy = pathData.coords[i+1].y - pathData.coords[i].y;
                 const dist = Math.sqrt(dx*dx + dy*dy);
-                segments.push({
-                    start: pathData.coords[i],
-                    end: pathData.coords[i+1],
-                    length: dist
-                });
+                segments.push({ start: pathData.coords[i], end: pathData.coords[i+1], length: dist });
                 totalLength += dist;
             }
 
             let currentDist = 0;
-            const duration = 4000; 
+            const duration = 3000; 
             const startTime = performance.now();
             const color = lineColors[pathData.startIndex % lineColors.length];
-            const pathWidth = Math.max(3, 100 / currentCount);
             
             function loop(now) {
                 const elapsed = now - startTime;
                 currentDist = (elapsed / duration) * totalLength;
-                
                 if(currentDist > totalLength) currentDist = totalLength;
 
                 drawBoard(); 
                 
-                ctx.lineWidth = pathWidth;
+                ctx.lineWidth = 6; // アニメーション中はさらに太く
                 ctx.strokeStyle = color;
-                ctx.shadowBlur = 4;
+                ctx.shadowBlur = 10; // 発光表現
                 ctx.shadowColor = color;
                 ctx.beginPath();
                 ctx.moveTo(segments[0].start.x, segments[0].start.y);
@@ -727,30 +629,6 @@
                 ctx.stroke();
                 ctx.shadowBlur = 0;
 
-                if (currentDist > 0 && currentDist < totalLength) {
-                    let headX, headY;
-                    let distRem2 = currentDist;
-                    for(let seg of segments) {
-                        if (distRem2 <= seg.length) {
-                            const ratio = distRem2 / seg.length;
-                            headX = seg.start.x + (seg.end.x - seg.start.x) * ratio;
-                            headY = seg.start.y + (seg.end.y - seg.start.y) * ratio;
-                            break;
-                        }
-                        distRem2 -= seg.length;
-                    }
-                    if(headX !== undefined) {
-                        ctx.beginPath();
-                        ctx.arc(headX, headY, pathWidth, 0, Math.PI*2);
-                        ctx.fillStyle = color;
-                        ctx.fill();
-                        ctx.fillStyle = 'white';
-                        ctx.beginPath();
-                        ctx.arc(headX, headY, pathWidth * 0.5, 0, Math.PI*2);
-                        ctx.fill();
-                    }
-                }
-
                 if (currentDist < totalLength) {
                     requestAnimationFrame(loop);
                 } else {
@@ -759,9 +637,7 @@
                     revealedResults[pathData.endIndex] = true;
                     drawBoard();
                     showResult(pathData);
-                    
-                    checkAllRevealed(); // 完了チェック
-
+                    checkAllRevealed();
                     if(onComplete) onComplete();
                 }
             }
@@ -771,29 +647,16 @@
         function showResult(pathData) {
             const startName = names[pathData.startIndex];
             const endResult = results[pathData.endIndex];
-            
             const msgBox = document.getElementById('result-message');
             const msgText = document.getElementById('result-text');
-            
-            msgText.innerHTML = `
-                <div class="mb-2 text-pink-400 text-sm font-bold">🎉 結果発表 🎉</div>
-                <div class="text-xl mb-3">
-                    <span class="font-black text-blue-500 text-3xl">${startName}</span>番 は...
-                </div>
-                <div class="text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${endResult}</div>
-            `;
+            msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-bold">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-blue-500 text-3xl">${startName}</span>番 は...</div><div class="text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${endResult}</div>`;
             msgBox.classList.remove('hidden');
             msgBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        // --- 結果一覧機能 ---
-
         function checkAllRevealed() {
-            const allRevealed = revealed.every(r => r === true);
-            if (allRevealed) {
-                setTimeout(() => {
-                    showSummary();
-                }, 1500);
+            if (revealed.every(r => r === true)) {
+                setTimeout(() => showSummary(), 1500);
             }
         }
 
@@ -801,23 +664,14 @@
             const modal = document.getElementById('summary-modal');
             const list = document.getElementById('summary-list');
             list.innerHTML = '';
-
             for (let i = 0; i < currentCount; i++) {
                 const pathData = calculatePath(i);
                 const result = results[pathData.endIndex];
-                
                 const li = document.createElement('li');
                 li.className = 'flex items-center justify-between p-3 bg-pink-50 rounded-xl border border-pink-100';
-                li.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="w-8 h-8 rounded-full bg-white border border-pink-200 flex items-center justify-center font-black text-pink-500 shadow-sm">${i+1}</span>
-                        <span class="text-gray-400 text-sm">➔</span>
-                        <span class="font-bold text-gray-700 text-lg">${result}</span>
-                    </div>
-                `;
+                li.innerHTML = `<div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-white border border-pink-200 flex items-center justify-center font-black text-pink-500 shadow-sm">${i+1}</span><span class="text-gray-400 text-sm">➔</span><span class="font-bold text-gray-700 text-lg">${result}</span></div>`;
                 list.appendChild(li);
             }
-
             modal.classList.remove('hidden');
         }
 
@@ -825,20 +679,24 @@
             document.getElementById('summary-modal').classList.add('hidden');
         }
 
-        // --- イベント ---
-
+        // クリック判定: CSSの縮小を考慮して座標変換が必要
         canvas.addEventListener('click', (e) => {
             if (isAnimating) return;
+            
+            // 実際の表示サイズと論理サイズの比率を計算
             const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
+            const scaleX = logicalWidth / rect.width;
+            const scaleY = logicalHeight / rect.height;
 
-            if (clickY < headerHeight + 60) {
+            // 論理座標系でのクリック位置
+            const clickX = (e.clientX - rect.left) * scaleX;
+            const clickY = (e.clientY - rect.top) * scaleY;
+
+            if (clickY < HEADER_HEIGHT + 40) {
+                const spacing = (logicalWidth - PADDING_SIDE * 2) / Math.max(1, currentCount - 1);
+                const threshold = Math.min(40, spacing / 2); // 判定範囲
+
                 let clickedCol = -1;
-                
-                const spacing = (canvasWidth - paddingX * 2) / Math.max(1, currentCount - 1);
-                const threshold = spacing / 2;
-
                 for(let i=0; i<currentCount; i++) {
                     const cx = getColX(i);
                     if (Math.abs(clickX - cx) < threshold) {
@@ -857,16 +715,10 @@
 
         async function revealAll() {
             if(isAnimating) return;
-            
             const unrevealedIndices = [];
-            for(let i=0; i<currentCount; i++) {
-                if(!revealed[i]) unrevealedIndices.push(i);
-            }
+            for(let i=0; i<currentCount; i++) if(!revealed[i]) unrevealedIndices.push(i);
             
-            if(unrevealedIndices.length === 0) {
-                showSummary(); 
-                return;
-            }
+            if(unrevealedIndices.length === 0) { showSummary(); return; }
 
             for(let i of unrevealedIndices) {
                 revealed[i] = true;
@@ -874,25 +726,23 @@
                 paths.push(path);
                 revealedResults[path.endIndex] = true; 
             }
-            
             drawBoard();
-            
             const msgBox = document.getElementById('result-message');
             document.getElementById('result-text').textContent = "全員の結果を表示しました！";
             msgBox.classList.remove('hidden');
             msgBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
             checkAllRevealed();
         }
 
         window.addEventListener('resize', () => {
             if(!document.getElementById('game-panel').classList.contains('hidden')) {
-                resizeCanvas();
+                // リサイズ時は再計算せずにstyleの自動調整に任せる（再描画するとアニメーションが飛ぶため）
+                // ただし極端な変更に対応するためリロード推奨だが、ここでは簡易的に再描画
+                // resizeCanvas(); 
             }
         });
 
         init();
-
     </script>
 </body>
 </html>
