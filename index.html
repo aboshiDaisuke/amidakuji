@@ -3,58 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FTLおみやげ配布⭐️あみだくじ</title>
+    <title>おみやげ配布⭐️あみだくじ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap');
         
+        :root {
+            --pop-pink: #ff85a1;
+            --pop-yellow: #ffd93d;
+            --pop-blue: #6ebbfd;
+            --pop-green: #6bcb77;
+            --pop-white: #ffffff;
+            --pop-bg: #fff5f8;
+        }
+
         body {
             font-family: 'M PLUS Rounded 1c', sans-serif;
-            background-color: #fff0f5; /* 薄いピンク */
-            background-image: radial-gradient(#fbcfe8 2px, transparent 2px);
-            background-size: 20px 20px;
+            background-color: var(--pop-bg);
+            background-image: 
+                radial-gradient(circle at 2px 2px, rgba(255, 133, 161, 0.15) 2px, transparent 0);
+            background-size: 32px 32px;
             color: #5c4b51;
+            overflow-x: hidden;
+        }
+
+        /* ポップなフローティング装飾 */
+        .pop-deco {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.05));
+            animation: popFloating 6s ease-in-out infinite;
+        }
+        @keyframes popFloating {
+            0%, 100% { transform: translateY(0) rotate(-5deg) scale(1); }
+            50% { transform: translateY(-20px) rotate(5deg) scale(1.1); }
         }
 
         .canvas-container {
             position: relative;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            border: 4px solid #f9a8d4;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 15px -3px rgba(249, 168, 212, 0.3);
+            background: var(--pop-white);
+            border: 6px solid #5c4b51; /* 太い縁取りでPOP感を出す */
+            border-radius: 2rem;
+            box-shadow: 8px 8px 0px #ffbdcb; /* ステッカー風の影 */
             overflow: hidden;
-            /* 高さはJSでcanvasに合わせて調整されるため固定しない */
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            padding: 15px;
         }
 
         canvas {
             cursor: pointer;
-            touch-action: none;
             display: block;
-            width: 100%; /* コンテナ幅に合わせる */
-            height: auto; /* アスペクト比を維持して高さ自動調整 */
+            width: 100%;
+            height: auto;
             max-width: 100%;
         }
 
-        /* ぷるんとしたボタンアニメーション */
+        /* ぷるんとしたボタン */
         .btn-pop {
-            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid #5c4b51;
+            box-shadow: 4px 4px 0px #5c4b51;
+            font-weight: 900;
         }
+        /* ふわふわ浮遊アニメーション */
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* ぷるんとしたボタンアニメーション */
         .btn-pop:active {
-            transform: scale(0.95);
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #5c4b51;
         }
         .btn-pop:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 6px 6px 0px #5c4b51;
+        }
+
+        /* POPなパネル */
+        .pop-card {
+            background: var(--pop-white);
+            border: 6px solid #5c4b51;
+            border-radius: 2.5rem;
+            box-shadow: 12px 12px 0px #ffd93d; /* 黄色のオフセット影 */
+        }
+
+        /* アニメーション */
+        .animate-pop-in {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
+            animation: fadeIn 0.4s ease-out forwards;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -63,38 +116,63 @@
 
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
-            height: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #fff0f5;
-            border-radius: 4px;
+            background: var(--pop-bg);
+            border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #f9a8d4;
-            border-radius: 4px;
+            background: var(--pop-pink);
+            border: 2px solid #5c4b51;
+            border-radius: 10px;
         }
         
         .modal-overlay {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(4px);
+            background-color: rgba(255, 133, 161, 0.3);
+            backdrop-filter: blur(8px);
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-8 px-4">
+<body class="p-4 pt-0 md:p-8 md:pt-1 pb-40 min-h-screen relative">
 
-    <header class="mb-8 text-center animate-fade-in">
-        <h1 class="text-3xl md:text-5xl font-black text-pink-500 mb-2 drop-shadow-sm tracking-wide">
-            <i class="fas fa-star text-yellow-400 mr-2 rotate-12"></i>FTLおみやげ配布⭐️あみだくじ<i class="fas fa-heart text-red-400 ml-2 -rotate-12"></i>
-        </h1>
-        <p class="text-gray-500 font-bold bg-white/80 inline-block px-4 py-1 rounded-full shadow-sm text-sm md:text-base">
-            ドキドキ！何が当たるかな？
-        </p>
+    <!-- 背景デコ -->
+    <div class="pop-deco text-4xl" style="top: 10%; left: 5%; color: var(--pop-pink); animation-delay: 0s;"><i class="fas fa-heart"></i></div>
+    <div class="pop-deco text-5xl" style="top: 15%; right: 5%; color: var(--pop-yellow); animation-delay: -1s;"><i class="fas fa-star"></i></div>
+    <div class="pop-deco text-3xl" style="bottom: 20%; left: 8%; color: var(--pop-blue); animation-delay: -2s;"><i class="fas fa-cloud"></i></div>
+    <div class="pop-deco text-4xl" style="bottom: 10%; right: 10%; color: var(--pop-green); animation-delay: -3s;"><i class="fas fa-gift"></i></div>
+
+    <header class="mt-4 mb-2 text-center animate-pop-in relative">
+        <div class="flex flex-col md:flex-row items-center justify-center gap-6">
+            <!-- 広報キャラクター画像 (ふわふわ浮遊アニメーション - 少し下げて配置) -->
+            <div class="relative w-22 h-auto md:w-32 filter drop-shadow-xl animate-float mt-4">
+                <img src="assets/koho.png" alt="広報（お土産配布係）" class="w-full h-auto object-contain">
+                <div class="absolute -top-1 -right-2 bg-yellow-400 text-gray-800 font-black text-[10px] px-2 py-0.5 rounded-full border-2 border-gray-800 rotate-12 shadow-sm">
+                    お土産配るよ！
+                </div>
+            </div>
+
+            <div class="text-center md:text-left">
+                <!-- タイトル (ふわふわアニメーション) -->
+                <div class="inline-block relative animate-float" style="animation-delay: -0.5s;">
+                    <h1 class="text-4xl md:text-6xl font-black text-white relative z-10 py-3 px-8 italic" style="-webkit-text-stroke: 3px #5c4b51; text-shadow: 6px 6px 0px #5c4b51;">
+                        あみだくじ★
+                    </h1>
+                    <div class="absolute inset-0 bg-pink-400 -rotate-2 rounded-xl -z-10 border-4 border-gray-800"></div>
+                </div>
+                <!-- メッセージ (さらにズレてふわふわ) -->
+                <div class="mt-4 animate-float" style="animation-delay: -1.2s;">
+                    <p class="text-gray-600 font-black bg-white border-4 border-gray-800 inline-block px-5 py-2 rounded-full shadow-[4px_4px_0px_#5c4b51] text-xs md:text-sm">
+                        ドキドキ！何が当たるかな？ 🎁
+                    </p>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <main class="w-full max-w-4xl space-y-8 relative">
-        
+    <main class="max-w-4xl mx-auto relative z-10 mb-20">
+
         <!-- 設定エリア -->
-        <div id="setup-panel" class="bg-white/90 backdrop-blur-sm p-4 md:p-8 rounded-[2rem] shadow-xl border-4 border-pink-200 animate-fade-in">
+        <div id="setup-panel" class="pop-card p-6 md:p-10 animate-fade-in">
             
             <!-- 上段：人数設定 -->
             <div class="flex flex-col items-center justify-center mb-8 pb-6 border-b-2 border-dashed border-pink-200">
@@ -119,7 +197,7 @@
                 <div class="flex flex-wrap gap-3 mb-4 items-end mt-2">
                     <div class="flex-1 min-w-[140px]">
                         <label class="text-xs text-yellow-700 font-bold ml-2">なにが当たる？</label>
-                        <input type="text" id="bulk-name" placeholder="例: 🍰 ケーキ" class="w-full border-2 border-yellow-200 rounded-2xl px-4 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-white font-bold text-gray-700 placeholder-yellow-200 transition-all">
+                        <input type="text" id="bulk-name" placeholder="例: 🍰 ケーキ" class="w-full border-2 border-yellow-200 rounded-2xl px-4 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-white font-bold text-gray-700 placeholder-yellow-200 transition-all" onkeydown="if(event.key==='Enter') addBulkItem()">
                     </div>
                     <div class="w-24">
                         <label class="text-xs text-yellow-700 font-bold ml-2">いくつ？</label>
@@ -142,6 +220,16 @@
                 <p class="text-right text-xs text-yellow-600 font-bold mt-2 mr-2">
                     ※入力が人数より少ない分は「★」になります
                 </p>
+            </div>
+
+            <!-- アニメーション速度 -->
+            <div class="flex items-center justify-center gap-3 mb-6">
+                <span class="text-sm font-bold text-gray-500"><i class="fas fa-gauge mr-1"></i>速さ</span>
+                <div class="flex gap-2">
+                    <button onclick="setSpeed('slow')" id="speed-slow" class="btn-pop px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500">おそい</button>
+                    <button onclick="setSpeed('normal')" id="speed-normal" class="btn-pop px-4 py-2 rounded-full text-sm font-bold border-2 border-pink-400 bg-pink-400 text-white">ふつう</button>
+                    <button onclick="setSpeed('fast')" id="speed-fast" class="btn-pop px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500">はやい</button>
+                </div>
             </div>
 
             <!-- 作成ボタン -->
@@ -215,13 +303,41 @@
 
     <script>
         const MIN_COUNT = 2;
-        const MAX_COUNT = 100; 
+        const MAX_COUNT = 100;
         let currentCount = 4;
-        
-        let names = []; 
+
+        let names = [];
         let results = [];
-        let horizontalLines = []; 
+        let horizontalLines = [];
         let bulkItems = [];
+        let animationDuration = 3000; // ms
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function setSpeed(speed) {
+            const speeds = { slow: 5000, normal: 3000, fast: 1200 };
+            animationDuration = speeds[speed];
+            ['slow', 'normal', 'fast'].forEach(s => {
+                const btn = document.getElementById(`speed-${s}`);
+                if (s === speed) {
+                    btn.className = btn.className.replace('border-blue-200 bg-blue-50 text-blue-500', 'border-pink-400 bg-pink-400 text-white');
+                } else {
+                    btn.className = btn.className.replace('border-pink-400 bg-pink-400 text-white', 'border-blue-200 bg-blue-50 text-blue-500');
+                }
+            });
+        }
 
         const canvas = document.getElementById('amidaCanvas');
         const ctx = canvas.getContext('2d');
@@ -256,7 +372,7 @@
         function updateDisplays() {
             document.getElementById('count-input').value = currentCount;
         }
-        
+
         function changeCount(delta) {
             const newCount = currentCount + delta;
             if (newCount >= MIN_COUNT && newCount <= MAX_COUNT) {
@@ -264,7 +380,7 @@
                 updateDisplays();
             }
         }
-        
+
         function updateCountFromInput() {
             const val = parseInt(document.getElementById('count-input').value);
             if (!isNaN(val) && val >= MIN_COUNT && val <= MAX_COUNT) {
@@ -302,7 +418,7 @@
             bulkItems.forEach((item, index) => {
                 const li = document.createElement('li');
                 li.className = 'flex justify-between items-center bg-yellow-50 px-4 py-3 rounded-xl border border-yellow-200 shadow-sm animate-fade-in';
-                li.innerHTML = `<div class="flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-white border-2 border-yellow-200 flex items-center justify-center text-yellow-500 font-bold text-lg shadow-sm"><i class="fas fa-gift"></i></span><span class="font-bold text-gray-700 text-lg">${item.name}</span><span class="text-yellow-600 text-xs font-bold bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">× ${item.count}</span></div><button onclick="removeBulkItem(${index})" class="text-red-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition"><i class="fas fa-times"></i></button>`;
+                li.innerHTML = `<div class="flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-white border-2 border-yellow-200 flex items-center justify-center text-yellow-500 font-bold text-lg shadow-sm"><i class="fas fa-gift"></i></span><span class="font-bold text-gray-700 text-lg">${escapeHtml(item.name)}</span><span class="text-yellow-600 text-xs font-bold bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">× ${item.count}</span></div><button onclick="removeBulkItem(${index})" class="text-red-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition"><i class="fas fa-times"></i></button>`;
                 listEl.appendChild(li);
             });
         }
@@ -310,17 +426,17 @@
         function generateAmida() {
             results = [];
             bulkItems.forEach(item => {
-                for(let i=0; i<item.count; i++) results.push(item.name);
+                for (let i = 0; i < item.count; i++) results.push(item.name);
             });
             const currentLen = results.length;
             if (currentLen < currentCount) {
-                for(let i=currentLen; i<currentCount; i++) results.push("★");
+                for (let i = currentLen; i < currentCount; i++) results.push("★");
             } else if (currentLen > currentCount) {
-                results.sort(() => 0.5 - Math.random());
+                shuffle(results);
                 results = results.slice(0, currentCount);
             }
-            results.sort(() => 0.5 - Math.random());
-            
+            shuffle(results);
+
             const summary = {};
             let hasItem = false;
             results.forEach(r => { if (r !== "★") { summary[r] = (summary[r] || 0) + 1; hasItem = true; } });
@@ -328,7 +444,9 @@
             document.getElementById('lineup-text').textContent = summaryText;
 
             names = [];
-            for(let i=0; i<currentCount; i++) names[i] = `${i+1}`;
+            for (let i = 0; i < currentCount; i++) {
+                names[i] = `${i + 1}`;
+            }
 
             horizontalLines = [];
             const segments = Math.max(12, Math.floor(currentCount * 0.8)); 
@@ -336,7 +454,7 @@
                 const gaps = currentCount - 1;
                 let candidates = [];
                 for(let g=0; g<gaps; g++) candidates.push(g);
-                candidates.sort(() => 0.5 - Math.random());
+                shuffle(candidates);
                 let used = new Array(gaps).fill(false);
                 for(let g of candidates) {
                     if(used[g]) continue;
@@ -375,37 +493,27 @@
 
         function resetPaths() {
             if(isAnimating) return;
-            revealed = new Array(currentCount).fill(false);
-            revealedResults = new Array(currentCount).fill(false);
-            paths = [];
-            document.getElementById('result-message').classList.add('hidden');
-            closeSummary();
-            drawBoard();
+            generateAmida();
         }
 
         // --- 描画・リサイズ処理（核心部分） ---
 
         function resizeCanvas() {
-            const container = document.querySelector('.canvas-container');
-            
-            // 1. 必要な「論理的な幅」を計算 (人数 * 1列幅 + 余白)
-            // 人数が多くても1列60pxは確保して描画する（文字が潰れないように）
-            logicalWidth = Math.max(MIN_LOGICAL_WIDTH, (currentCount * COL_WIDTH) + (PADDING_SIDE * 2));
-            
-            // 2. 高さはアスペクト比を考慮して適当に決める（または固定）
-            // 横に長い場合は高さもある程度確保しないと線が詰まりすぎる
-            // 逆に縦長すぎても見にくいのでバランスを取る
-            logicalHeight = Math.max(600, logicalWidth * 0.6); 
-            // ただし高すぎるとスマホで縦スクロールが必要になるので上限キャップも考慮したいが、
-            // 「全体を表示」が優先なのでアスペクト比優先。
-            
-            // 3. キャンバスの解像度を設定（これが描画されるピクセル数）
-            // Retina対応は後で行うが、まずは論理サイズ
             const dpr = window.devicePixelRatio || 1;
+            
+            // 1. 論理サイズを決定
+            logicalWidth = Math.max(MIN_LOGICAL_WIDTH, (currentCount * COL_WIDTH) + (PADDING_SIDE * 2));
+            logicalHeight = Math.max(600, logicalWidth * 0.6); 
+            
+            // 2. キャンバスの内部解像度を高精細にする
             canvas.width = logicalWidth * dpr;
             canvas.height = logicalHeight * dpr;
             
-            // 4. コンテキストのスケール調整
+            // 3. 表示サイズ（CSS）を固定
+            canvas.style.width = logicalWidth + "px";
+            canvas.style.height = logicalHeight + "px";
+            
+            // 4. スケールを適用（これがないとぼやける）
             ctx.resetTransform();
             ctx.scale(dpr, dpr);
 
@@ -413,13 +521,16 @@
         }
 
         function getColX(index) {
-            // 論理幅の中でのX座標
             const usableWidth = logicalWidth - (PADDING_SIDE * 2);
             const spacing = usableWidth / Math.max(1, currentCount - 1);
             return PADDING_SIDE + index * spacing;
         }
 
-        function drawBoard() {
+        /**
+         * 描画の主要関数
+         * @param {Object} currentPathInfo - 現在アニメーション中のデータがあれば渡す
+         */
+        function drawBoard(currentPathInfo = null) {
             ctx.clearRect(0, 0, logicalWidth, logicalHeight);
             
             const lineTop = HEADER_HEIGHT;
@@ -432,84 +543,13 @@
             ctx.textBaseline = 'middle';
 
             const colSpacing = (logicalWidth - (PADDING_SIDE * 2)) / Math.max(1, currentCount - 1);
-            
-            // 要素サイズ（論理座標系なので、人数が多くても小さくなりすぎない）
-            const baseSize = Math.min(48, colSpacing * 0.8);
+            const baseSize = Math.min(54, colSpacing * 0.85);
             const radius = baseSize / 2;
-            const fontSize = Math.max(12, radius * 0.8); // 最小フォントサイズ確保
+            const fontSize = Math.max(14, radius * 0.7);
 
-            for (let i = 0; i < currentCount; i++) {
-                const x = getColX(i);
-                const colorIdx = i % colors.length;
-                const bgColor = colors[colorIdx];
-                const lineColor = lineColors[colorIdx];
-                
-                // 名前 (上)
-                ctx.beginPath();
-                ctx.arc(x, HEADER_HEIGHT / 2, radius, 0, Math.PI * 2);
-                ctx.fillStyle = revealed[i] ? '#e5e7eb' : bgColor;
-                ctx.fill();
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = revealed[i] ? '#d1d5db' : '#fff';
-                ctx.stroke();
-                
-                ctx.fillStyle = revealed[i] ? '#9ca3af' : '#78350f'; 
-                ctx.font = `bold ${fontSize}px "M PLUS Rounded 1c"`;
-                ctx.fillText(`${i+1}`, x, HEADER_HEIGHT / 2);
-                
-                // スタート地点
-                ctx.beginPath();
-                ctx.arc(x, lineTop, 4, 0, Math.PI * 2);
-                ctx.fillStyle = revealed[i] ? '#d1d5db' : lineColor;
-                ctx.fill();
-
-                // 結果 (下)
-                const isRevealed = revealedResults[i];
-                if (isRevealed) {
-                    ctx.fillStyle = '#fff';
-                    ctx.shadowColor = "rgba(0,0,0,0.1)";
-                    ctx.shadowBlur = 4;
-                    ctx.shadowOffsetY = 2;
-                } else {
-                    ctx.fillStyle = '#fce7f3';
-                    ctx.shadowColor = "transparent";
-                }
-                
-                ctx.strokeStyle = isRevealed ? '#f9a8d4' : '#fbcfe8';
-                ctx.lineWidth = 2;
-                
-                const boxW = Math.max(40, colSpacing * 0.9); // 幅確保
-                const boxH = FOOTER_HEIGHT - 20;
-                const boxY = lineBottom + 10;
-                
-                ctx.beginPath();
-                ctx.roundRect(x - boxW/2, boxY, boxW, boxH, 8);
-                ctx.fill();
-                ctx.shadowColor = "transparent"; 
-                ctx.stroke();
-
-                if (isRevealed) {
-                    ctx.fillStyle = '#db2777'; 
-                    const result = results[i];
-                    let resFontSize = Math.min(16, boxW / 4); // フォントサイズ調整
-                    ctx.font = `bold ${resFontSize}px "M PLUS Rounded 1c"`;
-                    
-                    // 縦書きっぽく表示 (簡易)
-                    // 幅が狭いときは1文字ずつ改行するなど工夫が必要だが、
-                    // 今回は横書きで省略表示
-                    const maxChars = Math.floor(boxW / resFontSize);
-                    const displayResult = result.length > maxChars ? result.substring(0, maxChars) + '.' : result;
-                    ctx.fillText(displayResult, x, boxY + boxH/2);
-                } else {
-                    ctx.fillStyle = '#f472b6';
-                    ctx.font = `bold ${Math.min(24, boxW/2)}px "M PLUS Rounded 1c"`;
-                    ctx.fillText("?", x, boxY + boxH/2);
-                }
-            }
-
-            // 縦線
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#fce7f3'; 
+            // 1. 縦線（少し太めに）
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#ffdee6'; 
             for (let i = 0; i < currentCount; i++) {
                 const x = getColX(i);
                 ctx.beginPath();
@@ -518,7 +558,7 @@
                 ctx.stroke();
             }
 
-            // 横線
+            // 2. 横線
             for (let line of horizontalLines) {
                 const x1 = getColX(line.col);
                 const x2 = getColX(line.col + 1);
@@ -530,10 +570,112 @@
                 ctx.stroke();
             }
 
-            // パス
+            // 3. 通過済みのパス
             paths.forEach(p => {
                 drawPathLine(p.coords, lineColors[p.startIndex % lineColors.length]);
             });
+
+            // 4. 現在アニメーション中のパスがあれば描画
+            if (currentPathInfo) {
+                const { segments, currentDist, color } = currentPathInfo;
+                const pathCoords = [];
+                let distRem = currentDist;
+                pathCoords.push(segments[0].start);
+                for(let seg of segments) {
+                    if(distRem <= 0) break;
+                    if(distRem >= seg.length) {
+                        pathCoords.push(seg.end);
+                        distRem -= seg.length;
+                    } else {
+                        const ratio = distRem / seg.length;
+                        pathCoords.push({
+                            x: seg.start.x + (seg.end.x - seg.start.x) * ratio,
+                            y: seg.start.y + (seg.end.y - seg.start.y) * ratio
+                        });
+                        distRem = 0;
+                    }
+                }
+                drawPathLine(pathCoords, color, true); // trueで発光エフェクト
+            }
+
+            // 5. ノードと結果の描画
+            for (let i = 0; i < currentCount; i++) {
+                const x = getColX(i);
+                const colorIdx = i % colors.length;
+                const bgColor = colors[colorIdx];
+                const lineColor = lineColors[colorIdx];
+                
+                // --- 参加者アイコン (上) ---
+                // 外側の太い縁取り（ステッカー風）
+                ctx.beginPath();
+                ctx.arc(x, HEADER_HEIGHT / 2, radius + 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#5c4b51';
+                ctx.fill();
+
+                // 本体
+                ctx.beginPath();
+                ctx.arc(x, HEADER_HEIGHT / 2, radius, 0, Math.PI * 2);
+                ctx.fillStyle = revealed[i] ? '#e5e7eb' : bgColor;
+                ctx.fill();
+                
+                // 光沢（POP感を出す）
+                if (!revealed[i]) {
+                    ctx.beginPath();
+                    ctx.arc(x - radius*0.3, HEADER_HEIGHT/2 - radius*0.3, radius*0.2, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = revealed[i] ? '#9ca3af' : '#5c4b51'; 
+                ctx.font = `900 ${fontSize}px "M PLUS Rounded 1c"`;
+                ctx.fillText(`${i+1}`, x, HEADER_HEIGHT / 2);
+                
+                // スタート地点のポッチ
+                ctx.beginPath();
+                ctx.arc(x, lineTop, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#5c4b51';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x, lineTop, 3, 0, Math.PI * 2);
+                ctx.fillStyle = revealed[i] ? '#d1d5db' : lineColor;
+                ctx.fill();
+
+                // --- 結果ボックス (下) ---
+                const isRevealed = revealedResults[i];
+                const boxW = Math.max(46, colSpacing * 0.9);
+                const boxH = FOOTER_HEIGHT - 30;
+                const boxY = lineBottom + 15;
+
+                // ボックスの影（ステッカー風）
+                ctx.fillStyle = '#5c4b51';
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x - boxW/2 + 4, boxY + 4, boxW, boxH, 12);
+                ctx.fill();
+
+                // ボックス本体
+                ctx.fillStyle = isRevealed ? '#fff' : '#fff9f0';
+                ctx.strokeStyle = '#5c4b51';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x - boxW/2, boxY, boxW, boxH, 12);
+                ctx.fill();
+                ctx.stroke();
+
+                if (isRevealed) {
+                    ctx.fillStyle = '#ff5a8d'; // POPな強めのピンク
+                    const result = results[i];
+                    let resFontSize = Math.min(18, boxW / 3.5);
+                    ctx.font = `900 ${resFontSize}px "M PLUS Rounded 1c"`;
+                    
+                    const maxChars = Math.floor(boxW / resFontSize);
+                    const displayResult = result.length > maxChars ? result.substring(0, maxChars) + '..' : result;
+                    ctx.fillText(displayResult, x, boxY + boxH/2);
+                } else {
+                    ctx.fillStyle = '#ff85a1';
+                    ctx.font = `900 ${Math.min(28, boxW/1.8)}px "M PLUS Rounded 1c"`;
+                    ctx.fillText("?", x, boxY + boxH/2);
+                }
+            }
         }
 
         function calculatePath(startIndex) {
@@ -569,46 +711,57 @@
             return { startIndex, endIndex: col, coords };
         }
 
-        function drawPathLine(coords, color) {
-            ctx.lineWidth = 5; // 太く見やすく
-            ctx.strokeStyle = color;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.shadowBlur = 0;
+        /**
+         * パスそのものを描画する（フチ付き）
+         */
+        function drawPathLine(coords, color, isAnimating = false) {
+            if (coords.length < 2) return;
+
+            // フチ
+            ctx.lineWidth = 10;
+            ctx.strokeStyle = '#5c4b51';
             ctx.beginPath();
-            if(coords.length > 0) ctx.moveTo(coords[0].x, coords[0].y);
+            ctx.moveTo(coords[0].x, coords[0].y);
             for (let i = 1; i < coords.length; i++) ctx.lineTo(coords[i].x, coords[i].y);
             ctx.stroke();
+
+            // メイン
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = color;
+            if (isAnimating) {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = color;
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         }
 
         function animateSinglePath(pathData, onComplete) {
             isAnimating = true;
             let totalLength = 0;
             const segments = [];
-            for(let i=0; i<pathData.coords.length-1; i++) {
-                const dx = pathData.coords[i+1].x - pathData.coords[i].x;
-                const dy = pathData.coords[i+1].y - pathData.coords[i].y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                segments.push({ start: pathData.coords[i], end: pathData.coords[i+1], length: dist });
+            for (let i = 0; i < pathData.coords.length - 1; i++) {
+                const dx = pathData.coords[i + 1].x - pathData.coords[i].x;
+                const dy = pathData.coords[i + 1].y - pathData.coords[i].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                segments.push({ start: pathData.coords[i], end: pathData.coords[i + 1], length: dist });
                 totalLength += dist;
             }
 
-            let currentDist = 0;
-            const duration = 3000; 
             const startTime = performance.now();
             const color = lineColors[pathData.startIndex % lineColors.length];
             
             function loop(now) {
                 const elapsed = now - startTime;
-                currentDist = (elapsed / duration) * totalLength;
-                if(currentDist > totalLength) currentDist = totalLength;
+                const duration = animationDuration;
+                let currentDist = (elapsed / duration) * totalLength;
+                if (currentDist > totalLength) currentDist = totalLength;
 
-                drawBoard(); 
-                
-                ctx.lineWidth = 6; // アニメーション中はさらに太く
+                drawBoard();
+
+                ctx.lineWidth = 6;
                 ctx.strokeStyle = color;
-                ctx.shadowBlur = 10; // 発光表現
-                ctx.shadowColor = color;
+                ctx.shadowBlur = 0;
                 ctx.beginPath();
                 ctx.moveTo(segments[0].start.x, segments[0].start.y);
 
@@ -627,7 +780,6 @@
                     }
                 }
                 ctx.stroke();
-                ctx.shadowBlur = 0;
 
                 if (currentDist < totalLength) {
                     requestAnimationFrame(loop);
@@ -649,13 +801,13 @@
             const endResult = results[pathData.endIndex];
             const msgBox = document.getElementById('result-message');
             const msgText = document.getElementById('result-text');
-            msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-bold">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-blue-500 text-3xl">${startName}</span>番 は...</div><div class="text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${endResult}</div>`;
+            msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-bold">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-blue-500 text-3xl">${escapeHtml(startName)}</span>番 は...</div><div class="text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${escapeHtml(endResult)}</div>`;
             msgBox.classList.remove('hidden');
             msgBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         function checkAllRevealed() {
-            if (revealed.every(r => r === true)) {
+            if (revealed.slice(0, currentCount).every(r => r === true)) {
                 setTimeout(() => showSummary(), 1500);
             }
         }
@@ -669,7 +821,7 @@
                 const result = results[pathData.endIndex];
                 const li = document.createElement('li');
                 li.className = 'flex items-center justify-between p-3 bg-pink-50 rounded-xl border border-pink-100';
-                li.innerHTML = `<div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-white border border-pink-200 flex items-center justify-center font-black text-pink-500 shadow-sm">${i+1}</span><span class="text-gray-400 text-sm">➔</span><span class="font-bold text-gray-700 text-lg">${result}</span></div>`;
+                li.innerHTML = `<div class="flex items-center gap-3"><span class="px-3 h-8 rounded-full bg-white border border-pink-200 flex items-center justify-center font-black text-pink-500 shadow-sm text-sm">${escapeHtml(names[i])}</span><span class="text-gray-400 text-sm">➔</span><span class="font-bold text-gray-700 text-lg">${escapeHtml(result)}</span></div>`;
                 list.appendChild(li);
             }
             modal.classList.remove('hidden');
@@ -679,25 +831,22 @@
             document.getElementById('summary-modal').classList.add('hidden');
         }
 
-        // クリック判定: CSSの縮小を考慮して座標変換が必要
-        canvas.addEventListener('click', (e) => {
+        function handleCanvasInput(clientX, clientY) {
             if (isAnimating) return;
-            
-            // 実際の表示サイズと論理サイズの比率を計算
+
             const rect = canvas.getBoundingClientRect();
             const scaleX = logicalWidth / rect.width;
             const scaleY = logicalHeight / rect.height;
 
-            // 論理座標系でのクリック位置
-            const clickX = (e.clientX - rect.left) * scaleX;
-            const clickY = (e.clientY - rect.top) * scaleY;
+            const clickX = (clientX - rect.left) * scaleX;
+            const clickY = (clientY - rect.top) * scaleY;
 
             if (clickY < HEADER_HEIGHT + 40) {
                 const spacing = (logicalWidth - PADDING_SIDE * 2) / Math.max(1, currentCount - 1);
-                const threshold = Math.min(40, spacing / 2); // 判定範囲
+                const threshold = Math.min(40, spacing / 2);
 
                 let clickedCol = -1;
-                for(let i=0; i<currentCount; i++) {
+                for (let i = 0; i < currentCount; i++) {
                     const cx = getColX(i);
                     if (Math.abs(clickX - cx) < threshold) {
                         clickedCol = i;
@@ -711,7 +860,17 @@
                     animateSinglePath(pathData);
                 }
             }
+        }
+
+        canvas.addEventListener('click', (e) => {
+            handleCanvasInput(e.clientX, e.clientY);
         });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleCanvasInput(touch.clientX, touch.clientY);
+        }, { passive: false });
 
         async function revealAll() {
             if(isAnimating) return;
@@ -734,11 +893,11 @@
             checkAllRevealed();
         }
 
+        let resizeTimer;
         window.addEventListener('resize', () => {
-            if(!document.getElementById('game-panel').classList.contains('hidden')) {
-                // リサイズ時は再計算せずにstyleの自動調整に任せる（再描画するとアニメーションが飛ぶため）
-                // ただし極端な変更に対応するためリロード推奨だが、ここでは簡易的に再描画
-                // resizeCanvas(); 
+            if (!document.getElementById('game-panel').classList.contains('hidden') && !isAnimating) {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(resizeCanvas, 200);
             }
         });
 
