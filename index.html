@@ -48,19 +48,18 @@
             border: 6px solid #5c4b51; /* 太い縁取りでPOP感を出す */
             border-radius: 2rem;
             box-shadow: 8px 8px 0px #ffbdcb; /* ステッカー風の影 */
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
+            padding: 24px;
+            /* 修正：中央揃えとはみ出し防止を解除し、中身が切れないようにする */
         }
 
         canvas {
             cursor: pointer;
+            touch-action: none;
             display: block;
             width: 100%;
             height: auto;
             max-width: 100%;
+            image-rendering: -webkit-optimize-contrast; /* より鮮明に表示 */
         }
 
         /* ぷるんとしたボタン */
@@ -131,9 +130,20 @@
             background-color: rgba(255, 133, 161, 0.3);
             backdrop-filter: blur(8px);
         }
+
+        /* キャラクターのサイズを強制固定（スマホでの巨大化防止） */
+        header img {
+            max-width: 75px !important;
+            height: auto !important;
+        }
+        @media (min-width: 768px) {
+            header img {
+                max-width: 120px !important;
+            }
+        }
     </style>
 </head>
-<body class="p-4 pt-0 md:p-8 md:pt-1 pb-40 min-h-screen relative">
+<body class="p-4 pt-10 md:p-8 md:pt-10 pb-40 min-h-screen relative">
 
     <!-- 背景デコ -->
     <div class="pop-deco text-4xl" style="top: 10%; left: 5%; color: var(--pop-pink); animation-delay: 0s;"><i class="fas fa-heart"></i></div>
@@ -141,27 +151,27 @@
     <div class="pop-deco text-3xl" style="bottom: 20%; left: 8%; color: var(--pop-blue); animation-delay: -2s;"><i class="fas fa-cloud"></i></div>
     <div class="pop-deco text-4xl" style="bottom: 10%; right: 10%; color: var(--pop-green); animation-delay: -3s;"><i class="fas fa-gift"></i></div>
 
-    <header class="mt-4 mb-2 text-center animate-pop-in relative">
-        <div class="flex flex-row items-center justify-center gap-4 px-4 overflow-hidden">
-            <!-- 広報キャラクター画像 (スマホでも横並び・さらに小さく) -->
-            <div class="relative w-16 h-auto md:w-28 filter drop-shadow-xl animate-float mt-2 shrink-0">
-                <img src="assets/koho.png" alt="広報（お土産配布係）" class="w-full h-auto object-contain">
-                <div class="absolute -top-1 -right-2 bg-yellow-400 text-gray-800 font-black text-[8px] px-1.5 py-0.5 rounded-full border border-gray-800 rotate-12 shadow-sm whitespace-nowrap">
-                    配るよ！
+    <header class="mt-2 mb-2 text-center animate-pop-in relative">
+        <div class="flex flex-row items-center justify-center gap-2 md:gap-4 px-2 overflow-visible max-w-full">
+            <!-- 広報キャラクター画像 (スマホでは確実に小さく固定: 70px) -->
+            <div class="relative w-[70px] md:w-[120px] filter drop-shadow-lg animate-float shrink-0 self-center">
+                <img src="assets/koho.png" alt="広報" class="w-full h-auto object-contain">
+                <div class="absolute -top-1 -right-1 bg-yellow-400 text-gray-800 font-black text-[8px] px-1.5 py-0.5 rounded-full border border-gray-800 rotate-12 shadow-sm whitespace-nowrap z-20">
+                    お土産配るよ！
                 </div>
             </div>
 
-            <div class="text-left">
-                <!-- タイトル (ふわふわアニメーション) -->
+            <div class="text-left py-2">
+                <!-- タイトル (ゆらぎ) -->
                 <div class="inline-block relative animate-float" style="animation-delay: -0.5s;">
-                    <h1 class="text-2xl md:text-5xl font-black text-white relative z-10 py-1.5 px-4 italic" style="-webkit-text-stroke: 2px #5c4b51; text-shadow: 4px 4px 0px #5c4b51;">
-                        あみだくじ★
+                    <h1 class="text-3xl md:text-5xl font-black relative z-10 py-2 px-6 tracking-wide">
+                        <span style="background: linear-gradient(180deg, #ff85a1 0%, #ff5a8d 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(2px 2px 0px #5c4b51);">あみだくじ</span><span style="-webkit-text-fill-color: #ffd93d; filter: drop-shadow(2px 2px 0px #5c4b51);">★</span>
                     </h1>
-                    <div class="absolute inset-0 bg-pink-400 -rotate-2 rounded-lg -z-10 border-2 border-gray-800"></div>
+                    <div class="absolute inset-0 bg-white -rotate-1 rounded-2xl -z-10 border-4 border-gray-800" style="box-shadow: 4px 4px 0px #5c4b51;"></div>
                 </div>
-                <!-- メッセージ (さらにズレてふわふわ) -->
-                <div class="mt-2 animate-float" style="animation-delay: -1.2s;">
-                    <p class="text-gray-600 font-black bg-white border-2 border-gray-800 inline-block px-3 py-1 rounded-full shadow-[2px_2px_0px_#5c4b51] text-[10px] md:text-xs">
+                <!-- メッセージ -->
+                <div class="mt-1 animate-float" style="animation-delay: -1.2s;">
+                    <p class="text-gray-600 font-black bg-white border-2 border-gray-800 inline-block px-3 py-1 rounded-full shadow-[2px_2px_0px_#5c4b51] text-[9px] md:text-xs">
                         何が当たるかな？ 🎁
                     </p>
                 </div>
@@ -197,11 +207,11 @@
                 <div class="flex flex-wrap gap-3 mb-4 items-end mt-2">
                     <div class="flex-1 min-w-[140px]">
                         <label class="text-xs text-yellow-700 font-bold ml-2">なにが当たる？</label>
-                        <input type="text" id="bulk-name" placeholder="例: 🍰 ケーキ" class="w-full border-2 border-yellow-200 rounded-2xl px-4 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-white font-bold text-gray-700 placeholder-yellow-200 transition-all" onkeydown="if(event.key==='Enter') addBulkItem()">
+                        <input type="text" id="bulk-name" placeholder="例: 🍰 ケーキ" class="w-full border-2 border-yellow-200 rounded-2xl px-4 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-white font-bold text-gray-700 placeholder-yellow-200 transition-all" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('bulk-count').select()}">
                     </div>
                     <div class="w-24">
                         <label class="text-xs text-yellow-700 font-bold ml-2">いくつ？</label>
-                        <input type="number" id="bulk-count" value="1" min="1" class="w-full border-2 border-yellow-200 rounded-2xl px-3 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 text-center bg-white font-bold text-gray-700">
+                        <input type="number" id="bulk-count" value="1" min="1" class="w-full border-2 border-yellow-200 rounded-2xl px-3 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 text-center bg-white font-bold text-gray-700" onkeydown="if(event.key==='Enter') addBulkItem()">
                     </div>
                     <button onclick="addBulkItem()" class="btn-pop bg-yellow-400 text-white font-bold px-6 py-3 rounded-2xl shadow-md h-[52px] border-b-4 border-yellow-500 active:border-b-0 active:translate-y-1">
                         <i class="fas fa-plus"></i> 追加
@@ -226,9 +236,9 @@
             <div class="flex items-center justify-center gap-3 mb-6">
                 <span class="text-sm font-bold text-gray-500"><i class="fas fa-gauge mr-1"></i>速さ</span>
                 <div class="flex gap-2">
-                    <button onclick="setSpeed('slow')" id="speed-slow" class="btn-pop px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500">おそい</button>
-                    <button onclick="setSpeed('normal')" id="speed-normal" class="btn-pop px-4 py-2 rounded-full text-sm font-bold border-2 border-pink-400 bg-pink-400 text-white">ふつう</button>
-                    <button onclick="setSpeed('fast')" id="speed-fast" class="btn-pop px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500">はやい</button>
+                    <button onclick="setSpeed('slow')" id="speed-slow" class="px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500 transition-all">おそい</button>
+                    <button onclick="setSpeed('normal')" id="speed-normal" class="px-4 py-2 rounded-full text-sm font-bold border-2 border-pink-400 bg-pink-400 text-white transition-all">ふつう</button>
+                    <button onclick="setSpeed('fast')" id="speed-fast" class="px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500 transition-all">はやい</button>
                 </div>
             </div>
 
@@ -273,9 +283,9 @@
             </div>
 
             <!-- 結果表示エリア -->
-            <div id="result-message" class="hidden bg-white p-6 rounded-[2rem] shadow-xl border-4 border-pink-300 animate-fade-in text-center relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-yellow-300 to-blue-300"></div>
-                <p id="result-text" class="text-xl text-gray-700 font-bold relative z-10"></p>
+            <div id="result-message" class="hidden bg-white p-6 rounded-[2rem] shadow-xl border-4 border-pink-300 animate-fade-in text-center relative overflow-visible">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-yellow-300 to-blue-300 rounded-t-[2rem]"></div>
+                <div id="result-text" class="text-xl text-gray-700 font-bold relative z-10"></div>
             </div>
         </div>
 
@@ -320,6 +330,19 @@
             return arr;
         }
 
+        function drawRoundRect(ctx, x, y, w, h, r) {
+            if (ctx.roundRect) {
+                ctx.roundRect(x, y, w, h, r);
+            } else {
+                ctx.moveTo(x + r, y);
+                ctx.arcTo(x + w, y, x + w, y + h, r);
+                ctx.arcTo(x + w, y + h, x, y + h, r);
+                ctx.arcTo(x, y + h, x, y, r);
+                ctx.arcTo(x, y, x + w, y, r);
+                ctx.closePath();
+            }
+        }
+
         function escapeHtml(str) {
             const div = document.createElement('div');
             div.textContent = str;
@@ -347,8 +370,8 @@
         const COL_WIDTH = 60; // 1列あたりの理想幅
         const MIN_LOGICAL_WIDTH = 300;
         const HEADER_HEIGHT = 80;
-        const FOOTER_HEIGHT = 100; // 結果が見切れないように十分確保
-        const PADDING_SIDE = 40;
+        const FOOTER_HEIGHT = 180; // 下部が見切れないようさらに余裕を持たせた（角丸クリッピング対策）
+        const PADDING_SIDE = 60;
         
         const colors = [
             '#ff99c8', '#fcf6bd', '#d0f4de', '#a9def9', '#e4c1f9', 
@@ -499,24 +522,24 @@
         // --- 描画・リサイズ処理（核心部分） ---
 
         function resizeCanvas() {
+            const container = document.querySelector('.canvas-container');
             const dpr = window.devicePixelRatio || 1;
             
-            // 1. 論理サイズを決定
-            logicalWidth = Math.max(MIN_LOGICAL_WIDTH, (currentCount * COL_WIDTH) + (PADDING_SIDE * 2));
-            logicalHeight = Math.max(600, logicalWidth * 0.6); 
+            // 1. 描画の「土台」となる幅をコンテナの実際の幅に合わせる
+            // 人数による計算（COL_WIDTH）とコンテナ幅の大きい方を採用
+            const contentWidth = (currentCount * COL_WIDTH) + (PADDING_SIDE * 2);
+            logicalWidth = Math.max(container.offsetWidth - (currentCount <= 5 ? 40 : 0), contentWidth, MIN_LOGICAL_WIDTH);
+            logicalHeight = Math.max(800, logicalWidth * 0.8); // 縦にゆとりを持たせる
             
-            // 2. キャンバスの内部解像度を高精細にする
+            // 2. 内部解像度を高精細にセット（リサイズ時のみ実行して負荷を軽減）
             canvas.width = logicalWidth * dpr;
             canvas.height = logicalHeight * dpr;
             
-            // 3. 表示サイズ（CSS）を固定
-            canvas.style.width = logicalWidth + "px";
-            canvas.style.height = logicalHeight + "px";
+            // 3. 表示サイズ（CSS）— 幅はコンテナに合わせ、アスペクト比を維持
+            canvas.style.width = '100%';
+            canvas.style.height = 'auto';
+            canvas.style.aspectRatio = `${logicalWidth} / ${logicalHeight}`;
             
-            // 4. スケールを適用（これがないとぼやける）
-            ctx.resetTransform();
-            ctx.scale(dpr, dpr);
-
             drawBoard();
         }
 
@@ -526,11 +549,11 @@
             return PADDING_SIDE + index * spacing;
         }
 
-        /**
-         * 描画の主要関数
-         * @param {Object} currentPathInfo - 現在アニメーション中のデータがあれば渡す
-         */
         function drawBoard(currentPathInfo = null) {
+            const dpr = window.devicePixelRatio || 1;
+            
+            // スケールだけは描画のたびに確実に適用
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0); 
             ctx.clearRect(0, 0, logicalWidth, logicalHeight);
             
             const lineTop = HEADER_HEIGHT;
@@ -547,7 +570,7 @@
             const radius = baseSize / 2;
             const fontSize = Math.max(14, radius * 0.7);
 
-            // 1. 縦線（少し太めに）
+            // 1. 縦線
             ctx.lineWidth = 6;
             ctx.strokeStyle = '#ffdee6'; 
             for (let i = 0; i < currentCount; i++) {
@@ -595,7 +618,7 @@
                         distRem = 0;
                     }
                 }
-                drawPathLine(pathCoords, color, true); // trueで発光エフェクト
+                drawPathLine(pathCoords, color);
             }
 
             // 5. ノードと結果の描画
@@ -640,24 +663,23 @@
                 ctx.fillStyle = revealed[i] ? '#d1d5db' : lineColor;
                 ctx.fill();
 
-                // --- 結果ボックス (下) ---
+                // ボックス本体
                 const isRevealed = revealedResults[i];
-                const boxW = Math.max(46, colSpacing * 0.9);
-                const boxH = FOOTER_HEIGHT - 30;
-                const boxY = lineBottom + 15;
-
+                const boxW = Math.min(Math.max(46, colSpacing * 0.9), PADDING_SIDE * 2 - 8);
+                const boxH = 72; // 高さを固定して見切れを防止
+                const boxY = lineBottom + 20; // フッターのゆとり分、少し下げる
+                
                 // ボックスの影（ステッカー風）
                 ctx.fillStyle = '#5c4b51';
                 ctx.beginPath();
-                if (ctx.roundRect) ctx.roundRect(x - boxW/2 + 4, boxY + 4, boxW, boxH, 12);
+                drawRoundRect(ctx, x - boxW/2 + 4, boxY + 4, boxW, boxH, 12);
                 ctx.fill();
-
-                // ボックス本体
+                
                 ctx.fillStyle = isRevealed ? '#fff' : '#fff9f0';
                 ctx.strokeStyle = '#5c4b51';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
-                if (ctx.roundRect) ctx.roundRect(x - boxW/2, boxY, boxW, boxH, 12);
+                drawRoundRect(ctx, x - boxW/2, boxY, boxW, boxH, 12);
                 ctx.fill();
                 ctx.stroke();
 
@@ -714,7 +736,7 @@
         /**
          * パスそのものを描画する（フチ付き）
          */
-        function drawPathLine(coords, color, isAnimating = false) {
+        function drawPathLine(coords, color) {
             if (coords.length < 2) return;
 
             // フチ
@@ -728,12 +750,7 @@
             // メイン
             ctx.lineWidth = 6;
             ctx.strokeStyle = color;
-            if (isAnimating) {
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = color;
-            }
             ctx.stroke();
-            ctx.shadowBlur = 0;
         }
 
         function animateSinglePath(pathData, onComplete) {
@@ -757,29 +774,7 @@
                 let currentDist = (elapsed / duration) * totalLength;
                 if (currentDist > totalLength) currentDist = totalLength;
 
-                drawBoard();
-
-                ctx.lineWidth = 6;
-                ctx.strokeStyle = color;
-                ctx.shadowBlur = 0;
-                ctx.beginPath();
-                ctx.moveTo(segments[0].start.x, segments[0].start.y);
-
-                let distRem = currentDist;
-                for(let seg of segments) {
-                    if(distRem <= 0) break;
-                    if(distRem >= seg.length) {
-                        ctx.lineTo(seg.end.x, seg.end.y);
-                        distRem -= seg.length;
-                    } else {
-                        const ratio = distRem / seg.length;
-                        const mx = seg.start.x + (seg.end.x - seg.start.x) * ratio;
-                        const my = seg.start.y + (seg.end.y - seg.start.y) * ratio;
-                        ctx.lineTo(mx, my);
-                        distRem = 0;
-                    }
-                }
-                ctx.stroke();
+                drawBoard({ segments, currentDist, color });
 
                 if (currentDist < totalLength) {
                     requestAnimationFrame(loop);
@@ -803,7 +798,7 @@
             const msgText = document.getElementById('result-text');
             msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-bold">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-blue-500 text-3xl">${escapeHtml(startName)}</span>番 は...</div><div class="text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${escapeHtml(endResult)}</div>`;
             msgBox.classList.remove('hidden');
-            msgBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(() => msgBox.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
         }
 
         function checkAllRevealed() {
@@ -889,7 +884,7 @@
             const msgBox = document.getElementById('result-message');
             document.getElementById('result-text').textContent = "全員の結果を表示しました！";
             msgBox.classList.remove('hidden');
-            msgBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(() => msgBox.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
             checkAllRevealed();
         }
 
