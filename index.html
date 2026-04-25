@@ -26,6 +26,38 @@
             background-size: 32px 32px;
             color: #5c4b51;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            z-index: -1;
+            pointer-events: none;
+            border-radius: 999px;
+            filter: blur(8px);
+            opacity: 0.9;
+        }
+
+        body::before {
+            width: 320px;
+            height: 320px;
+            top: -110px;
+            right: -70px;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(255, 217, 61, 0.6), transparent 55%),
+                radial-gradient(circle at 65% 60%, rgba(255, 133, 161, 0.45), transparent 60%);
+        }
+
+        body::after {
+            width: 300px;
+            height: 300px;
+            bottom: -120px;
+            left: -110px;
+            background:
+                radial-gradient(circle at 40% 35%, rgba(110, 187, 253, 0.35), transparent 55%),
+                radial-gradient(circle at 70% 70%, rgba(107, 203, 119, 0.25), transparent 60%);
         }
 
         /* ポップなフローティング装飾 */
@@ -49,7 +81,9 @@
             border-radius: 2rem;
             box-shadow: 8px 8px 0px #ffbdcb; /* ステッカー風の影 */
             padding: 24px;
-            /* 修正：中央揃えとはみ出し防止を解除し、中身が切れないようにする */
+            background-image:
+                linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255, 249, 252, 0.98) 100%),
+                radial-gradient(circle at top left, rgba(255, 217, 61, 0.15), transparent 30%);
         }
 
         canvas {
@@ -90,10 +124,81 @@
 
         /* POPなパネル */
         .pop-card {
-            background: var(--pop-white);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,248,251,0.98) 100%);
             border: 6px solid #5c4b51;
             border-radius: 2.5rem;
             box-shadow: 12px 12px 0px #ffd93d; /* 黄色のオフセット影 */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pop-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at top right, rgba(255, 217, 61, 0.14), transparent 28%),
+                radial-gradient(circle at bottom left, rgba(110, 187, 253, 0.08), transparent 24%);
+            pointer-events: none;
+        }
+
+        .soft-panel {
+            background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,247,250,0.95) 100%);
+            border: 3px dashed #f7b7cb;
+            border-radius: 1.5rem;
+        }
+
+        .helper-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 999px;
+            border: 3px solid #5c4b51;
+            background: #fffdf5;
+            box-shadow: 4px 4px 0px rgba(92, 75, 81, 0.18);
+            font-size: 0.9rem;
+            font-weight: 900;
+        }
+
+        .mini-stat {
+            background: rgba(255, 255, 255, 0.92);
+            border: 3px solid #f7d84c;
+            border-radius: 1.35rem;
+            padding: 0.9rem 1rem;
+            box-shadow: 0 10px 20px rgba(255, 133, 161, 0.08);
+            text-align: center;
+        }
+
+        .mini-stat span {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 900;
+            color: #c2788b;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.2rem;
+        }
+
+        .mini-stat strong {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #5c4b51;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.75rem;
+            align-items: end;
+            margin-top: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .input-grid {
+                grid-template-columns: minmax(0, 1fr) 96px auto;
+            }
         }
 
         /* アニメーション */
@@ -175,6 +280,7 @@
                         何が当たるかな？ 🎁
                     </p>
                 </div>
+                <p class="mt-3 text-xs md:text-sm font-black text-pink-500 tracking-[0.18em]">OMIYAGE LUCKY BOARD</p>
             </div>
         </div>
     </header>
@@ -183,9 +289,15 @@
 
         <!-- 設定エリア -->
         <div id="setup-panel" class="pop-card p-6 md:p-10 animate-fade-in">
+            <div class="relative z-10 mb-6 flex justify-center md:justify-start">
+                <div class="helper-note text-pink-500">
+                    <i class="fas fa-sparkles text-yellow-400"></i>
+                    みんなで選ぶと、もっとたのしい抽選タイム
+                </div>
+            </div>
             
             <!-- 上段：人数設定 -->
-            <div class="flex flex-col items-center justify-center mb-8 pb-6 border-b-2 border-dashed border-pink-200">
+            <div class="relative z-10 flex flex-col items-center justify-center mb-8 pb-6 border-b-2 border-dashed border-pink-200">
                 <label class="font-bold text-xl text-gray-600 mb-4 flex items-center">
                     <span class="bg-blue-100 text-blue-500 rounded-full w-8 h-8 flex items-center justify-center mr-2"><i class="fas fa-users"></i></span>
                     参加人数を決めてね
@@ -199,21 +311,21 @@
             </div>
 
             <!-- 中段：商品設定 -->
-            <div class="bg-yellow-50 p-6 rounded-[1.5rem] mb-8 border-2 border-yellow-200 relative">
+            <div class="relative z-10 bg-yellow-50/80 backdrop-blur-sm p-6 rounded-[1.5rem] mb-8 border-2 border-yellow-200 relative">
                 <div class="absolute -top-4 left-6 bg-yellow-400 text-white font-bold px-4 py-1 rounded-full text-sm shadow-md transform -rotate-2">
                     <i class="fas fa-gift mr-1"></i> 商品リスト
                 </div>
 
-                <div class="flex flex-wrap gap-3 mb-4 items-end mt-2">
-                    <div class="flex-1 min-w-[140px]">
+                <div class="input-grid mb-4">
+                    <div class="min-w-0">
                         <label class="text-xs text-yellow-700 font-bold ml-2">なにが当たる？</label>
                         <input type="text" id="bulk-name" placeholder="例: 🍰 ケーキ" class="w-full border-2 border-yellow-200 rounded-2xl px-4 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-white font-bold text-gray-700 placeholder-yellow-200 transition-all" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('bulk-count').select()}">
                     </div>
-                    <div class="w-24">
+                    <div class="w-full sm:w-24">
                         <label class="text-xs text-yellow-700 font-bold ml-2">いくつ？</label>
                         <input type="number" id="bulk-count" value="1" min="1" class="w-full border-2 border-yellow-200 rounded-2xl px-3 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 text-center bg-white font-bold text-gray-700" onkeydown="if(event.key==='Enter') addBulkItem()">
                     </div>
-                    <button onclick="addBulkItem()" class="btn-pop bg-yellow-400 text-white font-bold px-6 py-3 rounded-2xl shadow-md h-[52px] border-b-4 border-yellow-500 active:border-b-0 active:translate-y-1">
+                    <button onclick="addBulkItem()" class="btn-pop bg-yellow-400 text-white font-bold px-6 py-3 rounded-2xl shadow-md h-[52px] border-b-4 border-yellow-500 active:border-b-0 active:translate-y-1 w-full sm:w-auto">
                         <i class="fas fa-plus"></i> 追加
                     </button>
                 </div>
@@ -230,10 +342,26 @@
                 <p class="text-right text-xs text-yellow-600 font-bold mt-2 mr-2">
                     ※入力が人数より少ない分は「★」になります
                 </p>
+
+                <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div class="mini-stat">
+                        <span>参加人数</span>
+                        <strong id="preview-people">4人</strong>
+                    </div>
+                    <div class="mini-stat">
+                        <span>おみやげ</span>
+                        <strong id="preview-prizes">0個</strong>
+                    </div>
+                    <div class="mini-stat">
+                        <span>★の数</span>
+                        <strong id="preview-blanks">4個</strong>
+                    </div>
+                </div>
+                <p id="preview-message" class="mt-4 text-sm font-black text-yellow-700 bg-white/80 border border-yellow-200 rounded-full px-4 py-3 text-center shadow-sm">まだ商品が入っていないよ。追加するとワクワク度アップ！</p>
             </div>
 
             <!-- アニメーション速度 -->
-            <div class="flex items-center justify-center gap-3 mb-6">
+            <div class="relative z-10 flex items-center justify-center gap-3 mb-6 flex-wrap">
                 <span class="text-sm font-bold text-gray-500"><i class="fas fa-gauge mr-1"></i>速さ</span>
                 <div class="flex gap-2">
                     <button onclick="setSpeed('slow')" id="speed-slow" class="px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500 transition-all">おそい</button>
@@ -252,6 +380,12 @@
 
         <!-- あみだくじ表示エリア -->
         <div id="game-panel" class="hidden space-y-6 animate-fade-in pb-20">
+            <div class="soft-panel p-4 text-center">
+                <p class="text-sm md:text-base font-black text-pink-500">
+                    <i class="fas fa-hand-pointer text-yellow-400 mr-2"></i>
+                    上のまるをタップすると、ひとりずつ結果が見られるよ
+                </p>
+            </div>
             
             <div class="flex flex-wrap justify-between items-center bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border-2 border-pink-100 gap-3">
                 <button onclick="resetView()" class="text-pink-400 hover:text-pink-600 font-bold px-3 py-1 btn-pop">
@@ -349,17 +483,46 @@
             return div.innerHTML;
         }
 
+        function updateSpeedButtons(activeSpeed) {
+            const baseClass = 'px-4 py-2 rounded-full text-sm font-bold border-2 transition-all';
+            ['slow', 'normal', 'fast'].forEach(speed => {
+                const btn = document.getElementById(`speed-${speed}`);
+                const stateClass = speed === activeSpeed
+                    ? 'border-pink-400 bg-pink-400 text-white shadow-md shadow-pink-100'
+                    : 'border-blue-200 bg-blue-50 text-blue-500';
+                btn.className = `${baseClass} ${stateClass}`;
+            });
+        }
+
         function setSpeed(speed) {
             const speeds = { slow: 5000, normal: 3000, fast: 1200 };
-            animationDuration = speeds[speed];
-            ['slow', 'normal', 'fast'].forEach(s => {
-                const btn = document.getElementById(`speed-${s}`);
-                if (s === speed) {
-                    btn.className = btn.className.replace('border-blue-200 bg-blue-50 text-blue-500', 'border-pink-400 bg-pink-400 text-white');
-                } else {
-                    btn.className = btn.className.replace('border-pink-400 bg-pink-400 text-white', 'border-blue-200 bg-blue-50 text-blue-500');
-                }
-            });
+            animationDuration = speeds[speed] || speeds.normal;
+            updateSpeedButtons(speed);
+        }
+
+        function getPrizeStats() {
+            const totalPrizes = bulkItems.reduce((sum, item) => sum + item.count, 0);
+            const blankCount = Math.max(0, currentCount - totalPrizes);
+            const overflowCount = Math.max(0, totalPrizes - currentCount);
+            return { totalPrizes, blankCount, overflowCount };
+        }
+
+        function updatePrizePreview() {
+            const { totalPrizes, blankCount, overflowCount } = getPrizeStats();
+            document.getElementById('preview-people').textContent = `${currentCount}人`;
+            document.getElementById('preview-prizes').textContent = `${totalPrizes}個`;
+            document.getElementById('preview-blanks').textContent = `${blankCount}個`;
+
+            const messageEl = document.getElementById('preview-message');
+            if (totalPrizes === 0) {
+                messageEl.textContent = 'まだ商品が入っていないよ。追加するとワクワク度アップ！';
+            } else if (overflowCount > 0) {
+                messageEl.textContent = `商品が ${overflowCount} 個ぶん多いので、スタート時にランダムで選ばれるよ。`;
+            } else if (blankCount > 0) {
+                messageEl.textContent = `あと ${blankCount} 枠ぶんは「★」になるよ。商品を増やすとぴったり揃えられるよ。`;
+            } else {
+                messageEl.textContent = 'ぴったり全員分そろったよ。きれいに配れる準備ばっちり！';
+            }
         }
 
         const canvas = document.getElementById('amidaCanvas');
@@ -390,10 +553,12 @@
         function init() {
             updateDisplays();
             updateBulkList();
+            updateSpeedButtons('normal');
         }
 
         function updateDisplays() {
             document.getElementById('count-input').value = currentCount;
+            updatePrizePreview();
         }
 
         function changeCount(delta) {
@@ -408,9 +573,8 @@
             const val = parseInt(document.getElementById('count-input').value);
             if (!isNaN(val) && val >= MIN_COUNT && val <= MAX_COUNT) {
                 currentCount = val;
-            } else {
-                updateDisplays();
             }
+            updateDisplays();
         }
 
         function addBulkItem() {
@@ -436,14 +600,16 @@
             listEl.innerHTML = '';
             if (bulkItems.length === 0) {
                 listEl.innerHTML = `<li class="text-gray-300 text-center py-6 flex flex-col items-center font-bold"><i class="fas fa-magic mb-2 text-yellow-200 text-3xl"></i><span>ここに商品を追加してね！</span></li>`;
+                updatePrizePreview();
                 return;
             }
             bulkItems.forEach((item, index) => {
                 const li = document.createElement('li');
-                li.className = 'flex justify-between items-center bg-yellow-50 px-4 py-3 rounded-xl border border-yellow-200 shadow-sm animate-fade-in';
-                li.innerHTML = `<div class="flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-white border-2 border-yellow-200 flex items-center justify-center text-yellow-500 font-bold text-lg shadow-sm"><i class="fas fa-gift"></i></span><span class="font-bold text-gray-700 text-lg">${escapeHtml(item.name)}</span><span class="text-yellow-600 text-xs font-bold bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">× ${item.count}</span></div><button onclick="removeBulkItem(${index})" class="text-red-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition"><i class="fas fa-times"></i></button>`;
+                li.className = 'flex justify-between items-center gap-3 bg-yellow-50 px-4 py-3 rounded-xl border border-yellow-200 shadow-sm animate-fade-in';
+                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-full bg-white border-2 border-yellow-200 flex items-center justify-center text-yellow-500 font-bold text-lg shadow-sm flex-shrink-0"><i class="fas fa-gift"></i></span><div class="min-w-0 flex-1"><span class="font-bold text-gray-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="text-yellow-600 text-xs font-bold bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200 inline-block mt-2">× ${item.count}</span></div></div><button onclick="removeBulkItem(${index})" class="text-red-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
                 listEl.appendChild(li);
             });
+            updatePrizePreview();
         }
 
         function generateAmida() {
@@ -893,6 +1059,18 @@
             if (!document.getElementById('game-panel').classList.contains('hidden') && !isAnimating) {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(resizeCanvas, 200);
+            }
+        });
+
+        document.getElementById('summary-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'summary-modal') {
+                closeSummary();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSummary();
             }
         });
 
