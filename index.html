@@ -10,21 +10,35 @@
         @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap');
         
         :root {
-            --pop-pink: #ff85a1;
-            --pop-yellow: #ffd93d;
-            --pop-blue: #6ebbfd;
-            --pop-green: #6bcb77;
-            --pop-white: #ffffff;
-            --pop-bg: #fff5f8;
+            --ink: #334155;
+            --muted: #64748b;
+            --line: #eadce5;
+            --rose: #ff5f93;
+            --pink: #ff86b7;
+            --peach: #ffc7a8;
+            --butter: #ffe681;
+            --sky: #8bd3ff;
+            --mint: #9ee6c4;
+            --lavender: #c7b8ff;
+            --milk: #fffafd;
+            --surface: rgba(255, 255, 255, 0.86);
+            --shadow: 0 24px 70px rgba(51, 65, 85, 0.13), 0 2px 8px rgba(255, 134, 183, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'M PLUS Rounded 1c', sans-serif;
-            background-color: var(--pop-bg);
-            background-image: 
-                radial-gradient(circle at 2px 2px, rgba(255, 133, 161, 0.15) 2px, transparent 0);
-            background-size: 32px 32px;
-            color: #5c4b51;
+            background-color: #fff7fb;
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(255, 95, 147, 0.14) 1px, transparent 0),
+                linear-gradient(120deg, rgba(255, 134, 183, 0.16), transparent 36%),
+                linear-gradient(240deg, rgba(139, 211, 255, 0.18), transparent 34%),
+                linear-gradient(180deg, #fff7fb 0%, #f8fcff 52%, #fffaf2 100%);
+            background-size: 24px 24px, auto, auto, auto;
+            color: var(--ink);
             overflow-x: hidden;
             position: relative;
         }
@@ -33,57 +47,124 @@
         body::after {
             content: '';
             position: fixed;
+            left: 0;
+            right: 0;
             z-index: -1;
             pointer-events: none;
-            border-radius: 999px;
-            filter: blur(8px);
-            opacity: 0.9;
         }
 
         body::before {
-            width: 320px;
-            height: 320px;
-            top: -110px;
-            right: -70px;
-            background:
-                radial-gradient(circle at 30% 30%, rgba(255, 217, 61, 0.6), transparent 55%),
-                radial-gradient(circle at 65% 60%, rgba(255, 133, 161, 0.45), transparent 60%);
+            top: 0;
+            height: 12px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--pink) 0 36px,
+                var(--butter) 36px 72px,
+                var(--sky) 72px 108px,
+                var(--mint) 108px 144px
+            );
         }
 
         body::after {
-            width: 300px;
-            height: 300px;
-            bottom: -120px;
-            left: -110px;
-            background:
-                radial-gradient(circle at 40% 35%, rgba(110, 187, 253, 0.35), transparent 55%),
-                radial-gradient(circle at 70% 70%, rgba(107, 203, 119, 0.25), transparent 60%);
+            bottom: 0;
+            height: 10px;
+            background: linear-gradient(90deg, var(--lavender), var(--pink), var(--peach), var(--butter));
+            opacity: 0.55;
         }
 
-        /* ポップなフローティング装飾 */
         .pop-deco {
             position: fixed;
             pointer-events: none;
             z-index: 0;
-            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.05));
-            animation: popFloating 6s ease-in-out infinite;
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border: 1px solid rgba(255, 134, 183, 0.28);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow: 0 16px 34px rgba(51, 65, 85, 0.09);
+            opacity: 0.8;
+            animation: stickerFloat 7s ease-in-out infinite;
         }
-        @keyframes popFloating {
-            0%, 100% { transform: translateY(0) rotate(-5deg) scale(1); }
-            50% { transform: translateY(-20px) rotate(5deg) scale(1.1); }
+
+        @keyframes stickerFloat {
+            0%, 100% { transform: translateY(0) rotate(-4deg); }
+            50% { transform: translateY(-12px) rotate(4deg); }
+        }
+
+        @media (max-width: 700px) {
+            .pop-deco {
+                display: none;
+            }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border: 1px solid rgba(255, 134, 183, 0.34);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 24px rgba(255, 134, 183, 0.16);
+            color: var(--rose);
+            font-size: 0.68rem;
+            font-weight: 900;
+            padding: 0.3rem 0.65rem;
+            white-space: nowrap;
+        }
+
+        .hero-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.05em;
+            color: var(--ink);
+            font-size: clamp(2.2rem, 9vw, 4.6rem);
+            font-weight: 900;
+            letter-spacing: 0;
+            line-height: 0.95;
+            text-shadow: 0 4px 0 rgba(255, 230, 129, 0.65);
+        }
+
+        .hero-title-main {
+            background: linear-gradient(90deg, #ff4f92 0%, #ff8f70 46%, #7a7cf6 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-title-star {
+            color: var(--butter);
+            -webkit-text-fill-color: var(--butter);
+            filter: drop-shadow(0 3px 0 rgba(255, 95, 147, 0.34));
+        }
+
+        .hero-kicker {
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
         }
 
         .canvas-container {
             position: relative;
             width: 100%;
-            background: var(--pop-white);
-            border: 6px solid #5c4b51; /* 太い縁取りでPOP感を出す */
-            border-radius: 2rem;
-            box-shadow: 8px 8px 0px #ffbdcb; /* ステッカー風の影 */
-            padding: 24px;
-            background-image:
-                linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255, 249, 252, 0.98) 100%),
-                radial-gradient(circle at top left, rgba(255, 217, 61, 0.15), transparent 30%);
+            overflow: hidden;
+            padding: clamp(12px, 3vw, 24px);
+            border: 1px solid rgba(234, 220, 229, 0.95);
+            border-radius: 8px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 251, 253, 0.92)),
+                repeating-linear-gradient(90deg, rgba(139, 211, 255, 0.1) 0 1px, transparent 1px 48px);
+            box-shadow: var(--shadow);
+        }
+
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--pink), var(--butter), var(--sky), var(--mint));
         }
 
         canvas {
@@ -93,98 +174,109 @@
             width: 100%;
             height: auto;
             max-width: 100%;
-            image-rendering: -webkit-optimize-contrast; /* より鮮明に表示 */
+            image-rendering: -webkit-optimize-contrast;
         }
 
-        /* ぷるんとしたボタン */
         .btn-pop {
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 3px solid #5c4b51;
-            box-shadow: 4px 4px 0px #5c4b51;
+            border: 0 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 12px 24px rgba(51, 65, 85, 0.12);
             font-weight: 900;
-        }
-        /* ふわふわ浮遊アニメーション */
-        .animate-float {
-            animation: float 3s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
         }
 
-        /* ぷるんとしたボタンアニメーション */
-        .btn-pop:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0px #5c4b51;
-        }
         .btn-pop:hover {
             transform: translateY(-2px);
-            box-shadow: 6px 6px 0px #5c4b51;
+            box-shadow: 0 18px 32px rgba(51, 65, 85, 0.16);
+            filter: saturate(1.04);
         }
 
-        /* POPなパネル */
+        .btn-pop:active {
+            transform: translateY(1px) scale(0.99);
+            box-shadow: 0 8px 16px rgba(51, 65, 85, 0.12);
+        }
+
+        .btn-pop:focus-visible,
+        input:focus-visible {
+            outline: 3px solid rgba(139, 211, 255, 0.58);
+            outline-offset: 3px;
+        }
+
+        .animate-float {
+            animation: float 5s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+
         .pop-card {
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,248,251,0.98) 100%);
-            border: 6px solid #5c4b51;
-            border-radius: 2.5rem;
-            box-shadow: 12px 12px 0px #ffd93d; /* 黄色のオフセット影 */
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(234, 220, 229, 0.9);
+            border-radius: 8px !important;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 253, 0.88)),
+                linear-gradient(90deg, rgba(255, 230, 129, 0.22), rgba(139, 211, 255, 0.16));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
         }
 
         .pop-card::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background:
-                radial-gradient(circle at top right, rgba(255, 217, 61, 0.14), transparent 28%),
-                radial-gradient(circle at bottom left, rgba(110, 187, 253, 0.08), transparent 24%);
+            inset: 0 0 auto 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--pink), var(--butter), var(--sky), var(--mint), var(--lavender));
             pointer-events: none;
         }
 
         .soft-panel {
-            background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,247,250,0.95) 100%);
-            border: 3px dashed #f7b7cb;
-            border-radius: 1.5rem;
+            border: 1px solid rgba(234, 220, 229, 0.9);
+            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.82);
+            box-shadow: 0 16px 36px rgba(51, 65, 85, 0.08);
+            backdrop-filter: blur(12px);
         }
 
         .helper-note {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.75rem 1rem;
+            padding: 0.65rem 0.95rem;
+            border: 1px solid rgba(255, 134, 183, 0.28);
             border-radius: 999px;
-            border: 3px solid #5c4b51;
-            background: #fffdf5;
-            box-shadow: 4px 4px 0px rgba(92, 75, 81, 0.18);
+            background: rgba(255, 255, 255, 0.84);
+            box-shadow: 0 12px 26px rgba(255, 134, 183, 0.12);
+            color: var(--rose);
             font-size: 0.9rem;
             font-weight: 900;
         }
 
         .mini-stat {
-            background: rgba(255, 255, 255, 0.92);
-            border: 3px solid #f7d84c;
-            border-radius: 1.35rem;
-            padding: 0.9rem 1rem;
-            box-shadow: 0 10px 20px rgba(255, 133, 161, 0.08);
+            border: 1px solid rgba(234, 220, 229, 0.95);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.82);
+            box-shadow: 0 12px 28px rgba(51, 65, 85, 0.07);
+            padding: 0.85rem 1rem;
             text-align: center;
         }
 
         .mini-stat span {
             display: block;
+            color: var(--muted);
             font-size: 0.72rem;
             font-weight: 900;
-            color: #c2788b;
             letter-spacing: 0.08em;
             margin-bottom: 0.2rem;
         }
 
         .mini-stat strong {
             display: block;
-            font-size: 1.2rem;
+            color: var(--ink);
+            font-size: 1.25rem;
             font-weight: 900;
-            color: #5c4b51;
         }
 
         .input-grid {
@@ -201,18 +293,55 @@
             }
         }
 
-        /* アニメーション */
-        .animate-pop-in {
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        #setup-panel,
+        #game-panel {
+            scroll-margin-top: 24px;
         }
+
+        #bulk-name,
+        #bulk-count,
+        #count-input {
+            color: var(--ink);
+        }
+
+        #bulk-name,
+        #bulk-count {
+            border-color: rgba(234, 220, 229, 0.95) !important;
+            border-radius: 8px !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        #bulk-name:focus,
+        #bulk-count:focus {
+            border-color: rgba(255, 95, 147, 0.5) !important;
+            box-shadow: 0 0 0 5px rgba(255, 134, 183, 0.14);
+        }
+
+        #prize-lineup,
+        #result-message,
+        #summary-modal > div {
+            border: 1px solid rgba(234, 220, 229, 0.95) !important;
+            border-radius: 8px !important;
+            box-shadow: var(--shadow);
+        }
+
+        #summary-modal > div {
+            overflow: hidden;
+        }
+
+        .animate-pop-in {
+            animation: popIn 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
         @keyframes popIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: translateY(10px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
+            animation: fadeIn 0.36s ease-out forwards;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -221,125 +350,118 @@
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: var(--pop-bg);
+            background: rgba(255, 250, 253, 0.9);
             border-radius: 10px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: var(--pop-pink);
-            border: 2px solid #5c4b51;
+            background: linear-gradient(180deg, var(--pink), var(--sky));
             border-radius: 10px;
         }
         
         .modal-overlay {
-            background-color: rgba(255, 133, 161, 0.3);
-            backdrop-filter: blur(8px);
+            background-color: rgba(255, 247, 251, 0.58);
+            backdrop-filter: blur(12px);
         }
 
-        /* キャラクターのサイズを強制固定（スマホでの巨大化防止） */
         header img {
-            max-width: 75px !important;
+            max-width: 78px !important;
             height: auto !important;
         }
+
         @media (min-width: 768px) {
             header img {
-                max-width: 120px !important;
+                max-width: 132px !important;
             }
         }
     </style>
 </head>
-<body class="p-4 pt-10 md:p-8 md:pt-10 pb-40 min-h-screen relative">
+<body class="p-4 pt-8 md:p-8 md:pt-10 pb-40 min-h-screen relative">
 
     <!-- 背景デコ -->
-    <div class="pop-deco text-4xl" style="top: 10%; left: 5%; color: var(--pop-pink); animation-delay: 0s;"><i class="fas fa-heart"></i></div>
-    <div class="pop-deco text-5xl" style="top: 15%; right: 5%; color: var(--pop-yellow); animation-delay: -1s;"><i class="fas fa-star"></i></div>
-    <div class="pop-deco text-3xl" style="bottom: 20%; left: 8%; color: var(--pop-blue); animation-delay: -2s;"><i class="fas fa-cloud"></i></div>
-    <div class="pop-deco text-4xl" style="bottom: 10%; right: 10%; color: var(--pop-green); animation-delay: -3s;"><i class="fas fa-gift"></i></div>
+    <div class="pop-deco text-2xl" style="top: 12%; left: 5%; color: var(--pink); animation-delay: 0s;"><i class="fas fa-heart"></i></div>
+    <div class="pop-deco text-3xl" style="top: 16%; right: 6%; color: var(--butter); animation-delay: -1s;"><i class="fas fa-star"></i></div>
+    <div class="pop-deco text-2xl" style="bottom: 22%; left: 8%; color: var(--sky); animation-delay: -2s;"><i class="fas fa-cloud"></i></div>
+    <div class="pop-deco text-2xl" style="bottom: 12%; right: 10%; color: var(--mint); animation-delay: -3s;"><i class="fas fa-gift"></i></div>
 
-    <header class="mt-2 mb-2 text-center animate-pop-in relative">
-        <div class="flex flex-row items-center justify-center gap-2 md:gap-4 px-2 overflow-visible max-w-full">
-            <!-- 広報キャラクター画像 (スマホでは確実に小さく固定: 70px) -->
-            <div class="relative w-[70px] md:w-[120px] filter drop-shadow-lg animate-float shrink-0 self-center">
+    <header class="mt-2 mb-5 text-center animate-pop-in relative">
+        <div class="flex flex-row items-center justify-center gap-3 md:gap-5 px-2 overflow-visible max-w-full">
+            <div class="relative w-[76px] md:w-[132px] filter drop-shadow-xl animate-float shrink-0 self-center">
                 <img src="assets/koho.png" alt="広報" class="w-full h-auto object-contain">
-                <div class="absolute -top-1 -right-1 bg-yellow-400 text-gray-800 font-black text-[8px] px-1.5 py-0.5 rounded-full border border-gray-800 rotate-12 shadow-sm whitespace-nowrap z-20">
-                    お土産配るよ！
+                <div class="hero-badge absolute -top-1 -right-3 rotate-6 z-20">
+                    <i class="fas fa-sparkles"></i> ラッキー係
                 </div>
             </div>
 
-            <div class="text-left py-2">
-                <!-- タイトル (ゆらぎ) -->
+            <div class="text-left py-2 min-w-0">
                 <div class="inline-block relative animate-float" style="animation-delay: -0.5s;">
-                    <h1 class="text-3xl md:text-5xl font-black relative z-10 py-2 px-6 tracking-wide">
-                        <span style="background: linear-gradient(180deg, #ff85a1 0%, #ff5a8d 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(2px 2px 0px #5c4b51);">あみだくじ</span><span style="-webkit-text-fill-color: #ffd93d; filter: drop-shadow(2px 2px 0px #5c4b51);">★</span>
+                    <h1 class="hero-title relative z-10 py-1">
+                        <span class="hero-title-main">あみだくじ</span><span class="hero-title-star">★</span>
                     </h1>
-                    <div class="absolute inset-0 bg-white -rotate-1 rounded-2xl -z-10 border-4 border-gray-800" style="box-shadow: 4px 4px 0px #5c4b51;"></div>
                 </div>
-                <!-- メッセージ -->
-                <div class="mt-1 animate-float" style="animation-delay: -1.2s;">
-                    <p class="text-gray-600 font-black bg-white border-2 border-gray-800 inline-block px-3 py-1 rounded-full shadow-[2px_2px_0px_#5c4b51] text-[9px] md:text-xs">
-                        何が当たるかな？ 🎁
-                    </p>
-                </div>
-                <p class="mt-3 text-xs md:text-sm font-black text-pink-500 tracking-[0.18em]">OMIYAGE LUCKY BOARD</p>
+                <p class="hero-kicker mt-2">OMIYAGE LUCKY BOARD</p>
+                <p class="mt-2 text-xs md:text-sm font-black text-slate-500">何が当たるかな？</p>
             </div>
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto relative z-10 mb-20">
+    <main class="max-w-5xl mx-auto relative z-10 mb-20">
 
         <!-- 設定エリア -->
-        <div id="setup-panel" class="pop-card p-6 md:p-10 animate-fade-in">
+        <div id="setup-panel" class="pop-card p-5 md:p-9 animate-fade-in">
             <div class="relative z-10 mb-6 flex justify-center md:justify-start">
-                <div class="helper-note text-pink-500">
+                <div class="helper-note">
                     <i class="fas fa-sparkles text-yellow-400"></i>
-                    みんなで選ぶと、もっとたのしい抽選タイム
+                    今日の運だめし、かわいくシャッフル
                 </div>
             </div>
             
             <!-- 上段：人数設定 -->
-            <div class="relative z-10 flex flex-col items-center justify-center mb-8 pb-6 border-b-2 border-dashed border-pink-200">
-                <label class="font-bold text-xl text-gray-600 mb-4 flex items-center">
-                    <span class="bg-blue-100 text-blue-500 rounded-full w-8 h-8 flex items-center justify-center mr-2"><i class="fas fa-users"></i></span>
+            <div class="relative z-10 flex flex-col items-center justify-center mb-8 pb-6 border-b border-pink-100/80">
+                <label class="font-black text-xl text-slate-700 mb-4 flex items-center">
+                    <span class="bg-sky-100 text-sky-500 rounded-lg w-8 h-8 flex items-center justify-center mr-2"><i class="fas fa-users"></i></span>
                     参加人数を決めてね
                 </label>
-                <div class="flex items-center bg-pink-50 rounded-2xl p-2 shadow-inner gap-4 border-2 border-pink-100">
-                    <button onclick="changeCount(-1)" class="btn-pop w-12 h-12 rounded-xl bg-white text-pink-500 font-black text-2xl shadow-sm border border-pink-100 flex-shrink-0">-</button>
-                    <input type="number" id="count-input" value="4" min="2" max="100" onchange="updateCountFromInput()" class="w-24 text-center font-black text-4xl text-gray-700 bg-transparent focus:outline-none focus:bg-white rounded-lg p-1">
-                    <button onclick="changeCount(1)" class="btn-pop w-12 h-12 rounded-xl bg-white text-pink-500 font-black text-2xl shadow-sm border border-pink-100 flex-shrink-0">+</button>
+                <div class="flex items-center bg-white/80 rounded-lg p-2 gap-3 border border-pink-100 shadow-sm">
+                    <button onclick="changeCount(-1)" class="btn-pop w-12 h-12 bg-white text-pink-500 font-black text-2xl flex-shrink-0" aria-label="人数を減らす">-</button>
+                    <input type="number" id="count-input" value="4" min="2" max="100" onchange="updateCountFromInput()" class="w-24 text-center font-black text-4xl bg-transparent focus:outline-none focus:bg-white rounded-lg p-1">
+                    <button onclick="changeCount(1)" class="btn-pop w-12 h-12 bg-pink-400 text-white font-black text-2xl flex-shrink-0" aria-label="人数を増やす">+</button>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">※画面に合わせて縮小表示されます</p>
+                <p class="text-xs text-slate-400 mt-2">※画面に合わせて縮小表示されます</p>
             </div>
 
             <!-- 中段：商品設定 -->
-            <div class="relative z-10 bg-yellow-50/80 backdrop-blur-sm p-6 rounded-[1.5rem] mb-8 border-2 border-yellow-200 relative">
-                <div class="absolute -top-4 left-6 bg-yellow-400 text-white font-bold px-4 py-1 rounded-full text-sm shadow-md transform -rotate-2">
+            <div class="relative z-10 bg-white/60 backdrop-blur-sm p-5 md:p-6 rounded-lg mb-8 border border-yellow-100">
+                <div class="absolute -top-4 left-5 bg-gradient-to-r from-yellow-300 to-pink-300 text-slate-700 font-black px-4 py-1 rounded-full text-sm shadow-sm transform -rotate-1">
                     <i class="fas fa-gift mr-1"></i> 商品リスト
                 </div>
 
                 <div class="input-grid mb-4">
                     <div class="min-w-0">
-                        <label class="text-xs text-yellow-700 font-bold ml-2">なにが当たる？</label>
-                        <input type="text" id="bulk-name" placeholder="例: 🍰 ケーキ" class="w-full border-2 border-yellow-200 rounded-2xl px-4 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-white font-bold text-gray-700 placeholder-yellow-200 transition-all" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('bulk-count').select()}">
+                        <label class="text-xs text-slate-500 font-black ml-1">なにが当たる？</label>
+                        <input type="text" id="bulk-name" placeholder="例: 🍰 ケーキ" class="w-full border px-4 py-3 focus:outline-none bg-white/90 font-bold placeholder-pink-200 transition-all" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('bulk-count').select()}">
                     </div>
                     <div class="w-full sm:w-24">
-                        <label class="text-xs text-yellow-700 font-bold ml-2">いくつ？</label>
-                        <input type="number" id="bulk-count" value="1" min="1" class="w-full border-2 border-yellow-200 rounded-2xl px-3 py-3 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 text-center bg-white font-bold text-gray-700" onkeydown="if(event.key==='Enter') addBulkItem()">
+                        <label class="text-xs text-slate-500 font-black ml-1">いくつ？</label>
+                        <input type="number" id="bulk-count" value="1" min="1" class="w-full border px-3 py-3 focus:outline-none text-center bg-white/90 font-bold" onkeydown="if(event.key==='Enter') addBulkItem()">
                     </div>
-                    <button onclick="addBulkItem()" class="btn-pop bg-yellow-400 text-white font-bold px-6 py-3 rounded-2xl shadow-md h-[52px] border-b-4 border-yellow-500 active:border-b-0 active:translate-y-1 w-full sm:w-auto">
+                    <button onclick="addBulkItem()" class="btn-pop bg-gradient-to-r from-yellow-300 to-pink-300 text-slate-700 font-black px-6 py-3 h-[52px] w-full sm:w-auto">
                         <i class="fas fa-plus"></i> 追加
                     </button>
                 </div>
 
-                <div class="bg-white rounded-2xl p-4 shadow-inner border border-yellow-100 min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar">
+                <div class="bg-white/86 rounded-lg p-4 shadow-inner border border-pink-100 min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar">
                     <ul id="bulk-list" class="space-y-2">
-                        <li class="text-gray-300 text-center py-6 flex flex-col items-center font-bold">
-                            <i class="fas fa-magic mb-2 text-yellow-200 text-3xl"></i>
+                        <li class="text-slate-300 text-center py-6 flex flex-col items-center font-bold">
+                            <i class="fas fa-magic mb-2 text-pink-200 text-3xl"></i>
                             <span>ここに商品を追加してね！</span>
                         </li>
                     </ul>
                 </div>
                 
-                <p class="text-right text-xs text-yellow-600 font-bold mt-2 mr-2">
+                <p class="text-right text-xs text-slate-400 font-bold mt-2 mr-1">
                     ※入力が人数より少ない分は「★」になります
                 </p>
 
@@ -357,22 +479,22 @@
                         <strong id="preview-blanks">4個</strong>
                     </div>
                 </div>
-                <p id="preview-message" class="mt-4 text-sm font-black text-yellow-700 bg-white/80 border border-yellow-200 rounded-full px-4 py-3 text-center shadow-sm">まだ商品が入っていないよ。追加するとワクワク度アップ！</p>
+                <p id="preview-message" class="mt-4 text-sm font-black text-slate-600 bg-white/80 border border-pink-100 rounded-lg px-4 py-3 text-center shadow-sm">まだ商品が入っていないよ。追加するとワクワク度アップ！</p>
             </div>
 
             <!-- アニメーション速度 -->
             <div class="relative z-10 flex items-center justify-center gap-3 mb-6 flex-wrap">
-                <span class="text-sm font-bold text-gray-500"><i class="fas fa-gauge mr-1"></i>速さ</span>
+                <span class="text-sm font-black text-slate-500"><i class="fas fa-gauge mr-1 text-sky-400"></i>速さ</span>
                 <div class="flex gap-2">
-                    <button onclick="setSpeed('slow')" id="speed-slow" class="px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500 transition-all">おそい</button>
-                    <button onclick="setSpeed('normal')" id="speed-normal" class="px-4 py-2 rounded-full text-sm font-bold border-2 border-pink-400 bg-pink-400 text-white transition-all">ふつう</button>
-                    <button onclick="setSpeed('fast')" id="speed-fast" class="px-4 py-2 rounded-full text-sm font-bold border-2 border-blue-200 bg-blue-50 text-blue-500 transition-all">はやい</button>
+                    <button onclick="setSpeed('slow')" id="speed-slow" class="px-4 py-2 rounded-lg text-sm font-black border border-sky-100 bg-white/80 text-sky-500 transition-all">おそい</button>
+                    <button onclick="setSpeed('normal')" id="speed-normal" class="px-4 py-2 rounded-lg text-sm font-black border border-pink-300 bg-pink-400 text-white transition-all">ふつう</button>
+                    <button onclick="setSpeed('fast')" id="speed-fast" class="px-4 py-2 rounded-lg text-sm font-black border border-sky-100 bg-white/80 text-sky-500 transition-all">はやい</button>
                 </div>
             </div>
 
             <!-- 作成ボタン -->
             <div class="text-center">
-                <button onclick="generateAmida()" class="btn-pop w-full md:w-2/3 px-12 py-5 bg-gradient-to-r from-pink-400 to-rose-400 text-white text-xl rounded-full font-black shadow-lg shadow-pink-200 border-b-4 border-rose-500 active:border-b-0 active:translate-y-1 flex items-center justify-center mx-auto tracking-wider">
+                <button onclick="generateAmida()" class="btn-pop w-full md:w-2/3 px-12 py-5 bg-gradient-to-r from-pink-400 via-rose-400 to-orange-300 text-white text-xl font-black flex items-center justify-center mx-auto tracking-wide">
                     <i class="fas fa-wand-magic-sparkles mr-2"></i> スタート！
                 </button>
             </div>
@@ -381,32 +503,32 @@
         <!-- あみだくじ表示エリア -->
         <div id="game-panel" class="hidden space-y-6 animate-fade-in pb-20">
             <div class="soft-panel p-4 text-center">
-                <p class="text-sm md:text-base font-black text-pink-500">
+                <p class="text-sm md:text-base font-black text-slate-600">
                     <i class="fas fa-hand-pointer text-yellow-400 mr-2"></i>
                     上のまるをタップすると、ひとりずつ結果が見られるよ
                 </p>
             </div>
             
-            <div class="flex flex-wrap justify-between items-center bg-white/80 backdrop-blur p-4 rounded-2xl shadow-sm border-2 border-pink-100 gap-3">
-                <button onclick="resetView()" class="text-pink-400 hover:text-pink-600 font-bold px-3 py-1 btn-pop">
+            <div class="soft-panel flex flex-wrap justify-between items-center p-4 gap-3">
+                <button onclick="resetView()" class="text-pink-500 hover:text-pink-600 font-black px-3 py-2 btn-pop bg-white">
                     <i class="fas fa-chevron-left mr-1"></i> もどる
                 </button>
                 <div class="flex gap-3">
-                     <button onclick="resetPaths()" class="px-5 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition btn-pop text-sm">
+                     <button onclick="resetPaths()" class="px-5 py-2 bg-white text-slate-500 font-black hover:bg-slate-50 transition btn-pop text-sm">
                         <i class="fas fa-undo mr-1"></i> もう一回
                     </button>
-                    <button onclick="revealAll()" class="px-5 py-2 bg-blue-400 text-white rounded-xl font-bold hover:bg-blue-500 transition shadow-md shadow-blue-200 btn-pop text-sm">
+                    <button onclick="revealAll()" class="px-5 py-2 bg-sky-400 text-white font-black hover:bg-sky-500 transition btn-pop text-sm">
                         <i class="fas fa-eye mr-1"></i> 全部みる
                     </button>
                 </div>
             </div>
 
             <!-- 商品ラインナップ表示 -->
-            <div id="prize-lineup" class="bg-yellow-100 border-2 border-yellow-300 p-4 rounded-2xl text-center shadow-sm relative overflow-hidden">
-                <i class="fas fa-gift absolute -right-4 -bottom-4 text-6xl text-yellow-200/50 rotate-12"></i>
+            <div id="prize-lineup" class="bg-white/85 p-4 text-center relative overflow-hidden">
+                <i class="fas fa-gift absolute -right-4 -bottom-4 text-6xl text-pink-100 rotate-12"></i>
                 <div class="relative z-10">
-                    <span class="font-black text-yellow-700 mr-2 bg-white px-3 py-1 rounded-full text-sm inline-block mb-1">今回のラインナップ</span>
-                    <div id="lineup-text" class="text-gray-700 font-bold mt-1 text-lg"></div>
+                    <span class="font-black text-pink-500 mr-2 bg-pink-50 px-3 py-1 rounded-full text-sm inline-block mb-1">今回のラインナップ</span>
+                    <div id="lineup-text" class="text-slate-700 font-bold mt-1 text-lg"></div>
                 </div>
             </div>
 
@@ -417,26 +539,26 @@
             </div>
 
             <!-- 結果表示エリア -->
-            <div id="result-message" class="hidden bg-white p-6 rounded-[2rem] shadow-xl border-4 border-pink-300 animate-fade-in text-center relative overflow-visible">
-                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-yellow-300 to-blue-300 rounded-t-[2rem]"></div>
-                <div id="result-text" class="text-xl text-gray-700 font-bold relative z-10"></div>
+            <div id="result-message" class="hidden bg-white/90 p-6 animate-fade-in text-center relative overflow-visible">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-yellow-300 to-sky-300 rounded-t-lg"></div>
+                <div id="result-text" class="text-xl text-slate-700 font-bold relative z-10"></div>
             </div>
         </div>
 
         <!-- 結果一覧モーダル -->
         <div id="summary-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl border-4 border-pink-200 relative max-h-[90vh] flex flex-col">
-                <div class="p-6 text-center border-b-2 border-dashed border-pink-100">
+            <div class="bg-white/95 w-full max-w-lg relative max-h-[90vh] flex flex-col">
+                <div class="p-6 text-center border-b border-pink-100">
                     <h2 class="text-3xl font-black text-pink-500">
                         <i class="fas fa-crown text-yellow-400 mr-2"></i>結果発表
                     </h2>
-                    <p class="text-gray-400 font-bold text-sm mt-1">みんなの結果が出揃いました！</p>
+                    <p class="text-slate-400 font-bold text-sm mt-1">みんなの結果が出揃いました！</p>
                 </div>
                 <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
                     <ul id="summary-list" class="space-y-3"></ul>
                 </div>
-                <div class="p-6 text-center bg-pink-50 rounded-b-[2rem]">
-                    <button onclick="closeSummary()" class="btn-pop bg-pink-400 text-white font-bold px-8 py-3 rounded-full shadow-lg border-b-4 border-pink-500 active:border-b-0 active:translate-y-1">
+                <div class="p-6 text-center bg-pink-50">
+                    <button onclick="closeSummary()" class="btn-pop bg-pink-400 text-white font-black px-8 py-3">
                         閉じる
                     </button>
                 </div>
@@ -484,12 +606,12 @@
         }
 
         function updateSpeedButtons(activeSpeed) {
-            const baseClass = 'px-4 py-2 rounded-full text-sm font-bold border-2 transition-all';
+            const baseClass = 'px-4 py-2 rounded-lg text-sm font-black border transition-all';
             ['slow', 'normal', 'fast'].forEach(speed => {
                 const btn = document.getElementById(`speed-${speed}`);
                 const stateClass = speed === activeSpeed
-                    ? 'border-pink-400 bg-pink-400 text-white shadow-md shadow-pink-100'
-                    : 'border-blue-200 bg-blue-50 text-blue-500';
+                    ? 'border-pink-300 bg-gradient-to-r from-pink-400 to-orange-300 text-white shadow-md shadow-pink-100'
+                    : 'border-sky-100 bg-white/80 text-sky-500 hover:bg-sky-50';
                 btn.className = `${baseClass} ${stateClass}`;
             });
         }
@@ -537,12 +659,12 @@
         const PADDING_SIDE = 60;
         
         const colors = [
-            '#ff99c8', '#fcf6bd', '#d0f4de', '#a9def9', '#e4c1f9', 
-            '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff'
+            '#ffd1e4', '#fff0a8', '#c5f4da', '#cbeeff', '#ddd5ff',
+            '#ffc9ba', '#e7f7a5', '#bff2ed', '#ffd7f0', '#d8ecff'
         ];
         const lineColors = [
-            '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', 
-            '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e'
+            '#ff5f93', '#ff9f6e', '#f4c430', '#60cfa8', '#37bdf8',
+            '#7c83ff', '#b66dff', '#ff73c5', '#21b7a8', '#f9737a'
         ];
 
         let paths = []; 
@@ -599,14 +721,14 @@
             const listEl = document.getElementById('bulk-list');
             listEl.innerHTML = '';
             if (bulkItems.length === 0) {
-                listEl.innerHTML = `<li class="text-gray-300 text-center py-6 flex flex-col items-center font-bold"><i class="fas fa-magic mb-2 text-yellow-200 text-3xl"></i><span>ここに商品を追加してね！</span></li>`;
+                listEl.innerHTML = `<li class="text-slate-300 text-center py-6 flex flex-col items-center font-bold"><i class="fas fa-magic mb-2 text-pink-200 text-3xl"></i><span>ここに商品を追加してね！</span></li>`;
                 updatePrizePreview();
                 return;
             }
             bulkItems.forEach((item, index) => {
                 const li = document.createElement('li');
-                li.className = 'flex justify-between items-center gap-3 bg-yellow-50 px-4 py-3 rounded-xl border border-yellow-200 shadow-sm animate-fade-in';
-                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-full bg-white border-2 border-yellow-200 flex items-center justify-center text-yellow-500 font-bold text-lg shadow-sm flex-shrink-0"><i class="fas fa-gift"></i></span><div class="min-w-0 flex-1"><span class="font-bold text-gray-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="text-yellow-600 text-xs font-bold bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200 inline-block mt-2">× ${item.count}</span></div></div><button onclick="removeBulkItem(${index})" class="text-red-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
+                li.className = 'flex justify-between items-center gap-3 bg-white/86 px-4 py-3 rounded-lg border border-pink-100 shadow-sm animate-fade-in';
+                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-400 font-bold text-lg shadow-sm flex-shrink-0"><i class="fas fa-gift"></i></span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="text-slate-500 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block mt-2">× ${item.count}</span></div></div><button onclick="removeBulkItem(${index})" class="text-pink-400 hover:text-pink-500 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
                 listEl.appendChild(li);
             });
             updatePrizePreview();
@@ -737,8 +859,8 @@
             const fontSize = Math.max(14, radius * 0.7);
 
             // 1. 縦線
-            ctx.lineWidth = 6;
-            ctx.strokeStyle = '#ffdee6'; 
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#f2dbe6';
             for (let i = 0; i < currentCount; i++) {
                 const x = getColX(i);
                 ctx.beginPath();
@@ -795,10 +917,14 @@
                 const lineColor = lineColors[colorIdx];
                 
                 // --- 参加者アイコン (上) ---
-                // 外側の太い縁取り（ステッカー風）
+                ctx.beginPath();
+                ctx.arc(x + 2, HEADER_HEIGHT / 2 + 4, radius + 3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(51, 65, 85, 0.12)';
+                ctx.fill();
+
                 ctx.beginPath();
                 ctx.arc(x, HEADER_HEIGHT / 2, radius + 3, 0, Math.PI * 2);
-                ctx.fillStyle = '#5c4b51';
+                ctx.fillStyle = '#ffffff';
                 ctx.fill();
 
                 // 本体
@@ -806,6 +932,9 @@
                 ctx.arc(x, HEADER_HEIGHT / 2, radius, 0, Math.PI * 2);
                 ctx.fillStyle = revealed[i] ? '#e5e7eb' : bgColor;
                 ctx.fill();
+                ctx.strokeStyle = revealed[i] ? '#cbd5e1' : lineColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
                 
                 // 光沢（POP感を出す）
                 if (!revealed[i]) {
@@ -815,15 +944,18 @@
                     ctx.fill();
                 }
 
-                ctx.fillStyle = revealed[i] ? '#9ca3af' : '#5c4b51'; 
+                ctx.fillStyle = revealed[i] ? '#94a3b8' : '#334155';
                 ctx.font = `900 ${fontSize}px "M PLUS Rounded 1c"`;
                 ctx.fillText(`${i+1}`, x, HEADER_HEIGHT / 2);
                 
                 // スタート地点のポッチ
                 ctx.beginPath();
                 ctx.arc(x, lineTop, 6, 0, Math.PI * 2);
-                ctx.fillStyle = '#5c4b51';
+                ctx.fillStyle = '#ffffff';
                 ctx.fill();
+                ctx.strokeStyle = revealed[i] ? '#cbd5e1' : lineColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
                 ctx.beginPath();
                 ctx.arc(x, lineTop, 3, 0, Math.PI * 2);
                 ctx.fillStyle = revealed[i] ? '#d1d5db' : lineColor;
@@ -835,22 +967,22 @@
                 const boxH = 72; // 高さを固定して見切れを防止
                 const boxY = lineBottom + 20; // フッターのゆとり分、少し下げる
                 
-                // ボックスの影（ステッカー風）
-                ctx.fillStyle = '#5c4b51';
+                // ボックスの影
+                ctx.fillStyle = 'rgba(51, 65, 85, 0.12)';
                 ctx.beginPath();
-                drawRoundRect(ctx, x - boxW/2 + 4, boxY + 4, boxW, boxH, 12);
+                drawRoundRect(ctx, x - boxW/2 + 3, boxY + 5, boxW, boxH, 8);
                 ctx.fill();
                 
-                ctx.fillStyle = isRevealed ? '#fff' : '#fff9f0';
-                ctx.strokeStyle = '#5c4b51';
-                ctx.lineWidth = 3;
+                ctx.fillStyle = isRevealed ? '#fff' : '#fffaf3';
+                ctx.strokeStyle = isRevealed ? '#ff86b7' : '#eadce5';
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                drawRoundRect(ctx, x - boxW/2, boxY, boxW, boxH, 12);
+                drawRoundRect(ctx, x - boxW/2, boxY, boxW, boxH, 8);
                 ctx.fill();
                 ctx.stroke();
 
                 if (isRevealed) {
-                    ctx.fillStyle = '#ff5a8d'; // POPな強めのピンク
+                    ctx.fillStyle = '#ff5f93';
                     const result = results[i];
                     let resFontSize = Math.min(18, boxW / 3.5);
                     ctx.font = `900 ${resFontSize}px "M PLUS Rounded 1c"`;
@@ -859,7 +991,7 @@
                     const displayResult = result.length > maxChars ? result.substring(0, maxChars) + '..' : result;
                     ctx.fillText(displayResult, x, boxY + boxH/2);
                 } else {
-                    ctx.fillStyle = '#ff85a1';
+                    ctx.fillStyle = '#ff86b7';
                     ctx.font = `900 ${Math.min(28, boxW/1.8)}px "M PLUS Rounded 1c"`;
                     ctx.fillText("?", x, boxY + boxH/2);
                 }
@@ -906,15 +1038,15 @@
             if (coords.length < 2) return;
 
             // フチ
-            ctx.lineWidth = 10;
-            ctx.strokeStyle = '#5c4b51';
+            ctx.lineWidth = 11;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.96)';
             ctx.beginPath();
             ctx.moveTo(coords[0].x, coords[0].y);
             for (let i = 1; i < coords.length; i++) ctx.lineTo(coords[i].x, coords[i].y);
             ctx.stroke();
 
             // メイン
-            ctx.lineWidth = 6;
+            ctx.lineWidth = 7;
             ctx.strokeStyle = color;
             ctx.stroke();
         }
@@ -962,7 +1094,7 @@
             const endResult = results[pathData.endIndex];
             const msgBox = document.getElementById('result-message');
             const msgText = document.getElementById('result-text');
-            msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-bold">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-blue-500 text-3xl">${escapeHtml(startName)}</span>番 は...</div><div class="text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${escapeHtml(endResult)}</div>`;
+            msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-black">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-sky-500 text-3xl">${escapeHtml(startName)}</span>番 は...</div><div class="text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${escapeHtml(endResult)}</div>`;
             msgBox.classList.remove('hidden');
             setTimeout(() => msgBox.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
         }
@@ -981,8 +1113,8 @@
                 const pathData = calculatePath(i);
                 const result = results[pathData.endIndex];
                 const li = document.createElement('li');
-                li.className = 'flex items-center justify-between p-3 bg-pink-50 rounded-xl border border-pink-100';
-                li.innerHTML = `<div class="flex items-center gap-3"><span class="px-3 h-8 rounded-full bg-white border border-pink-200 flex items-center justify-center font-black text-pink-500 shadow-sm text-sm">${escapeHtml(names[i])}</span><span class="text-gray-400 text-sm">➔</span><span class="font-bold text-gray-700 text-lg">${escapeHtml(result)}</span></div>`;
+                li.className = 'flex items-center justify-between p-3 bg-pink-50/80 rounded-lg border border-pink-100';
+                li.innerHTML = `<div class="flex items-center gap-3"><span class="px-3 h-8 rounded-lg bg-white border border-pink-100 flex items-center justify-center font-black text-pink-500 shadow-sm text-sm">${escapeHtml(names[i])}</span><span class="text-slate-300 text-sm">➔</span><span class="font-bold text-slate-700 text-lg">${escapeHtml(result)}</span></div>`;
                 list.appendChild(li);
             }
             modal.classList.remove('hidden');
