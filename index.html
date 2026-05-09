@@ -149,6 +149,74 @@
             background-size: auto, 9px 9px;
         }
 
+        .game-bg-video-wrap {
+            position: absolute;
+            top: -2.75rem;
+            left: 50%;
+            width: 100vw;
+            height: clamp(350px, 39vw, 480px);
+            transform: translateX(-50%);
+            z-index: 0;
+            overflow: hidden;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            pointer-events: none;
+            isolation: isolate;
+        }
+
+        @media (max-width: 767px) {
+            .game-bg-video-wrap {
+                top: -2.25rem;
+            }
+        }
+
+        .game-bg-video,
+        .game-bg-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 64%, rgba(0, 0, 0, 0.64) 80%, transparent 100%);
+            mask-image: linear-gradient(180deg, #000 0%, #000 64%, rgba(0, 0, 0, 0.64) 80%, transparent 100%);
+        }
+
+        .game-bg-video {
+            z-index: -2;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.52;
+            filter: saturate(1.04) brightness(0.82);
+        }
+
+        .game-bg-overlay {
+            z-index: -1;
+            background-image:
+                linear-gradient(180deg, rgba(255, 247, 251, 0.28), rgba(255, 247, 251, 0.5)),
+                radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.18) 0.55px, transparent 0.9px);
+            background-size: auto, 9px 9px;
+        }
+
+        #game-panel {
+            position: relative;
+            isolation: isolate;
+        }
+
+        #game-panel > :not(.game-bg-video-wrap) {
+            position: relative;
+            z-index: 1;
+        }
+
+        #game-panel > .game-bg-video-wrap + * {
+            margin-top: 0 !important;
+        }
+
+        #game-panel .soft-panel,
+        #game-panel #prize-lineup {
+            background: rgba(255, 255, 255, 0.76) !important;
+        }
+
         @media (min-width: 768px) {
             .site-header {
                 margin: -2.5rem -2rem 1.75rem;
@@ -331,6 +399,23 @@
             padding: 0.18rem 0.42rem;
         }
 
+        .setup-footer-visual {
+            position: relative;
+            z-index: 8;
+            display: flex;
+            justify-content: center;
+            margin: -3.2rem auto -1.25rem;
+            pointer-events: none;
+        }
+
+        .setup-footer-visual img {
+            display: block;
+            width: min(100%, 760px);
+            max-height: clamp(180px, 28vw, 320px);
+            object-fit: contain;
+            filter: drop-shadow(0 18px 28px rgba(51, 65, 85, 0.16));
+        }
+
         @media (max-width: 820px) {
             .setup-mascot {
                 position: relative;
@@ -338,6 +423,14 @@
                 right: auto;
                 margin: -0.5rem auto 1.25rem;
                 width: 76px;
+            }
+
+            .setup-footer-visual {
+                margin-top: -2.1rem;
+            }
+
+            .setup-footer-visual img {
+                max-height: 210px;
             }
         }
 
@@ -380,9 +473,79 @@
             }
         }
 
+        .distribution-options {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.75rem;
+        }
+
+        @media (min-width: 640px) {
+            .distribution-options {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        .distribution-option {
+            position: relative;
+            display: block;
+            cursor: pointer;
+        }
+
+        .distribution-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .distribution-option-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 74px;
+            padding: 0.85rem;
+            border: 2px solid rgba(234, 220, 229, 0.95);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.78);
+            box-shadow: 0 12px 28px rgba(51, 65, 85, 0.07);
+            transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+        }
+
+        .distribution-option:hover .distribution-option-content {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 32px rgba(51, 65, 85, 0.1);
+        }
+
+        .distribution-option.is-active .distribution-option-content {
+            border-color: rgba(255, 95, 147, 0.7);
+            background: linear-gradient(135deg, rgba(255, 244, 250, 0.96), rgba(240, 249, 255, 0.92));
+            box-shadow: 0 18px 36px rgba(255, 134, 183, 0.16);
+        }
+
+        .distribution-option input:focus-visible + .distribution-option-content {
+            outline: 3px solid rgba(139, 211, 255, 0.58);
+            outline-offset: 3px;
+        }
+
+        .distribution-icon {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            border-radius: 8px;
+            background: #fff7fb;
+            color: var(--rose);
+            border: 1px solid rgba(255, 134, 183, 0.28);
+        }
+
         #setup-panel,
         #game-panel {
             scroll-margin-top: 24px;
+        }
+
+        .start-action {
+            position: relative;
+            z-index: 12;
         }
 
         #bulk-name,
@@ -552,10 +715,39 @@
                 </div>
                 
                 <p class="text-right text-xs text-slate-400 font-bold mt-2 mr-1">
-                    ※入力が人数より少ない分は「★」になります
+                    ※少ない分は「★」、多い分は配布方法に合わせて扱います
                 </p>
 
-                <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                <div class="mt-4 bg-white/72 border border-sky-100 rounded-lg p-4">
+                    <div class="flex items-center gap-2 text-slate-600 font-black text-sm mb-3">
+                        <i class="fas fa-shuffle text-sky-400"></i>
+                        配布方法
+                    </div>
+                    <div class="distribution-options" role="radiogroup" aria-label="配布方法">
+                        <label id="mode-lottery-option" class="distribution-option is-active">
+                            <input type="radio" name="distribution-mode" value="lottery" checked onchange="setDistributionMode('lottery')">
+                            <span class="distribution-option-content">
+                                <span class="distribution-icon"><i class="fas fa-dice"></i></span>
+                                <span class="min-w-0">
+                                    <span class="block text-slate-700 font-black">通常抽選</span>
+                                    <span class="block text-xs text-slate-400 font-bold mt-1">余りはランダムで外す</span>
+                                </span>
+                            </span>
+                        </label>
+                        <label id="mode-auto-option" class="distribution-option">
+                            <input type="radio" name="distribution-mode" value="auto" onchange="setDistributionMode('auto')">
+                            <span class="distribution-option-content">
+                                <span class="distribution-icon"><i class="fas fa-layer-group"></i></span>
+                                <span class="min-w-0">
+                                    <span class="block text-slate-700 font-black">自動振り分け</span>
+                                    <span class="block text-xs text-slate-400 font-bold mt-1">余りはセットにする</span>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid gap-3 sm:grid-cols-4">
                     <div class="mini-stat">
                         <span>参加人数</span>
                         <strong id="preview-people">4人</strong>
@@ -565,7 +757,11 @@
                         <strong id="preview-prizes">0個</strong>
                     </div>
                     <div class="mini-stat">
-                        <span>★の数</span>
+                        <span>配布</span>
+                        <strong id="preview-mode">通常</strong>
+                    </div>
+                    <div class="mini-stat">
+                        <span id="preview-balance-label">★の数</span>
                         <strong id="preview-blanks">4個</strong>
                     </div>
                 </div>
@@ -583,15 +779,26 @@
             </div>
 
             <!-- 作成ボタン -->
-            <div class="text-center">
+            <div class="text-center start-action">
                 <button onclick="generateAmida()" class="btn-pop w-full md:w-2/3 px-12 py-5 bg-gradient-to-r from-pink-400 via-rose-400 to-orange-300 text-white text-xl font-black flex items-center justify-center mx-auto tracking-wide">
                     <i class="fas fa-wand-magic-sparkles mr-2"></i> スタート！
                 </button>
+            </div>
+
+            <div class="setup-footer-visual" aria-hidden="true">
+                <img src="./ChatGPT Image 2026年5月9日 17_54_01.webp" alt="">
             </div>
         </div>
 
         <!-- あみだくじ表示エリア -->
         <div id="game-panel" class="hidden space-y-6 animate-fade-in pb-20">
+            <div class="game-bg-video-wrap" aria-hidden="true">
+                <video class="game-bg-video" autoplay muted loop playsinline preload="metadata">
+                    <source src="./おみやげ.mp4" type="video/mp4">
+                </video>
+                <div class="game-bg-overlay"></div>
+            </div>
+
             <div class="soft-panel p-4 text-center">
                 <p class="text-sm md:text-base font-black text-slate-600">
                     <i class="fas fa-hand-pointer text-yellow-400 mr-2"></i>
@@ -599,20 +806,6 @@
                 </p>
             </div>
             
-            <div class="soft-panel flex flex-wrap justify-between items-center p-4 gap-3">
-                <button onclick="resetView()" class="text-pink-500 hover:text-pink-600 font-black px-3 py-2 btn-pop bg-white">
-                    <i class="fas fa-chevron-left mr-1"></i> もどる
-                </button>
-                <div class="flex gap-3">
-                     <button onclick="resetPaths()" class="px-5 py-2 bg-white text-slate-500 font-black hover:bg-slate-50 transition btn-pop text-sm">
-                        <i class="fas fa-undo mr-1"></i> もう一回
-                    </button>
-                    <button onclick="revealAll()" class="px-5 py-2 bg-sky-400 text-white font-black hover:bg-sky-500 transition btn-pop text-sm">
-                        <i class="fas fa-eye mr-1"></i> 全部みる
-                    </button>
-                </div>
-            </div>
-
             <!-- 商品ラインナップ表示 -->
             <div id="prize-lineup" class="bg-white/85 p-4 text-center relative overflow-hidden">
                 <i class="fas fa-gift absolute -right-4 -bottom-4 text-6xl text-pink-100 rotate-12"></i>
@@ -626,6 +819,20 @@
             <div class="canvas-container">
                 <!-- キャンバス自体はstyle="width:100%"で縮小表示される -->
                 <canvas id="amidaCanvas"></canvas>
+            </div>
+
+            <div class="soft-panel flex flex-wrap justify-between items-center p-4 gap-3">
+                <button onclick="resetView()" class="text-pink-500 hover:text-pink-600 font-black px-3 py-2 btn-pop bg-white">
+                    <i class="fas fa-chevron-left mr-1"></i> もどる
+                </button>
+                <div class="flex gap-3">
+                     <button onclick="resetPaths()" class="px-5 py-2 bg-white text-slate-500 font-black hover:bg-slate-50 transition btn-pop text-sm">
+                        <i class="fas fa-undo mr-1"></i> もう一回
+                    </button>
+                    <button onclick="revealAll()" class="px-5 py-2 bg-sky-400 text-white font-black hover:bg-sky-500 transition btn-pop text-sm">
+                        <i class="fas fa-eye mr-1"></i> 全部みる
+                    </button>
+                </div>
             </div>
 
             <!-- 結果表示エリア -->
@@ -663,9 +870,10 @@
         let currentCount = 4;
 
         let names = [];
-        let results = [];
+        let resultBundles = [];
         let horizontalLines = [];
         let bulkItems = [];
+        let distributionMode = 'lottery';
         let animationDuration = 3000; // ms
 
         function shuffle(arr) {
@@ -695,6 +903,132 @@
             return div.innerHTML;
         }
 
+        function expandPrizeItems() {
+            const prizeItems = [];
+            bulkItems.forEach(item => {
+                for (let i = 0; i < item.count; i++) prizeItems.push(item.name);
+            });
+            return prizeItems;
+        }
+
+        function groupBundleItems(bundle) {
+            const grouped = [];
+            bundle.forEach(name => {
+                const existing = grouped.find(item => item.name === name);
+                if (existing) {
+                    existing.count += 1;
+                } else {
+                    grouped.push({ name, count: 1 });
+                }
+            });
+            return grouped;
+        }
+
+        function formatPrizeBundle(bundle) {
+            if (!bundle || bundle.length === 0) return '★';
+            return groupBundleItems(bundle)
+                .map(item => item.count > 1 ? `${item.name}×${item.count}` : item.name)
+                .join(' + ');
+        }
+
+        function formatPrizeBundleHtml(bundle, size = 'normal') {
+            if (!bundle || bundle.length === 0) {
+                return '<span class="text-slate-300">★</span>';
+            }
+
+            const grouped = groupBundleItems(bundle);
+            if (grouped.length === 1 && grouped[0].count === 1) {
+                return `<span>${escapeHtml(grouped[0].name)}</span>`;
+            }
+
+            const chipClass = size === 'large'
+                ? 'text-lg md:text-2xl px-4 py-2'
+                : 'text-sm md:text-base px-3 py-1.5';
+            return `<div class="flex flex-wrap justify-center gap-2">${grouped.map(item => {
+                const countBadge = item.count > 1 ? `<span class="ml-2 text-xs bg-yellow-100 text-slate-600 px-2 py-0.5 rounded-full">×${item.count}</span>` : '';
+                return `<span class="inline-flex items-center max-w-full rounded-lg bg-white border border-pink-100 text-pink-500 font-black shadow-sm ${chipClass}"><span class="truncate">${escapeHtml(item.name)}</span>${countBadge}</span>`;
+            }).join('')}</div>`;
+        }
+
+        function getCanvasResultLabel(bundle) {
+            if (!bundle || bundle.length === 0) return '★';
+            if (bundle.length === 1) return formatPrizeBundle(bundle);
+            return `${bundle.length}個セット`;
+        }
+
+        function buildStandardResultBundles(prizeItems) {
+            const bundles = prizeItems.map(name => [name]);
+            shuffle(bundles);
+            const selectedBundles = bundles.slice(0, currentCount);
+            while (selectedBundles.length < currentCount) selectedBundles.push([]);
+            return shuffle(selectedBundles);
+        }
+
+        function findBundleForExtraPrize(bundles, prizeName) {
+            const indexes = bundles.map((_, index) => index);
+            shuffle(indexes);
+            const minLength = Math.min(...bundles.map(bundle => bundle.length));
+            const shortestIndexes = indexes.filter(index => bundles[index].length === minLength);
+            const shortestMixedIndex = shortestIndexes.find(index => !bundles[index].includes(prizeName));
+            if (shortestMixedIndex !== undefined) return shortestMixedIndex;
+
+            const mixedIndexes = indexes
+                .filter(index => !bundles[index].includes(prizeName))
+                .sort((a, b) => bundles[a].length - bundles[b].length);
+            return mixedIndexes[0] ?? shortestIndexes[0] ?? 0;
+        }
+
+        function buildAutoResultBundles(prizeItems) {
+            if (prizeItems.length <= currentCount) {
+                return buildStandardResultBundles(prizeItems);
+            }
+
+            const pool = shuffle([...prizeItems]);
+            const bundles = Array.from({ length: currentCount }, () => []);
+            for (let i = 0; i < currentCount; i++) {
+                bundles[i].push(pool.pop());
+            }
+
+            while (pool.length > 0) {
+                const prizeName = pool.pop();
+                const targetIndex = findBundleForExtraPrize(bundles, prizeName);
+                bundles[targetIndex].push(prizeName);
+            }
+
+            return shuffle(bundles);
+        }
+
+        function buildResultBundles() {
+            const prizeItems = expandPrizeItems();
+            return distributionMode === 'auto'
+                ? buildAutoResultBundles(prizeItems)
+                : buildStandardResultBundles(prizeItems);
+        }
+
+        function summarizeBundles(bundles) {
+            const summary = {};
+            bundles.forEach(bundle => {
+                bundle.forEach(name => {
+                    summary[name] = (summary[name] || 0) + 1;
+                });
+            });
+            return summary;
+        }
+
+        function updateDistributionControls() {
+            const isAuto = distributionMode === 'auto';
+            document.getElementById('mode-lottery-option').classList.toggle('is-active', !isAuto);
+            document.getElementById('mode-auto-option').classList.toggle('is-active', isAuto);
+            document.querySelector('input[name="distribution-mode"][value="lottery"]').checked = !isAuto;
+            document.querySelector('input[name="distribution-mode"][value="auto"]').checked = isAuto;
+        }
+
+        function setDistributionMode(mode) {
+            distributionMode = mode === 'auto' ? 'auto' : 'lottery';
+            updateDistributionControls();
+            updatePrizePreview();
+        }
+
         function updateSpeedButtons(activeSpeed) {
             const baseClass = 'px-4 py-2 rounded-lg text-sm font-black border transition-all';
             ['slow', 'normal', 'fast'].forEach(speed => {
@@ -721,15 +1055,27 @@
 
         function updatePrizePreview() {
             const { totalPrizes, blankCount, overflowCount } = getPrizeStats();
+            const isAuto = distributionMode === 'auto';
             document.getElementById('preview-people').textContent = `${currentCount}人`;
             document.getElementById('preview-prizes').textContent = `${totalPrizes}個`;
-            document.getElementById('preview-blanks').textContent = `${blankCount}個`;
+            document.getElementById('preview-mode').textContent = isAuto ? '自動' : '通常';
+
+            const balanceLabel = document.getElementById('preview-balance-label');
+            if (overflowCount > 0) {
+                balanceLabel.textContent = isAuto ? 'セット追加' : '余り';
+                document.getElementById('preview-blanks').textContent = `${overflowCount}個`;
+            } else {
+                balanceLabel.textContent = '★の数';
+                document.getElementById('preview-blanks').textContent = `${blankCount}個`;
+            }
 
             const messageEl = document.getElementById('preview-message');
             if (totalPrizes === 0) {
                 messageEl.textContent = 'まだ商品が入っていないよ。追加するとワクワク度アップ！';
             } else if (overflowCount > 0) {
-                messageEl.textContent = `商品が ${overflowCount} 個ぶん多いので、スタート時にランダムで選ばれるよ。`;
+                messageEl.textContent = isAuto
+                    ? `余った ${overflowCount} 個は、ランダムな当たり枠にセットで入るよ。`
+                    : `商品が ${overflowCount} 個ぶん多いので、スタート時にランダムで選ばれるよ。`;
             } else if (blankCount > 0) {
                 messageEl.textContent = `あと ${blankCount} 枠ぶんは「★」になるよ。商品を増やすとぴったり揃えられるよ。`;
             } else {
@@ -765,6 +1111,7 @@
         function init() {
             updateDisplays();
             updateBulkList();
+            updateDistributionControls();
             updateSpeedButtons('normal');
         }
 
@@ -825,22 +1172,10 @@
         }
 
         function generateAmida() {
-            results = [];
-            bulkItems.forEach(item => {
-                for (let i = 0; i < item.count; i++) results.push(item.name);
-            });
-            const currentLen = results.length;
-            if (currentLen < currentCount) {
-                for (let i = currentLen; i < currentCount; i++) results.push("★");
-            } else if (currentLen > currentCount) {
-                shuffle(results);
-                results = results.slice(0, currentCount);
-            }
-            shuffle(results);
+            resultBundles = buildResultBundles();
 
-            const summary = {};
-            let hasItem = false;
-            results.forEach(r => { if (r !== "★") { summary[r] = (summary[r] || 0) + 1; hasItem = true; } });
+            const summary = summarizeBundles(resultBundles);
+            const hasItem = Object.keys(summary).length > 0;
             const summaryText = !hasItem ? "（商品なし...？）" : Object.entries(summary).map(([n, c]) => `${n}×${c}`).join(' / ');
             document.getElementById('lineup-text').textContent = summaryText;
 
@@ -1073,7 +1408,7 @@
 
                 if (isRevealed) {
                     ctx.fillStyle = '#ff5f93';
-                    const result = results[i];
+                    const result = getCanvasResultLabel(resultBundles[i]);
                     let resFontSize = Math.min(18, boxW / 3.5);
                     ctx.font = `900 ${resFontSize}px "M PLUS Rounded 1c"`;
                     
@@ -1181,10 +1516,10 @@
 
         function showResult(pathData) {
             const startName = names[pathData.startIndex];
-            const endResult = results[pathData.endIndex];
+            const endBundle = resultBundles[pathData.endIndex] || [];
             const msgBox = document.getElementById('result-message');
             const msgText = document.getElementById('result-text');
-            msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-black">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-sky-500 text-3xl">${escapeHtml(startName)}</span>番 は...</div><div class="text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${escapeHtml(endResult)}</div>`;
+            msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-black">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-sky-500 text-3xl">${escapeHtml(startName)}</span>番 は...</div><div class="text-3xl md:text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${formatPrizeBundleHtml(endBundle, 'large')}</div>`;
             msgBox.classList.remove('hidden');
             setTimeout(() => msgBox.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
         }
@@ -1201,10 +1536,10 @@
             list.innerHTML = '';
             for (let i = 0; i < currentCount; i++) {
                 const pathData = calculatePath(i);
-                const result = results[pathData.endIndex];
+                const resultBundle = resultBundles[pathData.endIndex] || [];
                 const li = document.createElement('li');
-                li.className = 'flex items-center justify-between p-3 bg-pink-50/80 rounded-lg border border-pink-100';
-                li.innerHTML = `<div class="flex items-center gap-3"><span class="px-3 h-8 rounded-lg bg-white border border-pink-100 flex items-center justify-center font-black text-pink-500 shadow-sm text-sm">${escapeHtml(names[i])}</span><span class="text-slate-300 text-sm">➔</span><span class="font-bold text-slate-700 text-lg">${escapeHtml(result)}</span></div>`;
+                li.className = 'p-3 bg-pink-50/80 rounded-lg border border-pink-100';
+                li.innerHTML = `<div class="flex items-start gap-3"><span class="px-3 h-8 rounded-lg bg-white border border-pink-100 flex items-center justify-center font-black text-pink-500 shadow-sm text-sm flex-shrink-0">${escapeHtml(names[i])}</span><span class="text-slate-300 text-sm pt-1">➔</span><div class="font-bold text-slate-700 text-lg min-w-0 flex-1">${formatPrizeBundleHtml(resultBundle)}</div></div>`;
                 list.appendChild(li);
             }
             modal.classList.remove('hidden');
