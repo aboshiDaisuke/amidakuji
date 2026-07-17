@@ -10,8 +10,8 @@
         @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap');
         
         :root {
-            --ink: #334155;
-            --muted: #64748b;
+            --ink: #2b3445;
+            --muted: #526077;
             --line: #eadce5;
             --rose: #ff5f93;
             --pink: #ff86b7;
@@ -75,28 +75,283 @@
         .pop-deco {
             position: fixed;
             pointer-events: none;
-            z-index: 2;
+            z-index: 1;
             display: grid;
             width: 42px;
             height: 42px;
             place-items: center;
-            border: 1px solid rgba(255, 134, 183, 0.28);
-            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            border-radius: 14px;
             background: rgba(255, 255, 255, 0.72);
-            box-shadow: 0 16px 34px rgba(51, 65, 85, 0.09);
-            opacity: 0.8;
-            animation: stickerFloat 7s ease-in-out infinite;
+            box-shadow: 0 8px 18px rgba(51, 65, 85, 0.08);
+            opacity: 0.55;
+            animation: stickerFloat 10s ease-in-out infinite;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+
+        .pop-deco.emoji {
+            border-radius: 50%;
+            font-size: 1.3rem;
         }
 
         @keyframes stickerFloat {
-            0%, 100% { transform: translateY(0) rotate(-4deg); }
-            50% { transform: translateY(-12px) rotate(4deg); }
+            0%, 100% { transform: translateY(0) rotate(-3deg); }
+            50% { transform: translateY(-8px) rotate(3deg); }
         }
 
-        @media (max-width: 700px) {
+        @media (max-width: 900px) {
             .pop-deco {
                 display: none;
             }
+        }
+
+        body.is-playing .pop-deco {
+            display: none;
+        }
+
+        /* 画面内ステッカー（角だけ・静止） */
+        .card-sticker {
+            position: absolute;
+            z-index: 3;
+            pointer-events: none;
+            user-select: none;
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            font-size: 1.35rem;
+            border: 2px solid #fff;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #fff, #fff7fb);
+            box-shadow: 0 6px 0 rgba(255, 134, 183, 0.14), 0 10px 20px rgba(51, 65, 85, 0.08);
+            opacity: 0.9;
+        }
+
+        .card-sticker.sm {
+            width: 36px;
+            height: 36px;
+            font-size: 1.05rem;
+            border-radius: 12px;
+        }
+
+        .card-sticker.blob {
+            border-radius: 45% 55% 50% 50% / 55% 40% 60% 45%;
+        }
+
+        /* 吹き出し（親が細くても1行で読める幅を確保） */
+        .speech-bubble {
+            position: absolute;
+            z-index: 8;
+            box-sizing: border-box;
+            width: max-content;
+            max-width: min(16rem, 70vw);
+            padding: 0.5rem 0.8rem;
+            border: 2px solid #fff;
+            border-radius: 1.15rem 1.15rem 1.15rem 0.35rem;
+            background: #fffefb;
+            box-shadow: 0 6px 0 rgba(255, 134, 183, 0.12), 0 10px 20px rgba(51, 65, 85, 0.08);
+            color: #c2416b;
+            font-size: 0.8rem;
+            font-weight: 900;
+            line-height: 1.35;
+            white-space: nowrap;
+            text-align: center;
+            animation: bubblePop 0.4s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+        }
+
+        .speech-bubble.is-multiline {
+            white-space: normal;
+            text-align: left;
+            line-break: strict;
+            word-break: keep-all;
+            overflow-wrap: anywhere;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            left: 12px;
+            bottom: -10px;
+            width: 14px;
+            height: 14px;
+            background: #ffeef6;
+            border-right: 3px solid #fff;
+            border-bottom: 3px solid #fff;
+            transform: rotate(45deg);
+        }
+
+        .speech-bubble.right::after {
+            left: auto;
+            right: 14px;
+        }
+
+        @keyframes bubblePop {
+            from { opacity: 0; transform: translateY(8px) scale(0.85); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* 紙吹雪 */
+        #confetti-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            top: -20px;
+            width: 10px;
+            height: 14px;
+            border-radius: 3px;
+            opacity: 0.95;
+            animation: confettiFall linear forwards;
+        }
+
+        .confetti-piece.circle {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+        }
+
+        .confetti-piece.emoji {
+            width: auto;
+            height: auto;
+            background: none !important;
+            font-size: 1rem;
+            border-radius: 0;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translate3d(0, -8vh, 0) rotate(0deg); opacity: 0.95; }
+            55% { opacity: 0.85; }
+            100% { transform: translate3d(var(--drift, 40px), 105vh, 0) rotate(540deg); opacity: 0; }
+        }
+
+        /* ゆるい登場 */
+        .animate-wiggle-in {
+            animation: wiggleIn 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+        }
+
+        @keyframes wiggleIn {
+            0% { opacity: 0; transform: scale(0.7) rotate(-6deg); }
+            60% { opacity: 1; transform: scale(1.06) rotate(3deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+
+        .animate-boing {
+            animation: boing 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) both;
+        }
+
+        @keyframes boing {
+            0% { transform: scale(0.6); }
+            55% { transform: scale(1.12); }
+            75% { transform: scale(0.94); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-jiggle {
+            animation: jiggle 0.55s ease both;
+        }
+
+        @keyframes jiggle {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(-4deg) scale(1.03); }
+            40% { transform: rotate(4deg) scale(1.03); }
+            60% { transform: rotate(-3deg); }
+            80% { transform: rotate(2deg); }
+        }
+
+        .count-pop {
+            animation: countPop 0.35s cubic-bezier(0.34, 1.5, 0.64, 1);
+        }
+
+        @keyframes countPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.22); }
+            100% { transform: scale(1); }
+        }
+
+        .game-mascot {
+            position: absolute;
+            right: 0.5rem;
+            bottom: -0.25rem;
+            z-index: 4;
+            width: 56px;
+            pointer-events: none;
+            opacity: 0.92;
+            filter: drop-shadow(0 8px 12px rgba(51, 65, 85, 0.12));
+            animation: float 7s ease-in-out infinite;
+        }
+
+        .game-mascot img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .game-mascot .speech-bubble {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .game-mascot {
+                width: 64px;
+                overflow: visible;
+            }
+            .game-mascot .speech-bubble {
+                display: block;
+                right: calc(100% + 6px);
+                bottom: 34px;
+                left: auto;
+                max-width: min(12rem, 40vw);
+                font-size: 0.75rem;
+                border-radius: 1rem 1rem 0.3rem 1rem;
+                opacity: 0.95;
+            }
+
+            .game-mascot .speech-bubble::after {
+                left: auto;
+                right: 10px;
+                bottom: -8px;
+            }
+        }
+
+        .start-action .btn-pop {
+            border-radius: 999px !important;
+            box-shadow: 0 7px 0 #e84a7a, 0 14px 28px rgba(255, 95, 147, 0.24) !important;
+        }
+
+        .start-action .btn-pop:hover {
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        .start-action .btn-pop:active {
+            transform: translateY(4px) scale(0.98);
+            box-shadow: 0 3px 0 #e84a7a, 0 8px 16px rgba(255, 95, 147, 0.2) !important;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .pop-deco,
+            .setup-mascot,
+            .game-mascot,
+            .animate-float,
+            .hero-logo-wrap,
+            .setup-footer-visual {
+                animation: none !important;
+            }
+        }
+
+        .result-burst {
+            animation: resultBurst 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+        }
+
+        @keyframes resultBurst {
+            0% { opacity: 0; transform: scale(0.7) rotate(-3deg); }
+            55% { opacity: 1; transform: scale(1.08) rotate(2deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
         }
 
         .hero-badge {
@@ -186,8 +441,8 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            opacity: 0.52;
-            filter: saturate(1.04) brightness(0.82);
+            opacity: 0.32;
+            filter: saturate(1.02) brightness(0.9);
         }
 
         .game-bg-overlay {
@@ -201,6 +456,7 @@
         #game-panel {
             position: relative;
             isolation: isolate;
+            padding-bottom: 0.5rem;
         }
 
         #game-panel > :not(.game-bg-video-wrap) {
@@ -249,6 +505,11 @@
             filter: drop-shadow(0 3px 0 rgba(255, 95, 147, 0.34));
         }
 
+        .hero-logo-wrap {
+            animation-duration: 4.5s;
+            will-change: transform;
+        }
+
         .hero-logo {
             display: block;
             width: min(78vw, 700px);
@@ -262,6 +523,15 @@
                 drop-shadow(0 16px 24px rgba(51, 65, 85, 0.2));
         }
 
+        .hero-logo-wrap.animate-float {
+            animation-name: logoFloat;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
         .hero-kicker {
             color: var(--muted);
             font-size: 0.76rem;
@@ -272,7 +542,7 @@
         }
 
         .hero-subcopy {
-            color: #475569;
+            color: #334155;
             -webkit-text-stroke: 0.35px rgba(255, 255, 255, 0.92);
             text-shadow: 0 0 7px rgba(255, 255, 255, 0.95), 0 2px 9px rgba(15, 23, 42, 0.2);
         }
@@ -282,19 +552,19 @@
             width: 100%;
             overflow: hidden;
             padding: clamp(12px, 3vw, 24px);
-            border: 1px solid rgba(234, 220, 229, 0.95);
-            border-radius: 8px;
+            border: 3px solid rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
             background:
                 linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 251, 253, 0.92)),
                 repeating-linear-gradient(90deg, rgba(139, 211, 255, 0.1) 0 1px, transparent 1px 48px);
-            box-shadow: var(--shadow);
+            box-shadow: 0 8px 0 rgba(255, 134, 183, 0.12), var(--shadow);
         }
 
         .canvas-container::before {
             content: '';
             position: absolute;
             inset: 0 0 auto 0;
-            height: 6px;
+            height: 8px;
             background: linear-gradient(90deg, var(--pink), var(--butter), var(--sky), var(--mint));
         }
 
@@ -310,21 +580,21 @@
 
         .btn-pop {
             border: 0 !important;
-            border-radius: 8px !important;
-            box-shadow: 0 12px 24px rgba(51, 65, 85, 0.12);
+            border-radius: 16px !important;
+            box-shadow: 0 6px 0 rgba(51, 65, 85, 0.12), 0 12px 24px rgba(51, 65, 85, 0.1);
             font-weight: 900;
             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
         }
 
         .btn-pop:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 18px 32px rgba(51, 65, 85, 0.16);
-            filter: saturate(1.04);
+            transform: translateY(-2px) rotate(-1deg);
+            box-shadow: 0 8px 0 rgba(51, 65, 85, 0.12), 0 18px 32px rgba(51, 65, 85, 0.14);
+            filter: saturate(1.08);
         }
 
         .btn-pop:active {
-            transform: translateY(1px) scale(0.99);
-            box-shadow: 0 8px 16px rgba(51, 65, 85, 0.12);
+            transform: translateY(3px) scale(0.98);
+            box-shadow: 0 2px 0 rgba(51, 65, 85, 0.12), 0 6px 12px rgba(51, 65, 85, 0.1);
         }
 
         .btn-pop:focus-visible,
@@ -344,13 +614,13 @@
 
         .pop-card {
             position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(234, 220, 229, 0.9);
-            border-radius: 8px !important;
+            overflow: visible;
+            border: 3px solid rgba(255, 255, 255, 0.98);
+            border-radius: 28px !important;
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 253, 0.88)),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 250, 253, 0.9)),
                 linear-gradient(90deg, rgba(255, 230, 129, 0.22), rgba(139, 211, 255, 0.16));
-            box-shadow: var(--shadow);
+            box-shadow: 0 10px 0 rgba(255, 134, 183, 0.14), var(--shadow);
             backdrop-filter: blur(16px);
         }
 
@@ -358,16 +628,18 @@
             content: '';
             position: absolute;
             inset: 0 0 auto 0;
-            height: 8px;
+            height: 10px;
+            border-radius: 28px 28px 0 0;
             background: linear-gradient(90deg, var(--pink), var(--butter), var(--sky), var(--mint), var(--lavender));
             pointer-events: none;
+            z-index: 1;
         }
 
         .soft-panel {
-            border: 1px solid rgba(234, 220, 229, 0.9);
-            border-radius: 8px !important;
-            background: rgba(255, 255, 255, 0.82);
-            box-shadow: 0 16px 36px rgba(51, 65, 85, 0.08);
+            border: 3px solid rgba(255, 255, 255, 0.95);
+            border-radius: 22px !important;
+            background: rgba(255, 255, 255, 0.86);
+            box-shadow: 0 8px 0 rgba(255, 134, 183, 0.1), 0 16px 36px rgba(51, 65, 85, 0.08);
             backdrop-filter: blur(12px);
         }
 
@@ -378,9 +650,9 @@
             padding: 0.65rem 0.95rem;
             border: 1px solid rgba(255, 134, 183, 0.28);
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.84);
-            box-shadow: 0 12px 26px rgba(255, 134, 183, 0.12);
-            color: var(--rose);
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 10px 22px rgba(255, 134, 183, 0.1);
+            color: #c2416b;
             font-size: 0.9rem;
             font-weight: 900;
         }
@@ -388,10 +660,11 @@
         .setup-mascot {
             position: absolute;
             top: 2.35rem;
-            right: clamp(2.25rem, 6vw, 4.75rem);
+            right: clamp(1.5rem, 5vw, 3.5rem);
             z-index: 5;
-            width: clamp(64px, 9vw, 96px);
-            filter: drop-shadow(0 18px 26px rgba(51, 65, 85, 0.16));
+            width: clamp(68px, 9vw, 96px);
+            overflow: visible;
+            filter: drop-shadow(0 14px 20px rgba(51, 65, 85, 0.14));
         }
 
         .setup-mascot .hero-badge {
@@ -399,12 +672,25 @@
             padding: 0.18rem 0.42rem;
         }
 
+        .setup-mascot .speech-bubble {
+            /* 親幅に縛られないよう right 基準で外に出す */
+            right: calc(100% + 8px);
+            top: 6px;
+            left: auto;
+            border-radius: 1.1rem 1.1rem 0.35rem 1.1rem;
+        }
+
+        .setup-mascot .speech-bubble::after {
+            left: auto;
+            right: 12px;
+        }
+
         .setup-footer-visual {
             position: relative;
             z-index: 8;
             display: flex;
             justify-content: center;
-            margin: -3.2rem auto -1.25rem;
+            margin: -3.2rem auto -0.25rem;
             pointer-events: none;
         }
 
@@ -416,6 +702,62 @@
             filter: drop-shadow(0 18px 28px rgba(51, 65, 85, 0.16));
         }
 
+        .site-footer {
+            position: relative;
+            z-index: 20;
+            max-width: 40rem;
+            margin: 0 auto;
+            padding: 0.25rem 1rem 1rem;
+            text-align: center;
+        }
+
+        .site-footer-inner {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem 0.85rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(234, 220, 229, 0.95);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow: 0 10px 28px rgba(51, 65, 85, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .site-footer #persist-hint {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .site-footer .persist-clear {
+            flex-shrink: 0;
+            border: 0;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 0.72rem;
+            font-weight: 900;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            cursor: pointer;
+            padding: 0.15rem 0.2rem;
+        }
+
+        .site-footer .persist-clear:hover {
+            color: #ec4899;
+        }
+
+        @media (max-width: 640px) {
+            .site-footer-inner {
+                border-radius: 1.25rem;
+                flex-direction: column;
+                gap: 0.4rem;
+            }
+        }
+
         @media (max-width: 820px) {
             .setup-mascot {
                 position: relative;
@@ -425,12 +767,41 @@
                 width: 76px;
             }
 
+            .setup-mascot .speech-bubble {
+                right: auto;
+                left: 50%;
+                top: auto;
+                bottom: calc(100% + 6px);
+                /* transform ではなく translate で中央寄せ → アニメと共存 */
+                translate: -50% 0;
+                border-radius: 1.1rem;
+                max-width: min(15rem, 80vw);
+            }
+
+            .setup-mascot .speech-bubble::after {
+                left: 50%;
+                right: auto;
+                bottom: -8px;
+                translate: -50% 0;
+                transform: rotate(45deg);
+            }
+
             .setup-footer-visual {
                 margin-top: -2.1rem;
             }
 
             .setup-footer-visual img {
                 max-height: 210px;
+            }
+
+            .card-sticker {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .pop-card {
+                overflow: hidden;
             }
         }
 
@@ -445,7 +816,7 @@
 
         .mini-stat span {
             display: block;
-            color: var(--muted);
+            color: #526077;
             font-size: 0.72rem;
             font-weight: 900;
             letter-spacing: 0.08em;
@@ -570,13 +941,31 @@
         #prize-lineup,
         #result-message,
         #summary-modal > div {
-            border: 1px solid rgba(234, 220, 229, 0.95) !important;
-            border-radius: 8px !important;
-            box-shadow: var(--shadow);
+            border: 3px solid rgba(255, 255, 255, 0.98) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 8px 0 rgba(255, 134, 183, 0.12), var(--shadow);
         }
 
         #summary-modal > div {
             overflow: hidden;
+            animation: wiggleIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+        }
+
+        #result-message {
+            overflow: visible !important;
+        }
+
+        .distribution-option-content {
+            border-radius: 18px !important;
+        }
+
+        .mini-stat {
+            border-radius: 16px !important;
+            transition: transform 0.2s ease;
+        }
+
+        .mini-stat:hover {
+            transform: translateY(-2px) rotate(-1deg);
         }
 
         .animate-pop-in {
@@ -628,12 +1017,15 @@
         }
     </style>
 </head>
-<body class="p-4 pt-8 md:p-8 md:pt-10 pb-40 min-h-screen relative">
-    <!-- 背景デコ -->
-    <div class="pop-deco text-2xl" style="top: 12%; left: 5%; color: var(--pink); animation-delay: 0s;"><i class="fas fa-heart"></i></div>
-    <div class="pop-deco text-3xl" style="top: 16%; right: 6%; color: var(--butter); animation-delay: -1s;"><i class="fas fa-star"></i></div>
-    <div class="pop-deco text-2xl" style="bottom: 22%; left: 8%; color: var(--sky); animation-delay: -2s;"><i class="fas fa-cloud"></i></div>
-    <div class="pop-deco text-2xl" style="bottom: 12%; right: 10%; color: var(--mint); animation-delay: -3s;"><i class="fas fa-gift"></i></div>
+<body class="p-4 pt-8 md:p-8 md:pt-10 pb-6 min-h-screen relative">
+    <!-- 紙吹雪レイヤー -->
+    <div id="confetti-layer" aria-hidden="true"></div>
+
+    <!-- 背景デコ（角寄り・控えめ） -->
+    <div class="pop-deco emoji" style="top: 12%; left: 2.5%; animation-delay: 0s;" aria-hidden="true">💖</div>
+    <div class="pop-deco" style="top: 18%; right: 2.5%; animation-delay: -3s;" aria-hidden="true">⭐</div>
+    <div class="pop-deco emoji" style="bottom: 16%; left: 3%; animation-delay: -5s;" aria-hidden="true">🎁</div>
+    <div class="pop-deco" style="bottom: 22%; right: 3%; animation-delay: -7s;" aria-hidden="true">🎀</div>
 
     <header class="site-header text-center animate-pop-in relative z-10">
         <video class="header-bg-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
@@ -643,22 +1035,27 @@
 
         <div class="flex flex-row items-center justify-center gap-3 md:gap-5 px-2 overflow-visible max-w-full relative z-10">
             <div class="text-center py-2 min-w-0">
-                <div class="inline-block relative animate-float" style="animation-delay: -0.5s;">
+                <div class="inline-block relative animate-float hero-logo-wrap">
                     <h1 class="relative z-10 py-1">
                         <img class="hero-logo" src="./ChatGPT Image 2026年5月6日 15_26_18.webp" alt="お土産専用あみだくじ">
                     </h1>
                 </div>
                 <p class="hero-kicker mt-2">OMIYAGE LUCKY BOARD</p>
-                <p class="hero-subcopy mt-2 text-xs md:text-sm font-black">何が当たるかな？</p>
+                <p class="hero-subcopy mt-2 text-xs md:text-sm font-black">なにが当たるかな〜！？ 🎲</p>
             </div>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto relative z-10 mb-20">
+    <main class="max-w-5xl mx-auto relative z-10 mb-4">
 
         <!-- 設定エリア -->
         <div id="setup-panel" class="pop-card p-5 md:p-9 animate-fade-in">
-            <div class="setup-mascot animate-float">
+            <!-- 角だけステッカー（入力エリアから離す） -->
+            <div class="card-sticker sm blob" style="top: -10px; left: 12px; transform: rotate(-10deg);" aria-hidden="true">🍡</div>
+            <div class="card-sticker sm" style="top: -8px; right: 14px; transform: rotate(8deg);" aria-hidden="true">✨</div>
+
+            <div class="setup-mascot animate-float" style="animation-duration: 6s;">
+                <div class="speech-bubble right" id="mascot-speech">いっくよー！！ 🎁</div>
                 <img src="assets/koho.png" alt="広報" class="w-full h-auto object-contain">
                 <div class="hero-badge absolute -top-1 -right-3 rotate-6 z-20">
                     <i class="fas fa-sparkles"></i> ラッキー係
@@ -667,28 +1064,28 @@
             <div class="relative z-10 mb-6 flex justify-center md:justify-start">
                 <div class="helper-note">
                     <i class="fas fa-sparkles text-yellow-400"></i>
-                    今日の運だめし、かわいくシャッフル
+                    今日の運だめし、かわいくガチャガチャ
                 </div>
             </div>
             
             <!-- 上段：人数設定 -->
             <div class="relative z-10 flex flex-col items-center justify-center mb-8 pb-6 border-b border-pink-100/80">
                 <label class="font-black text-xl text-slate-700 mb-4 flex items-center">
-                    <span class="bg-sky-100 text-sky-500 rounded-lg w-8 h-8 flex items-center justify-center mr-2"><i class="fas fa-users"></i></span>
-                    参加人数を決めてね
+                    <span class="bg-sky-100 text-sky-600 rounded-2xl w-9 h-9 flex items-center justify-center mr-2 shadow-sm"><i class="fas fa-users"></i></span>
+                    何人で遊ぶ？？
                 </label>
-                <div class="flex items-center bg-white/80 rounded-lg p-2 gap-3 border border-pink-100 shadow-sm">
+                <div class="flex items-center bg-white rounded-2xl p-2 gap-3 border-2 border-pink-100 shadow-sm">
                     <button onclick="changeCount(-1)" class="btn-pop w-12 h-12 bg-white text-pink-500 font-black text-2xl flex-shrink-0" aria-label="人数を減らす">-</button>
-                    <input type="number" id="count-input" value="4" min="2" max="100" onchange="updateCountFromInput()" class="w-24 text-center font-black text-4xl bg-transparent focus:outline-none focus:bg-white rounded-lg p-1">
+                    <input type="number" id="count-input" value="4" min="2" max="100" onchange="updateCountFromInput()" class="w-24 text-center font-black text-4xl bg-transparent focus:outline-none focus:bg-white rounded-2xl p-1">
                     <button onclick="changeCount(1)" class="btn-pop w-12 h-12 bg-pink-400 text-white font-black text-2xl flex-shrink-0" aria-label="人数を増やす">+</button>
                 </div>
-                <p class="text-xs text-slate-400 mt-2">※画面に合わせて縮小表示されます</p>
+                <p class="text-xs text-slate-500 mt-2 font-bold">※画面に合わせてぎゅっと縮小されます</p>
             </div>
 
             <!-- 中段：商品設定 -->
-            <div class="relative z-10 bg-white/60 backdrop-blur-sm p-5 md:p-6 rounded-lg mb-8 border border-yellow-100">
+            <div class="relative z-10 bg-white/80 backdrop-blur-sm p-5 md:p-6 rounded-3xl mb-8 border-2 border-yellow-100 overflow-hidden">
                 <div class="absolute -top-4 left-5 bg-gradient-to-r from-yellow-300 to-pink-300 text-slate-700 font-black px-4 py-1 rounded-full text-sm shadow-sm transform -rotate-1">
-                    <i class="fas fa-gift mr-1"></i> 商品リスト
+                    <i class="fas fa-gift mr-1"></i> おみやげリスト ✨
                 </div>
 
                 <div class="input-grid mb-4">
@@ -701,20 +1098,20 @@
                         <input type="number" id="bulk-count" value="1" min="1" class="w-full border px-3 py-3 focus:outline-none text-center bg-white/90 font-bold" onkeydown="if(event.key==='Enter') addBulkItem()">
                     </div>
                     <button onclick="addBulkItem()" class="btn-pop bg-gradient-to-r from-yellow-300 to-pink-300 text-slate-700 font-black px-6 py-3 h-[52px] w-full sm:w-auto">
-                        <i class="fas fa-plus"></i> 追加
+                        <i class="fas fa-plus"></i> ついか！
                     </button>
                 </div>
 
-                <div class="bg-white/86 rounded-lg p-4 shadow-inner border border-pink-100 min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar">
+                <div class="bg-white/86 rounded-2xl p-4 shadow-inner border-2 border-pink-100 min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar">
                     <ul id="bulk-list" class="space-y-2">
-                        <li class="text-slate-300 text-center py-6 flex flex-col items-center font-bold">
-                            <i class="fas fa-magic mb-2 text-pink-200 text-3xl"></i>
-                            <span>ここに商品を追加してね！</span>
+                        <li class="text-slate-400 text-center py-6 flex flex-col items-center font-bold">
+                            <span class="text-4xl mb-2">🎁</span>
+                            <span class="text-slate-500">ここにおみやげを入れてね！</span>
                         </li>
                     </ul>
                 </div>
                 
-                <p class="text-right text-xs text-slate-400 font-bold mt-2 mr-1">
+                <p class="text-right text-xs text-slate-500 font-bold mt-2 mr-1">
                     ※少ない分は「★」、多い分は配布方法に合わせて扱います
                 </p>
 
@@ -730,7 +1127,7 @@
                                 <span class="distribution-icon"><i class="fas fa-dice"></i></span>
                                 <span class="min-w-0">
                                     <span class="block text-slate-700 font-black">通常抽選</span>
-                                    <span class="block text-xs text-slate-400 font-bold mt-1">余りはランダムで外す</span>
+                                    <span class="block text-xs text-slate-500 font-bold mt-1">余りはランダムで外す</span>
                                 </span>
                             </span>
                         </label>
@@ -740,7 +1137,7 @@
                                 <span class="distribution-icon"><i class="fas fa-layer-group"></i></span>
                                 <span class="min-w-0">
                                     <span class="block text-slate-700 font-black">自動振り分け</span>
-                                    <span class="block text-xs text-slate-400 font-bold mt-1">余りはセットにする</span>
+                                    <span class="block text-xs text-slate-500 font-bold mt-1">余りはセットにする</span>
                                 </span>
                             </span>
                         </label>
@@ -765,23 +1162,23 @@
                         <strong id="preview-blanks">4個</strong>
                     </div>
                 </div>
-                <p id="preview-message" class="mt-4 text-sm font-black text-slate-600 bg-white/80 border border-pink-100 rounded-lg px-4 py-3 text-center shadow-sm">まだ商品が入っていないよ。追加するとワクワク度アップ！</p>
+                <p id="preview-message" class="mt-4 text-sm font-black text-slate-600 bg-white/80 border-2 border-pink-100 rounded-2xl px-4 py-3 text-center shadow-sm">まだ空っぽだよ〜。ついかしてワクワクさせよう！ ✨</p>
             </div>
 
             <!-- アニメーション速度 -->
             <div class="relative z-10 flex items-center justify-center gap-3 mb-6 flex-wrap">
-                <span class="text-sm font-black text-slate-500"><i class="fas fa-gauge mr-1 text-sky-400"></i>速さ</span>
+                <span class="text-sm font-black text-slate-500"><i class="fas fa-gauge mr-1 text-sky-400"></i>はやさ</span>
                 <div class="flex gap-2">
-                    <button onclick="setSpeed('slow')" id="speed-slow" class="px-4 py-2 rounded-lg text-sm font-black border border-sky-100 bg-white/80 text-sky-500 transition-all">おそい</button>
-                    <button onclick="setSpeed('normal')" id="speed-normal" class="px-4 py-2 rounded-lg text-sm font-black border border-pink-300 bg-pink-400 text-white transition-all">ふつう</button>
-                    <button onclick="setSpeed('fast')" id="speed-fast" class="px-4 py-2 rounded-lg text-sm font-black border border-sky-100 bg-white/80 text-sky-500 transition-all">はやい</button>
+                    <button onclick="setSpeed('slow')" id="speed-slow" class="btn-pop px-4 py-2 rounded-2xl text-sm font-black border-2 border-sky-100 bg-white/80 text-sky-500 transition-all">のろのろ</button>
+                    <button onclick="setSpeed('normal')" id="speed-normal" class="btn-pop px-4 py-2 rounded-2xl text-sm font-black border-2 border-pink-300 bg-pink-400 text-white transition-all">ふつう</button>
+                    <button onclick="setSpeed('fast')" id="speed-fast" class="btn-pop px-4 py-2 rounded-2xl text-sm font-black border-2 border-sky-100 bg-white/80 text-sky-500 transition-all">ばくばく</button>
                 </div>
             </div>
 
             <!-- 作成ボタン -->
             <div class="text-center start-action">
                 <button onclick="generateAmida()" class="btn-pop w-full md:w-2/3 px-12 py-5 bg-gradient-to-r from-pink-400 via-rose-400 to-orange-300 text-white text-xl font-black flex items-center justify-center mx-auto tracking-wide">
-                    <i class="fas fa-wand-magic-sparkles mr-2"></i> スタート！
+                    <i class="fas fa-wand-magic-sparkles mr-2"></i> いくぜ！！！
                 </button>
             </div>
 
@@ -791,7 +1188,7 @@
         </div>
 
         <!-- あみだくじ表示エリア -->
-        <div id="game-panel" class="hidden space-y-6 animate-fade-in pb-20">
+        <div id="game-panel" class="hidden space-y-6 animate-fade-in pb-4">
             <div class="game-bg-video-wrap" aria-hidden="true">
                 <video class="game-bg-video" autoplay muted loop playsinline preload="metadata">
                     <source src="./おみやげ.mp4" type="video/mp4">
@@ -800,25 +1197,30 @@
             </div>
 
             <div class="soft-panel p-4 text-center">
-                <p class="text-sm md:text-base font-black text-slate-600">
-                    <i class="fas fa-hand-pointer text-yellow-400 mr-2"></i>
-                    上のまるをタップすると、ひとりずつ結果が見られるよ
+                <p class="text-sm md:text-base font-black text-slate-700">
+                    <i class="fas fa-hand-pointer text-yellow-500 mr-2"></i>
+                    上のまるをタップ！ ひとりずつドキドキ発表 💓
                 </p>
             </div>
             
             <!-- 商品ラインナップ表示 -->
-            <div id="prize-lineup" class="bg-white/85 p-4 text-center relative overflow-hidden">
-                <i class="fas fa-gift absolute -right-4 -bottom-4 text-6xl text-pink-100 rotate-12"></i>
+            <div id="prize-lineup" class="bg-white/92 p-4 text-center relative overflow-hidden">
+                <span class="absolute -right-2 -bottom-3 text-5xl opacity-20 rotate-12 select-none" aria-hidden="true">🎁</span>
                 <div class="relative z-10">
-                    <span class="font-black text-pink-500 mr-2 bg-pink-50 px-3 py-1 rounded-full text-sm inline-block mb-1">今回のラインナップ</span>
+                    <span class="font-black text-pink-600 mr-2 bg-pink-50 px-3 py-1 rounded-full text-sm inline-block mb-1 border border-pink-100">今回のラインナップ 🎀</span>
                     <div id="lineup-text" class="text-slate-700 font-bold mt-1 text-lg"></div>
                 </div>
             </div>
 
             <!-- キャンバスエリア -->
-            <div class="canvas-container">
-                <!-- キャンバス自体はstyle="width:100%"で縮小表示される -->
-                <canvas id="amidaCanvas"></canvas>
+            <div class="relative">
+                <div class="canvas-container">
+                    <canvas id="amidaCanvas"></canvas>
+                </div>
+                <div class="game-mascot" aria-hidden="true">
+                    <div class="speech-bubble" id="game-mascot-speech">がんばれ〜！</div>
+                    <img src="assets/koho.png" alt="">
+                </div>
             </div>
 
             <div class="soft-panel flex flex-wrap justify-between items-center p-4 gap-3">
@@ -827,36 +1229,37 @@
                 </button>
                 <div class="flex gap-3">
                      <button onclick="resetPaths()" class="px-5 py-2 bg-white text-slate-500 font-black hover:bg-slate-50 transition btn-pop text-sm">
-                        <i class="fas fa-undo mr-1"></i> もう一回
+                        <i class="fas fa-undo mr-1"></i> もういっかい
                     </button>
                     <button onclick="revealAll()" class="px-5 py-2 bg-sky-400 text-white font-black hover:bg-sky-500 transition btn-pop text-sm">
-                        <i class="fas fa-eye mr-1"></i> 全部みる
+                        <i class="fas fa-eye mr-1"></i> ぜんぶみる
                     </button>
                 </div>
             </div>
 
             <!-- 結果表示エリア -->
-            <div id="result-message" class="hidden bg-white/90 p-6 animate-fade-in text-center relative overflow-visible">
-                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-yellow-300 to-sky-300 rounded-t-lg"></div>
+            <div id="result-message" class="hidden bg-white p-6 text-center relative overflow-visible">
+                <div class="absolute top-0 left-0 w-full h-2.5 bg-gradient-to-r from-pink-300 via-yellow-300 to-sky-300 rounded-t-3xl"></div>
                 <div id="result-text" class="text-xl text-slate-700 font-bold relative z-10"></div>
             </div>
         </div>
 
         <!-- 結果一覧モーダル -->
-        <div id="summary-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div class="bg-white/95 w-full max-w-lg relative max-h-[90vh] flex flex-col">
+        <div id="summary-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-lg relative max-h-[90vh] flex flex-col">
+                <div class="card-sticker sm" style="top: -14px; right: 16px; transform: rotate(8deg);" aria-hidden="true">🎉</div>
                 <div class="p-6 text-center border-b border-pink-100">
-                    <h2 class="text-3xl font-black text-pink-500">
-                        <i class="fas fa-crown text-yellow-400 mr-2"></i>結果発表
+                    <h2 class="text-3xl font-black text-pink-600">
+                        <i class="fas fa-crown text-yellow-500 mr-2"></i>結果はっぴょう〜！
                     </h2>
-                    <p class="text-slate-400 font-bold text-sm mt-1">みんなの結果が出揃いました！</p>
+                    <p class="text-slate-500 font-bold text-sm mt-1">みんなの運命が決まったよ ✨</p>
                 </div>
                 <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
                     <ul id="summary-list" class="space-y-3"></ul>
                 </div>
                 <div class="p-6 text-center bg-pink-50">
                     <button onclick="closeSummary()" class="btn-pop bg-pink-400 text-white font-black px-8 py-3">
-                        閉じる
+                        とじる
                     </button>
                 </div>
             </div>
@@ -864,9 +1267,17 @@
 
     </main>
 
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <p id="persist-hint">この端末のブラウザに自動保存されます（キャッシュ削除まで残ります）</p>
+            <button type="button" class="persist-clear" onclick="clearSavedData()">保存データを消す</button>
+        </div>
+    </footer>
+
     <script>
         const MIN_COUNT = 2;
         const MAX_COUNT = 100;
+        const STORAGE_KEY = 'amidakuji-omiyage-v1';
         let currentCount = 4;
 
         let names = [];
@@ -875,6 +1286,8 @@
         let bulkItems = [];
         let distributionMode = 'lottery';
         let animationDuration = 3000; // ms
+        let currentSpeed = 'normal';
+        let persistEnabled = true;
 
         function shuffle(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
@@ -1027,10 +1440,11 @@
             distributionMode = mode === 'auto' ? 'auto' : 'lottery';
             updateDistributionControls();
             updatePrizePreview();
+            saveAppState();
         }
 
         function updateSpeedButtons(activeSpeed) {
-            const baseClass = 'px-4 py-2 rounded-lg text-sm font-black border transition-all';
+            const baseClass = 'btn-pop px-4 py-2 rounded-2xl text-sm font-black border-2 transition-all';
             ['slow', 'normal', 'fast'].forEach(speed => {
                 const btn = document.getElementById(`speed-${speed}`);
                 const stateClass = speed === activeSpeed
@@ -1040,10 +1454,278 @@
             });
         }
 
-        function setSpeed(speed) {
+        function setSpeed(speed, options = {}) {
+            const { silent = false } = options;
             const speeds = { slow: 5000, normal: 3000, fast: 1200 };
-            animationDuration = speeds[speed] || speeds.normal;
-            updateSpeedButtons(speed);
+            const next = speeds[speed] ? speed : 'normal';
+            currentSpeed = next;
+            animationDuration = speeds[next];
+            updateSpeedButtons(next);
+            if (!silent) {
+                const tips = {
+                    slow: 'のんびりいく〜 🐢',
+                    normal: 'ちょうどいいかも！',
+                    fast: 'ばくばくいくぜ！！ ⚡'
+                };
+                setMascotSpeech(tips[next] || tips.normal);
+            }
+            saveAppState();
+        }
+
+        function isGamePanelOpen() {
+            const panel = document.getElementById('game-panel');
+            return panel && !panel.classList.contains('hidden');
+        }
+
+        function saveAppState() {
+            if (!persistEnabled) return;
+            try {
+                const payload = {
+                    version: 1,
+                    currentCount,
+                    bulkItems,
+                    distributionMode,
+                    speed: currentSpeed,
+                    isPlaying: isGamePanelOpen(),
+                    names,
+                    resultBundles,
+                    horizontalLines,
+                    revealed: revealed.slice(0, currentCount),
+                    revealedResults: revealedResults.slice(0, currentCount),
+                    lineupText: document.getElementById('lineup-text')?.textContent || '',
+                    savedAt: Date.now()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+                updatePersistHint();
+            } catch (err) {
+                console.warn('データの保存に失敗しました', err);
+            }
+        }
+
+        function loadAppState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return null;
+                const data = JSON.parse(raw);
+                if (!data || data.version !== 1) return null;
+                return data;
+            } catch (err) {
+                console.warn('保存データの読み込みに失敗しました', err);
+                return null;
+            }
+        }
+
+        function sanitizeBulkItems(items) {
+            if (!Array.isArray(items)) return [];
+            return items
+                .map(item => ({
+                    name: String(item?.name ?? '').trim(),
+                    count: Math.max(1, parseInt(item?.count, 10) || 1)
+                }))
+                .filter(item => item.name.length > 0)
+                .slice(0, 200);
+        }
+
+        function applyLoadedSetup(data) {
+            if (!data) return;
+            const count = parseInt(data.currentCount, 10);
+            if (!isNaN(count) && count >= MIN_COUNT && count <= MAX_COUNT) {
+                currentCount = count;
+            }
+            bulkItems = sanitizeBulkItems(data.bulkItems);
+            distributionMode = data.distributionMode === 'auto' ? 'auto' : 'lottery';
+            currentSpeed = ['slow', 'normal', 'fast'].includes(data.speed) ? data.speed : 'normal';
+        }
+
+        function canRestoreGame(data) {
+            if (!data?.isPlaying) return false;
+            if (!Array.isArray(data.horizontalLines) || !Array.isArray(data.resultBundles)) return false;
+            if (!Array.isArray(data.names) || data.names.length !== currentCount) return false;
+            if (data.resultBundles.length !== currentCount) return false;
+            return true;
+        }
+
+        function restoreGameSession(data) {
+            names = data.names.map((n, i) => String(n ?? i + 1));
+            resultBundles = data.resultBundles.map(bundle =>
+                Array.isArray(bundle) ? bundle.map(name => String(name)) : []
+            );
+            horizontalLines = data.horizontalLines
+                .filter(line => line && Number.isFinite(line.col) && Number.isFinite(line.y))
+                .map(line => ({ col: line.col, y: line.y }));
+
+            revealed = Array.from({ length: currentCount }, (_, i) => Boolean(data.revealed?.[i]));
+            revealedResults = Array.from({ length: currentCount }, (_, i) => Boolean(data.revealedResults?.[i]));
+            paths = [];
+            isAnimating = false;
+
+            const summary = summarizeBundles(resultBundles);
+            const hasItem = Object.keys(summary).length > 0;
+            const summaryText = data.lineupText
+                || (!hasItem ? '（まだ空っぽ…？ 🤔）' : Object.entries(summary).map(([n, c]) => `${n}×${c}`).join(' / '));
+            document.getElementById('lineup-text').textContent = summaryText;
+
+            document.getElementById('setup-panel').classList.add('hidden');
+            document.getElementById('game-panel').classList.remove('hidden');
+            document.querySelector('header').classList.add('hidden');
+            document.body.classList.add('is-playing');
+            document.getElementById('result-message').classList.add('hidden');
+            closeSummary();
+
+            // 座標は画面サイズ依存なので、開封済み分だけ再計算
+            setTimeout(() => {
+                resizeCanvas();
+                paths = [];
+                for (let i = 0; i < currentCount; i++) {
+                    if (revealed[i]) {
+                        const pathData = calculatePath(i);
+                        paths.push(pathData);
+                        revealedResults[pathData.endIndex] = true;
+                    }
+                }
+                drawBoard();
+                updatePersistHint();
+            }, 50);
+        }
+
+        function updatePersistHint() {
+            const hint = document.getElementById('persist-hint');
+            if (!hint) return;
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    hint.textContent = 'この端末のブラウザに自動保存されます（キャッシュ削除まで残ります）';
+                    return;
+                }
+                const data = JSON.parse(raw);
+                const when = data?.savedAt ? new Date(data.savedAt) : null;
+                const timeText = when
+                    ? `${when.getMonth() + 1}/${when.getDate()} ${String(when.getHours()).padStart(2, '0')}:${String(when.getMinutes()).padStart(2, '0')}`
+                    : '';
+                const gameNote = data?.isPlaying ? '・抽選の途中も保存中' : '';
+                hint.textContent = timeText
+                    ? `自動保存済み ${timeText}${gameNote}（キャッシュ削除まで残ります）`
+                    : 'この端末のブラウザに自動保存されます（キャッシュ削除まで残ります）';
+            } catch {
+                hint.textContent = 'この端末のブラウザに自動保存されます（キャッシュ削除まで残ります）';
+            }
+        }
+
+        function clearSavedData() {
+            if (!confirm('保存した人数・おみやげ・抽選の途中経過を消しますか？\n（この操作はこのサイトのデータだけ消します）')) {
+                return;
+            }
+            persistEnabled = false;
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (err) {
+                console.warn(err);
+            }
+
+            currentCount = 4;
+            bulkItems = [];
+            distributionMode = 'lottery';
+            currentSpeed = 'normal';
+            names = [];
+            resultBundles = [];
+            horizontalLines = [];
+            paths = [];
+            revealed = new Array(MAX_COUNT).fill(false);
+            revealedResults = new Array(MAX_COUNT).fill(false);
+            isAnimating = false;
+
+            document.getElementById('game-panel').classList.add('hidden');
+            document.getElementById('setup-panel').classList.remove('hidden');
+            document.querySelector('header').classList.remove('hidden');
+            document.body.classList.remove('is-playing');
+            document.getElementById('result-message').classList.add('hidden');
+            closeSummary();
+
+            updateDisplays();
+            updateBulkList();
+            updateDistributionControls();
+            setSpeed('normal', { silent: true });
+            setMascotSpeech('まっさらにしたよ！');
+            persistEnabled = true;
+            updatePersistHint();
+        }
+
+        const MASCOT_LINES = [
+            'いっくよー！！ 🎁',
+            'なにが出るかな〜？',
+            'ハズレかもよ〜？ 😏',
+            '運だめしタイム！',
+            'ワクワクしてきた…！',
+            'がんばるのだ〜',
+            'おみやげだ〜いすき',
+            'ぽんぽんシャッフル！'
+        ];
+        const GAME_MASCOT_LINES = [
+            'がんばれ〜！',
+            'ドキドキ…！',
+            'どれ選ぶ？',
+            'つぎつぎ〜！',
+            'あたれ〜！ ✨',
+            'わくわく…'
+        ];
+        let mascotLineIndex = 0;
+
+        function applySpeechText(el, text) {
+            if (!el) return;
+            const normalized = String(text).replace(/\s+/g, ' ').trim();
+            el.textContent = normalized;
+            // 長文だけ折り返し。短いセリフは nowrap で1行のまま
+            el.classList.toggle('is-multiline', normalized.length > 16);
+            el.classList.remove('animate-boing');
+            void el.offsetWidth;
+            el.classList.add('animate-boing');
+        }
+
+        function setMascotSpeech(text) {
+            applySpeechText(document.getElementById('mascot-speech'), text);
+        }
+
+        function setGameMascotSpeech(text) {
+            applySpeechText(document.getElementById('game-mascot-speech'), text);
+        }
+
+        function rotateMascotSpeech() {
+            mascotLineIndex = (mascotLineIndex + 1) % MASCOT_LINES.length;
+            setMascotSpeech(MASCOT_LINES[mascotLineIndex]);
+        }
+
+        function burstConfetti(count = 28) {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const layer = document.getElementById('confetti-layer');
+            if (!layer) return;
+            // 前回の紙吹雪が残ると読みにくいのでクリア
+            layer.innerHTML = '';
+            const colors = ['#ff5f93', '#ffe681', '#8bd3ff', '#9ee6c4', '#c7b8ff', '#ffc7a8', '#ff86b7'];
+            const emojis = ['✨', '🎉', '⭐', '💖', '🎊'];
+            for (let i = 0; i < count; i++) {
+                const piece = document.createElement('span');
+                const useEmoji = Math.random() < 0.22;
+                piece.className = 'confetti-piece' + (useEmoji ? ' emoji' : (Math.random() < 0.35 ? ' circle' : ''));
+                if (useEmoji) {
+                    piece.textContent = emojis[i % emojis.length];
+                } else {
+                    piece.style.background = colors[i % colors.length];
+                }
+                piece.style.left = `${Math.random() * 100}%`;
+                piece.style.setProperty('--drift', `${(Math.random() * 90) - 45}px`);
+                piece.style.animationDuration = `${1.2 + Math.random() * 0.9}s`;
+                piece.style.animationDelay = `${Math.random() * 0.12}s`;
+                layer.appendChild(piece);
+                setTimeout(() => piece.remove(), 2400);
+            }
+        }
+
+        function popCountInput() {
+            const input = document.getElementById('count-input');
+            if (!input) return;
+            input.classList.remove('count-pop');
+            void input.offsetWidth;
+            input.classList.add('count-pop');
         }
 
         function getPrizeStats() {
@@ -1071,15 +1753,15 @@
 
             const messageEl = document.getElementById('preview-message');
             if (totalPrizes === 0) {
-                messageEl.textContent = 'まだ商品が入っていないよ。追加するとワクワク度アップ！';
+                messageEl.textContent = 'まだ空っぽだよ〜。ついかしてワクワクさせよう！ ✨';
             } else if (overflowCount > 0) {
                 messageEl.textContent = isAuto
-                    ? `余った ${overflowCount} 個は、ランダムな当たり枠にセットで入るよ。`
-                    : `商品が ${overflowCount} 個ぶん多いので、スタート時にランダムで選ばれるよ。`;
+                    ? `余った ${overflowCount} 個は、ランダムな当たり枠にドカッとセット！ 🎁`
+                    : `おみやげが ${overflowCount} 個おおいよ！スタート時にランダムで選ばれるよ。`;
             } else if (blankCount > 0) {
-                messageEl.textContent = `あと ${blankCount} 枠ぶんは「★」になるよ。商品を増やすとぴったり揃えられるよ。`;
+                messageEl.textContent = `あと ${blankCount} 枠は「★」になるよ…ハズレ枠かも！？ ⭐`;
             } else {
-                messageEl.textContent = 'ぴったり全員分そろったよ。きれいに配れる準備ばっちり！';
+                messageEl.textContent = 'ぴったり全員分そろった！準備ばっちり〜 🎉';
             }
         }
 
@@ -1109,10 +1791,23 @@
         let revealedResults = new Array(MAX_COUNT).fill(false); 
 
         function init() {
+            persistEnabled = false;
+            const saved = loadAppState();
+            applyLoadedSetup(saved);
             updateDisplays();
             updateBulkList();
             updateDistributionControls();
-            updateSpeedButtons('normal');
+            setSpeed(currentSpeed, { silent: true });
+            setMascotSpeech(MASCOT_LINES[0]);
+            setInterval(rotateMascotSpeech, 7000);
+            persistEnabled = true;
+
+            if (canRestoreGame(saved)) {
+                restoreGameSession(saved);
+                setMascotSpeech('途中から再開したよ！');
+            } else {
+                updatePersistHint();
+            }
         }
 
         function updateDisplays() {
@@ -1125,6 +1820,9 @@
             if (newCount >= MIN_COUNT && newCount <= MAX_COUNT) {
                 currentCount = newCount;
                 updateDisplays();
+                popCountInput();
+                setMascotSpeech(delta > 0 ? `にんずう ${currentCount}人！ 🎈` : `にんずう ${currentCount}人…`);
+                saveAppState();
             }
         }
 
@@ -1134,6 +1832,8 @@
                 currentCount = val;
             }
             updateDisplays();
+            popCountInput();
+            saveAppState();
         }
 
         function addBulkItem() {
@@ -1147,25 +1847,30 @@
             countInput.value = 1;
             nameInput.focus();
             updateBulkList();
+            const shortName = name.length > 8 ? `${name.slice(0, 8)}…` : name;
+            setMascotSpeech(`「${shortName}」ついか！ ✨`);
+            saveAppState();
         }
 
         function removeBulkItem(index) {
             bulkItems.splice(index, 1);
             updateBulkList();
+            setMascotSpeech('ひとつけしたよ…');
+            saveAppState();
         }
 
         function updateBulkList() {
             const listEl = document.getElementById('bulk-list');
             listEl.innerHTML = '';
             if (bulkItems.length === 0) {
-                listEl.innerHTML = `<li class="text-slate-300 text-center py-6 flex flex-col items-center font-bold"><i class="fas fa-magic mb-2 text-pink-200 text-3xl"></i><span>ここに商品を追加してね！</span></li>`;
+                listEl.innerHTML = `<li class="text-slate-400 text-center py-6 flex flex-col items-center font-bold"><span class="text-4xl mb-2">🎁</span><span class="text-slate-500">ここにおみやげを入れてね！</span></li>`;
                 updatePrizePreview();
                 return;
             }
             bulkItems.forEach((item, index) => {
                 const li = document.createElement('li');
-                li.className = 'flex justify-between items-center gap-3 bg-white/86 px-4 py-3 rounded-lg border border-pink-100 shadow-sm animate-fade-in';
-                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-400 font-bold text-lg shadow-sm flex-shrink-0"><i class="fas fa-gift"></i></span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="text-slate-500 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block mt-2">× ${item.count}</span></div></div><button onclick="removeBulkItem(${index})" class="text-pink-400 hover:text-pink-500 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
+                li.className = 'flex justify-between items-center gap-3 bg-white px-4 py-3 rounded-2xl border-2 border-pink-100 shadow-sm animate-fade-in';
+                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-lg shadow-sm flex-shrink-0">🎁</span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="text-slate-600 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block mt-2">× ${item.count}</span></div></div><button onclick="removeBulkItem(${index})" class="text-pink-500 hover:text-pink-600 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
                 listEl.appendChild(li);
             });
             updatePrizePreview();
@@ -1176,8 +1881,9 @@
 
             const summary = summarizeBundles(resultBundles);
             const hasItem = Object.keys(summary).length > 0;
-            const summaryText = !hasItem ? "（商品なし...？）" : Object.entries(summary).map(([n, c]) => `${n}×${c}`).join(' / ');
+            const summaryText = !hasItem ? "（まだ空っぽ…？ 🤔）" : Object.entries(summary).map(([n, c]) => `${n}×${c}`).join(' / ');
             document.getElementById('lineup-text').textContent = summaryText;
+            setGameMascotSpeech(GAME_MASCOT_LINES[Math.floor(Math.random() * GAME_MASCOT_LINES.length)]);
 
             names = [];
             for (let i = 0; i < currentCount; i++) {
@@ -1208,7 +1914,8 @@
 
             document.getElementById('setup-panel').classList.add('hidden');
             document.getElementById('game-panel').classList.remove('hidden');
-            document.querySelector('header').classList.add('hidden'); 
+            document.querySelector('header').classList.add('hidden');
+            document.body.classList.add('is-playing');
             
             revealed = new Array(currentCount).fill(false);
             revealedResults = new Array(currentCount).fill(false);
@@ -1218,13 +1925,18 @@
             closeSummary();
 
             setTimeout(resizeCanvas, 50);
+            saveAppState();
         }
 
         function resetView() {
             document.getElementById('game-panel').classList.add('hidden');
             document.getElementById('setup-panel').classList.remove('hidden');
             document.querySelector('header').classList.remove('hidden');
+            document.body.classList.remove('is-playing');
+            paths = [];
+            isAnimating = false;
             closeSummary();
+            saveAppState();
         }
 
         function resetPaths() {
@@ -1519,8 +2231,16 @@
             const endBundle = resultBundles[pathData.endIndex] || [];
             const msgBox = document.getElementById('result-message');
             const msgText = document.getElementById('result-text');
-            msgText.innerHTML = `<div class="mb-2 text-pink-400 text-sm font-black">🎉 結果発表 🎉</div><div class="text-xl mb-3"><span class="font-black text-sky-500 text-3xl">${escapeHtml(startName)}</span>番 は...</div><div class="text-3xl md:text-4xl font-black text-pink-500 drop-shadow-sm animate-pulse">${formatPrizeBundleHtml(endBundle, 'large')}</div>`;
+            const isBlank = !endBundle || endBundle.length === 0;
+            const fanfare = isBlank ? 'ざんねん…？ ⭐' : 'やったね！！ 🎉';
+            msgText.innerHTML = `<div class="mb-2 text-pink-600 text-sm font-black">${fanfare}</div><div class="text-xl mb-3"><span class="font-black text-sky-600 text-3xl">${escapeHtml(startName)}</span>番 は…</div><div class="text-3xl md:text-4xl font-black text-pink-600 drop-shadow-sm animate-boing">${formatPrizeBundleHtml(endBundle, 'large')}</div>`;
             msgBox.classList.remove('hidden');
+            msgBox.classList.remove('result-burst');
+            void msgBox.offsetWidth;
+            msgBox.classList.add('result-burst');
+            setGameMascotSpeech(isBlank ? 'つぎこそ〜！' : 'あたり〜！！ ✨');
+            burstConfetti(isBlank ? 14 : 28);
+            saveAppState();
             setTimeout(() => msgBox.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
         }
 
@@ -1538,11 +2258,13 @@
                 const pathData = calculatePath(i);
                 const resultBundle = resultBundles[pathData.endIndex] || [];
                 const li = document.createElement('li');
-                li.className = 'p-3 bg-pink-50/80 rounded-lg border border-pink-100';
-                li.innerHTML = `<div class="flex items-start gap-3"><span class="px-3 h-8 rounded-lg bg-white border border-pink-100 flex items-center justify-center font-black text-pink-500 shadow-sm text-sm flex-shrink-0">${escapeHtml(names[i])}</span><span class="text-slate-300 text-sm pt-1">➔</span><div class="font-bold text-slate-700 text-lg min-w-0 flex-1">${formatPrizeBundleHtml(resultBundle)}</div></div>`;
+                li.className = 'p-3 bg-pink-50/90 rounded-2xl border border-pink-100 animate-fade-in';
+                li.style.animationDelay = `${Math.min(i, 8) * 0.04}s`;
+                li.innerHTML = `<div class="flex items-start gap-3"><span class="px-3 h-8 rounded-xl bg-white border border-pink-100 flex items-center justify-center font-black text-pink-600 shadow-sm text-sm flex-shrink-0">${escapeHtml(names[i])}</span><span class="text-slate-400 text-sm pt-1">➔</span><div class="font-bold text-slate-700 text-lg min-w-0 flex-1">${formatPrizeBundleHtml(resultBundle)}</div></div>`;
                 list.appendChild(li);
             }
             modal.classList.remove('hidden');
+            burstConfetti(32);
         }
 
         function closeSummary() {
@@ -1573,6 +2295,7 @@
                 }
                 if (clickedCol !== -1 && !revealed[clickedCol]) {
                     revealed[clickedCol] = true;
+                    saveAppState();
                     drawBoard();
                     const pathData = calculatePath(clickedCol);
                     animateSinglePath(pathData);
@@ -1605,8 +2328,14 @@
             }
             drawBoard();
             const msgBox = document.getElementById('result-message');
-            document.getElementById('result-text').textContent = "全員の結果を表示しました！";
+            document.getElementById('result-text').innerHTML = '<div class="text-2xl font-black text-pink-600 animate-boing">みんなの結果いっせーい！ 🎊</div>';
             msgBox.classList.remove('hidden');
+            msgBox.classList.remove('result-burst');
+            void msgBox.offsetWidth;
+            msgBox.classList.add('result-burst');
+            setGameMascotSpeech('ぜんいんオープン！');
+            burstConfetti(28);
+            saveAppState();
             setTimeout(() => msgBox.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
             checkAllRevealed();
         }
