@@ -338,8 +338,7 @@
             .setup-mascot,
             .game-mascot,
             .animate-float,
-            .hero-logo-wrap,
-            .setup-footer-visual {
+            .hero-logo-wrap {
                 animation: none !important;
             }
         }
@@ -685,23 +684,6 @@
             right: 12px;
         }
 
-        .setup-footer-visual {
-            position: relative;
-            z-index: 8;
-            display: flex;
-            justify-content: center;
-            margin: -3.2rem auto -0.25rem;
-            pointer-events: none;
-        }
-
-        .setup-footer-visual img {
-            display: block;
-            width: min(100%, 760px);
-            max-height: clamp(180px, 28vw, 320px);
-            object-fit: contain;
-            filter: drop-shadow(0 18px 28px rgba(51, 65, 85, 0.16));
-        }
-
         .site-footer {
             position: relative;
             z-index: 20;
@@ -786,14 +768,6 @@
                 transform: rotate(45deg);
             }
 
-            .setup-footer-visual {
-                margin-top: -2.1rem;
-            }
-
-            .setup-footer-visual img {
-                max-height: 210px;
-            }
-
             .card-sticker {
                 width: 40px;
                 height: 40px;
@@ -801,7 +775,7 @@
             }
 
             .pop-card {
-                overflow: hidden;
+                overflow: visible;
             }
         }
 
@@ -1083,8 +1057,8 @@
             </div>
 
             <!-- 中段：商品設定 -->
-            <div class="relative z-10 bg-white/80 backdrop-blur-sm p-5 md:p-6 rounded-3xl mb-8 border-2 border-yellow-100 overflow-hidden">
-                <div class="absolute -top-4 left-5 bg-gradient-to-r from-yellow-300 to-pink-300 text-slate-700 font-black px-4 py-1 rounded-full text-sm shadow-sm transform -rotate-1">
+            <div class="relative z-10 bg-white/80 backdrop-blur-sm pt-7 p-5 md:p-6 md:pt-7 rounded-3xl mb-8 border-2 border-yellow-100 overflow-visible">
+                <div class="absolute -top-3 left-5 bg-gradient-to-r from-yellow-300 to-pink-300 text-slate-700 font-black px-4 py-1 rounded-full text-sm shadow-sm transform -rotate-1">
                     <i class="fas fa-gift mr-1"></i> おみやげリスト ✨
                 </div>
 
@@ -1180,10 +1154,6 @@
                 <button onclick="generateAmida()" class="btn-pop w-full md:w-2/3 px-12 py-5 bg-gradient-to-r from-pink-400 via-rose-400 to-orange-300 text-white text-xl font-black flex items-center justify-center mx-auto tracking-wide">
                     <i class="fas fa-wand-magic-sparkles mr-2"></i> いくぜ！！！
                 </button>
-            </div>
-
-            <div class="setup-footer-visual" aria-hidden="true">
-                <img src="./ChatGPT Image 2026年5月9日 17_54_01.webp" alt="">
             </div>
         </div>
 
