@@ -914,7 +914,8 @@
 
         #prize-lineup,
         #result-message,
-        #summary-modal > div {
+        #summary-modal > div,
+        #alcohol-modal > div {
             border: 3px solid rgba(255, 255, 255, 0.98) !important;
             border-radius: 24px !important;
             box-shadow: 0 8px 0 rgba(255, 134, 183, 0.12), var(--shadow);
@@ -1076,6 +1077,11 @@
                     </button>
                 </div>
 
+                <label class="flex items-center gap-2 text-sm font-black text-slate-600 mb-4 ml-1 select-none cursor-pointer w-fit">
+                    <input type="checkbox" id="bulk-alcohol" class="w-4 h-4 accent-pink-400">
+                    🍺 お酒を含む商品（引く前に本人へ確認します）
+                </label>
+
                 <div class="bg-white/86 rounded-2xl p-4 shadow-inner border-2 border-pink-100 min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar">
                     <ul id="bulk-list" class="space-y-2">
                         <li class="text-slate-400 text-center py-6 flex flex-col items-center font-bold">
@@ -1214,6 +1220,25 @@
             </div>
         </div>
 
+        <!-- お酒チャレンジ確認モーダル -->
+        <div id="alcohol-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm relative p-6 text-center">
+                <div class="card-sticker sm" style="top: -14px; right: 16px; transform: rotate(8deg);" aria-hidden="true">🍺</div>
+                <h2 class="text-2xl font-black text-pink-600 mb-2">
+                    <span id="alcohol-modal-who"></span>番さん、お酒チャレンジする？
+                </h2>
+                <p class="text-slate-500 font-bold text-sm mb-5">おみやげに 🍺 お酒入りがあるよ！<br>辞退してもべつの商品が当たるかも ✨</p>
+                <div class="flex flex-col gap-3">
+                    <button onclick="resolveAlcoholChoice(true)" class="btn-pop bg-gradient-to-r from-pink-400 via-rose-400 to-orange-300 text-white font-black px-6 py-3 text-lg">
+                        🍻 チャレンジする！
+                    </button>
+                    <button onclick="resolveAlcoholChoice(false)" class="btn-pop bg-white text-slate-500 font-black px-6 py-3 border-2 border-slate-100">
+                        お酒は辞退する
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- 結果一覧モーダル -->
         <div id="summary-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-lg relative max-h-[90vh] flex flex-col">
@@ -1254,6 +1279,8 @@
         let resultBundles = [];
         let horizontalLines = [];
         let bulkItems = [];
+        let alcoholNames = [];
+        let pendingRevealCol = null;
         let distributionMode = 'lottery';
         let animationDuration = 3000; // ms
         let currentSpeed = 'normal';
@@ -1286,6 +1313,26 @@
             return div.innerHTML;
         }
 
+        function isAlcoholName(name) {
+            return alcoholNames.includes(name);
+        }
+
+        // 商品名にすでに🍺が入っている場合は二重表示になるのでマークを付けない
+        function needsAlcoholMark(name) {
+            return isAlcoholName(name) && !name.includes('🍺');
+        }
+
+        function bundleHasAlcohol(bundle) {
+            return Array.isArray(bundle) && bundle.some(isAlcoholName);
+        }
+
+        function hasUnrevealedAlcohol() {
+            for (let i = 0; i < currentCount; i++) {
+                if (!revealedResults[i] && bundleHasAlcohol(resultBundles[i])) return true;
+            }
+            return false;
+        }
+
         function expandPrizeItems() {
             const prizeItems = [];
             bulkItems.forEach(item => {
@@ -1310,7 +1357,10 @@
         function formatPrizeBundle(bundle) {
             if (!bundle || bundle.length === 0) return '★';
             return groupBundleItems(bundle)
-                .map(item => item.count > 1 ? `${item.name}×${item.count}` : item.name)
+                .map(item => {
+                    const label = needsAlcoholMark(item.name) ? `🍺${item.name}` : item.name;
+                    return item.count > 1 ? `${label}×${item.count}` : label;
+                })
                 .join(' + ');
         }
 
@@ -1320,8 +1370,9 @@
             }
 
             const grouped = groupBundleItems(bundle);
+            const withMark = name => `${needsAlcoholMark(name) ? '🍺 ' : ''}${escapeHtml(name)}`;
             if (grouped.length === 1 && grouped[0].count === 1) {
-                return `<span>${escapeHtml(grouped[0].name)}</span>`;
+                return `<span>${withMark(grouped[0].name)}</span>`;
             }
 
             const chipClass = size === 'large'
@@ -1329,7 +1380,7 @@
                 : 'text-sm md:text-base px-3 py-1.5';
             return `<div class="flex flex-wrap justify-center gap-2">${grouped.map(item => {
                 const countBadge = item.count > 1 ? `<span class="ml-2 text-xs bg-yellow-100 text-slate-600 px-2 py-0.5 rounded-full">×${item.count}</span>` : '';
-                return `<span class="inline-flex items-center max-w-full rounded-lg bg-white border border-pink-100 text-pink-500 font-black shadow-sm ${chipClass}"><span class="truncate">${escapeHtml(item.name)}</span>${countBadge}</span>`;
+                return `<span class="inline-flex items-center max-w-full rounded-lg bg-white border border-pink-100 text-pink-500 font-black shadow-sm ${chipClass}"><span class="truncate">${withMark(item.name)}</span>${countBadge}</span>`;
             }).join('')}</div>`;
         }
 
@@ -1459,6 +1510,7 @@
                     isPlaying: isGamePanelOpen(),
                     names,
                     resultBundles,
+                    alcoholNames,
                     horizontalLines,
                     revealed: revealed.slice(0, currentCount),
                     revealedResults: revealedResults.slice(0, currentCount),
@@ -1490,7 +1542,8 @@
             return items
                 .map(item => ({
                     name: String(item?.name ?? '').trim(),
-                    count: Math.max(1, parseInt(item?.count, 10) || 1)
+                    count: Math.max(1, parseInt(item?.count, 10) || 1),
+                    isAlcohol: Boolean(item?.isAlcohol)
                 }))
                 .filter(item => item.name.length > 0)
                 .slice(0, 200);
@@ -1520,6 +1573,7 @@
             resultBundles = data.resultBundles.map(bundle =>
                 Array.isArray(bundle) ? bundle.map(name => String(name)) : []
             );
+            alcoholNames = Array.isArray(data.alcoholNames) ? data.alcoholNames.map(name => String(name)) : [];
             horizontalLines = data.horizontalLines
                 .filter(line => line && Number.isFinite(line.col) && Number.isFinite(line.y))
                 .map(line => ({ col: line.col, y: line.y }));
@@ -1594,6 +1648,8 @@
 
             currentCount = 4;
             bulkItems = [];
+            alcoholNames = [];
+            closeAlcoholModal();
             distributionMode = 'lottery';
             currentSpeed = 'normal';
             names = [];
@@ -1809,12 +1865,14 @@
         function addBulkItem() {
             const nameInput = document.getElementById('bulk-name');
             const countInput = document.getElementById('bulk-count');
+            const alcoholInput = document.getElementById('bulk-alcohol');
             const name = nameInput.value.trim();
             const count = parseInt(countInput.value);
             if (!name || count < 1) return;
-            bulkItems.push({ name, count });
+            bulkItems.push({ name, count, isAlcohol: alcoholInput.checked });
             nameInput.value = '';
             countInput.value = 1;
+            alcoholInput.checked = false;
             nameInput.focus();
             updateBulkList();
             const shortName = name.length > 8 ? `${name.slice(0, 8)}…` : name;
@@ -1840,18 +1898,21 @@
             bulkItems.forEach((item, index) => {
                 const li = document.createElement('li');
                 li.className = 'flex justify-between items-center gap-3 bg-white px-4 py-3 rounded-2xl border-2 border-pink-100 shadow-sm animate-fade-in';
-                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-lg shadow-sm flex-shrink-0">🎁</span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="text-slate-600 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block mt-2">× ${item.count}</span></div></div><button onclick="removeBulkItem(${index})" class="text-pink-500 hover:text-pink-600 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
+                const alcoholBadge = item.isAlcohol ? `<span class="text-amber-700 text-xs font-black bg-amber-100/80 px-3 py-1 rounded-full border border-amber-200 inline-block mt-2 ml-1">🍺 お酒</span>` : '';
+                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-lg shadow-sm flex-shrink-0">${item.isAlcohol ? '🍺' : '🎁'}</span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="text-slate-600 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block mt-2">× ${item.count}</span>${alcoholBadge}</div></div><button onclick="removeBulkItem(${index})" class="text-pink-500 hover:text-pink-600 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
                 listEl.appendChild(li);
             });
             updatePrizePreview();
         }
 
         function generateAmida() {
+            alcoholNames = bulkItems.filter(item => item.isAlcohol).map(item => item.name);
+            closeAlcoholModal();
             resultBundles = buildResultBundles();
 
             const summary = summarizeBundles(resultBundles);
             const hasItem = Object.keys(summary).length > 0;
-            const summaryText = !hasItem ? "（まだ空っぽ…？ 🤔）" : Object.entries(summary).map(([n, c]) => `${n}×${c}`).join(' / ');
+            const summaryText = !hasItem ? "（まだ空っぽ…？ 🤔）" : Object.entries(summary).map(([n, c]) => `${needsAlcoholMark(n) ? '🍺' : ''}${n}×${c}`).join(' / ');
             document.getElementById('lineup-text').textContent = summaryText;
             setGameMascotSpeech(GAME_MASCOT_LINES[Math.floor(Math.random() * GAME_MASCOT_LINES.length)]);
 
@@ -1906,6 +1967,7 @@
             paths = [];
             isAnimating = false;
             closeSummary();
+            closeAlcoholModal();
             saveAppState();
         }
 
@@ -2241,8 +2303,57 @@
             document.getElementById('summary-modal').classList.add('hidden');
         }
 
+        function requestReveal(col) {
+            // お酒入りの当たり枠がまだ残っている場合だけ、本人にチャレンジ確認をする
+            if (hasUnrevealedAlcohol()) {
+                pendingRevealCol = col;
+                document.getElementById('alcohol-modal-who').textContent = names[col] ?? `${col + 1}`;
+                document.getElementById('alcohol-modal').classList.remove('hidden');
+                return;
+            }
+            startReveal(col, false);
+        }
+
+        function startReveal(col, declineAlcohol) {
+            if (declineAlcohol) reassignAlcoholAwayFrom(col);
+            revealed[col] = true;
+            saveAppState();
+            drawBoard();
+            animateSinglePath(calculatePath(col));
+        }
+
+        // 辞退した人の到達先がお酒入りなら、未開封の別枠(お酒なし)と中身を丸ごと交換する
+        function reassignAlcoholAwayFrom(col) {
+            const endIndex = calculatePath(col).endIndex;
+            if (!bundleHasAlcohol(resultBundles[endIndex])) return;
+            const candidates = [];
+            for (let i = 0; i < currentCount; i++) {
+                if (i !== endIndex && !revealedResults[i] && !bundleHasAlcohol(resultBundles[i])) {
+                    candidates.push(i);
+                }
+            }
+            if (candidates.length === 0) return;
+            const swapIndex = candidates[Math.floor(Math.random() * candidates.length)];
+            [resultBundles[endIndex], resultBundles[swapIndex]] = [resultBundles[swapIndex], resultBundles[endIndex]];
+        }
+
+        function resolveAlcoholChoice(challenge) {
+            const col = pendingRevealCol;
+            closeAlcoholModal();
+            if (col === null) return;
+            setGameMascotSpeech(challenge ? 'チャレンジャー！ 🍻' : 'むりせずいこ〜');
+            startReveal(col, !challenge);
+        }
+
+        function closeAlcoholModal() {
+            pendingRevealCol = null;
+            const modal = document.getElementById('alcohol-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
         function handleCanvasInput(clientX, clientY) {
             if (isAnimating) return;
+            if (pendingRevealCol !== null) return;
 
             const rect = canvas.getBoundingClientRect();
             const scaleX = logicalWidth / rect.width;
@@ -2264,11 +2375,7 @@
                     }
                 }
                 if (clickedCol !== -1 && !revealed[clickedCol]) {
-                    revealed[clickedCol] = true;
-                    saveAppState();
-                    drawBoard();
-                    const pathData = calculatePath(clickedCol);
-                    animateSinglePath(pathData);
+                    requestReveal(clickedCol);
                 }
             }
         }
@@ -2324,9 +2431,16 @@
             }
         });
 
+        document.getElementById('alcohol-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'alcohol-modal') {
+                closeAlcoholModal();
+            }
+        });
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeSummary();
+                closeAlcoholModal();
             }
         });
 
