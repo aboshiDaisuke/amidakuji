@@ -1906,7 +1906,19 @@
             'あたれ〜！ ✨',
             'わくわく…'
         ];
+        // 右のキャラ（お菓子を食べてる子）のセリフ
+        const RIGHT_MASCOT_LINES = [
+            'もぐもぐ… 🍪',
+            'これ おいしー！ 😋',
+            'ひとくち いる？',
+            'おみやげ たのしみ〜 🎁',
+            'まだ〜？ はやく引こ？',
+            'あたり ぜったい わたし！',
+            'ん〜 あまい… 🍩',
+            'もう一個 たべちゃお 🍫'
+        ];
         let mascotLineIndex = 0;
+        let rightMascotLineIndex = 0;
 
         function applySpeechText(el, text) {
             if (!el) return;
@@ -1930,6 +1942,15 @@
         function rotateMascotSpeech() {
             mascotLineIndex = (mascotLineIndex + 1) % MASCOT_LINES.length;
             setMascotSpeech(MASCOT_LINES[mascotLineIndex]);
+        }
+
+        function setRightMascotSpeech(text) {
+            applySpeechText(document.getElementById('mascot-speech-right'), text);
+        }
+
+        function rotateRightMascotSpeech() {
+            rightMascotLineIndex = (rightMascotLineIndex + 1) % RIGHT_MASCOT_LINES.length;
+            setRightMascotSpeech(RIGHT_MASCOT_LINES[rightMascotLineIndex]);
         }
 
         function burstConfetti(count = 28) {
@@ -2045,6 +2066,8 @@
             setSpeed(currentSpeed, { silent: true });
             setMascotSpeech(MASCOT_LINES[0]);
             setInterval(rotateMascotSpeech, 7000);
+            setRightMascotSpeech(RIGHT_MASCOT_LINES[0]);
+            setTimeout(() => setInterval(rotateRightMascotSpeech, 8500), 3500);
             persistEnabled = true;
 
             if (canRestoreGame(saved)) {
@@ -2103,6 +2126,7 @@
             updateBulkList();
             const shortName = name.length > 8 ? `${name.slice(0, 8)}…` : name;
             setMascotSpeech(`「${shortName}」ついか！ ✨`);
+            setRightMascotSpeech(Math.random() < 0.5 ? 'それ たべていい？ 🤤' : 'えっ それ ほしい…！');
             saveAppState();
         }
 
