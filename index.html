@@ -617,6 +617,13 @@
             50% { transform: translateY(-8px) rotate(0.7deg); }
         }
 
+        .setup-mascot-right {
+            grid-column: 3;
+            justify-self: start;
+            margin: -1.5rem 0 0 4rem;
+            animation-delay: -2.6s;
+        }
+
         .setup-mascot .hero-badge {
             font-size: 0.58rem;
             padding: 0.2rem 0.48rem;
@@ -710,6 +717,10 @@
                 margin: 2.15rem 0 0;
                 order: -1;
                 justify-self: center;
+            }
+
+            .setup-mascot-right {
+                display: none;
             }
 
             .card-sticker {
@@ -991,6 +1002,10 @@
                     <div class="hero-badge absolute rotate-6 z-20" style="top: 6%; right: 2%;">
                         ラッキー係
                     </div>
+                </div>
+                <div class="setup-mascot setup-mascot-right" aria-hidden="true">
+                    <div class="speech-bubble" id="mascot-speech-right">もぐもぐ… 🍪</div>
+                    <img src="assets/gal-eat.png" alt="" class="w-full h-auto object-contain">
                 </div>
             </div>
 
