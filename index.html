@@ -472,10 +472,13 @@
             height: auto;
             max-height: clamp(110px, 18vw, 200px);
             object-fit: contain;
+            /* 白いふわっとしたふち: 小さい白影を重ねて縁を作り、大きいぼかしで光らせる */
             filter:
-                drop-shadow(0 0 4px rgba(255, 255, 255, 0.95))
                 drop-shadow(0 3px 0 #111)
-                drop-shadow(0 10px 16px rgba(255, 45, 122, 0.28));
+                drop-shadow(0 0 10px rgba(255, 255, 255, 0.75))
+                drop-shadow(0 0 24px rgba(255, 255, 255, 0.85))
+                drop-shadow(0 0 48px rgba(255, 255, 255, 0.6))
+                drop-shadow(0 12px 20px rgba(255, 45, 122, 0.28));
         }
 
         @keyframes logoFloat {
