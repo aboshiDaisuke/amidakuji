@@ -925,7 +925,7 @@
 
         #result-message {
             overflow: visible !important;
-            scroll-margin: 24px 0 40px;
+            scroll-margin: 16px 0 0;
         }
 
         #jackpot-video-layer {
@@ -1343,6 +1343,12 @@
                 </div>
             </div>
 
+            <!-- 結果表示エリア（盤面の上に置くことで、結果と次にタップするまるが同じ画面に収まる） -->
+            <div id="result-message" class="hidden bg-white p-6 text-center relative overflow-visible">
+                <div class="absolute top-0 left-0 w-full h-2.5 bg-black rounded-t-3xl"></div>
+                <div id="result-text" class="text-xl text-slate-700 font-bold relative z-10"></div>
+            </div>
+
             <!-- キャンバスエリア -->
             <div class="relative">
                 <div class="canvas-container">
@@ -1383,11 +1389,6 @@
                 </div>
             </div>
 
-            <!-- 結果表示エリア -->
-            <div id="result-message" class="hidden bg-white p-6 text-center relative overflow-visible">
-                <div class="absolute top-0 left-0 w-full h-2.5 bg-black rounded-t-3xl"></div>
-                <div id="result-text" class="text-xl text-slate-700 font-bold relative z-10"></div>
-            </div>
         </div>
 
         <!-- チャレンジ商品（お酒・ぬいぐるみなど）確認モーダル -->
@@ -2559,12 +2560,11 @@
             scrollResultIntoView(msgBox);
         }
 
-        // 結果欄を確実に画面内へ。登場アニメ(拡大)や複数商品の折り返しで高さが変わるので、少し後にもう一度合わせる
+        // 結果欄は盤面の直上にあるので、上端に合わせてスクロールすると結果とそのすぐ下の「タップするまる」が同時に見える。
+        // 登場アニメ(拡大)や複数商品の折り返しで高さが変わるので、少し後にもう一度合わせる
         function scrollResultIntoView(msgBox) {
             const doScroll = () => {
-                const h = msgBox.getBoundingClientRect().height;
-                const fits = h < window.innerHeight * 0.8;
-                msgBox.scrollIntoView({ behavior: 'smooth', block: fits ? 'center' : 'start' });
+                msgBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
             };
             setTimeout(doScroll, 120);
             setTimeout(doScroll, 850);
