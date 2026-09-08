@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>おみやげ配布⭐️あみだくじ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -525,7 +525,7 @@
 
         canvas {
             cursor: pointer;
-            touch-action: none;
+            touch-action: pan-x pan-y;
             display: block;
             width: 100%;
             height: auto;
@@ -1151,13 +1151,77 @@
             max-width: none !important;
             height: auto !important;
         }
+        /* Both modes keep the same draw; iPad mode adds larger controls and compact spacing. */
+        button, label { -webkit-tap-highlight-color: transparent; }
+        button { touch-action: manipulation; }
+        button:focus-visible, .board-scroll:focus-visible { outline: 3px solid #2ec4c6; outline-offset: 4px; }
+        .view-switch {
+            position: relative; z-index: 40; display: flex; align-items: center; gap: 4px;
+            width: fit-content; max-width: 100%; margin: 0 auto 20px; padding: 5px;
+            border: 2px solid #111; border-radius: 18px; background: #fffafc;
+            box-shadow: 0 4px 0 #f5c518; font-size: 14px; font-weight: 900;
+        }
+        .view-switch-label { padding: 0 8px; color: #7a4d63; }
+        .view-switch button { min-height: 44px; padding: 8px 16px; border-radius: 12px; color: #7a4d63; }
+        .view-switch button[aria-pressed="true"] { color: #f5c518; background: #111; }
+        .board-scroll { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
+        .board-content { position: relative; }
+        .board-content canvas { max-width: none; }
+        .participant-button {
+            position: absolute; top: 16px; width: 48px; height: 48px;
+            padding: 0; border: 0; border-radius: 50%; background: transparent;
+            cursor: pointer; touch-action: pan-x pan-y;
+        }
+        .participant-button:disabled { cursor: default; }
+        .board-scroll-hint { text-align: center; font-size: 14px; font-weight: 900; margin: 0 0 10px; }
+        #result-message { scroll-margin-top: 16px; }
+        .modal-overlay { overflow-y: auto; padding: max(20px, env(safe-area-inset-top)) 20px; }
+        #alcohol-modal > div { max-height: calc(100dvh - 40px); overflow-y: auto; }
+        #summary-modal > div { max-height: calc(100dvh - 40px); }
+        #summary-list { overflow-wrap: anywhere; }
+        .ipad-mode .view-switch { position: sticky; top: max(8px, env(safe-area-inset-top)); }
+        .ipad-mode .game-controls { position: sticky; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 25; }
+        .ipad-mode #game-panel, .ipad-mode #result-message { scroll-margin-top: 88px; }
+        .ipad-mode button:not(.participant-button), .ipad-mode .persist-clear,
+        .ipad-mode label:has(input[type="checkbox"]) { min-height: 48px; }
+        .ipad-mode button:not(.participant-button) { min-width: 48px; }
+        .ipad-mode input[type="checkbox"] { width: 22px; height: 22px; flex-shrink: 0; }
+        .ipad-mode #bulk-name, .ipad-mode #bulk-count { font-size: 18px; min-height: 52px; }
+        .ipad-mode .btn-pop:hover { transform: none; }
+        body.ipad-mode, body.ipad-mode::before, .ipad-mode .setup-mascot, .ipad-mode .hero-logo-wrap { animation: none; }
+        .ipad-mode .canvas-container { box-shadow: 0 6px 0 #f5c518; }
+        @media (min-width: 641px) and (max-width: 1366px) {
+            /* Prevent the artwork from covering the input fields in either mode. */
+            .count-hero { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; padding-top: 12px; }
+            .setup-mascot, .setup-mascot-right { width: min(100%, 190px); margin: 0; justify-self: center; }
+            .count-block { padding-top: 12px; }
+            .count-block > p { max-width: 280px; text-align: center; }
+            body.ipad-mode { padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); }
+            .ipad-mode .site-header { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+            .ipad-mode #setup-panel { padding: 24px; }
+            body.ipad-mode.is-playing main { max-width: 1200px; }
+            .ipad-mode #game-panel { padding-bottom: 12px; }
+            .ipad-mode #game-panel > * + * { margin-top: 16px; }
+            .ipad-mode #prize-lineup { padding: 12px 18px; }
+            .ipad-mode #lineup-text { font-size: 16px; max-height: 76px; overflow-y: auto; }
+            .ipad-mode #result-message { padding: 20px; }
+            .ipad-mode .canvas-container { padding: 12px; }
+            .ipad-mode .game-mascot { display: none; }
+        }
+        @media (max-width: 640px) {
+            .game-controls { padding: 12px; gap: 12px; }
+            .game-controls > div { gap: 10px; }
+            .game-controls button { padding-left: 12px; padding-right: 12px; }
+            .view-switch button { padding-left: 12px; padding-right: 12px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body, body::before, .setup-mascot, .hero-logo-wrap { animation: none; }
+        }
     </style>
 </head>
 <body class="p-4 pt-8 md:p-8 md:pt-10 pb-6 min-h-screen relative">
     <!-- 紙吹雪レイヤー -->
     <div id="confetti-layer" aria-hidden="true"></div>
-
-    <!-- 背景デコ（角寄り・控えめ） -->
 
     <header class="site-header text-center animate-pop-in relative z-10">
         <div class="hero-brand">
@@ -1170,6 +1234,12 @@
     </header>
 
     <main class="max-w-5xl mx-auto relative z-10 mb-4">
+
+        <div class="view-switch" role="group" aria-label="表示モード">
+            <span class="view-switch-label">表示</span>
+            <button type="button" id="display-standard" aria-pressed="true" onclick="setDisplayMode('standard')">通常表示</button>
+            <button type="button" id="display-ipad" aria-pressed="false" onclick="setDisplayMode('ipad')">iPad向け</button>
+        </div>
 
         <!-- 設定エリア -->
         <div id="setup-panel" class="pop-card p-5 md:p-9 animate-fade-in">
@@ -1190,10 +1260,10 @@
                     </label>
                     <div class="flex items-center bg-white rounded-2xl p-2 gap-3 border-2 border-pink-100 shadow-sm">
                         <button onclick="changeCount(-1)" class="btn-pop w-12 h-12 bg-white text-pink-500 font-black text-2xl flex-shrink-0" aria-label="人数を減らす">-</button>
-                        <input type="number" id="count-input" value="4" min="2" max="100" onchange="updateCountFromInput()" class="w-24 text-center font-black text-4xl bg-transparent focus:outline-none focus:bg-white rounded-2xl p-1">
+                        <input type="number" id="count-input" inputmode="numeric" aria-label="参加人数" value="4" min="2" max="20" onchange="updateCountFromInput()" class="w-24 text-center font-black text-4xl bg-transparent focus:outline-none focus:bg-white rounded-2xl p-1">
                         <button onclick="changeCount(1)" class="btn-pop w-12 h-12 bg-pink-500 text-white font-black text-2xl flex-shrink-0" aria-label="人数を増やす">+</button>
                     </div>
-                    <p class="text-xs text-slate-500 mt-2 font-bold">※画面に合わせてぎゅっと縮小されます</p>
+                    <p class="text-xs text-slate-500 mt-2 font-bold">※2〜20人。人数が多いときは盤面を横にスワイプ</p>
                 </div>
                 <div class="setup-mascot">
                     <div class="speech-bubble" id="mascot-speech">いっくよー！！ 🎁</div>
@@ -1217,11 +1287,11 @@
                 <div class="input-grid mb-4">
                     <div class="min-w-0">
                         <label class="text-xs text-slate-500 font-black ml-1">なにが当たる？</label>
-                        <input type="text" id="bulk-name" placeholder="例: 🍰 ケーキ" class="w-full border px-4 py-3 focus:outline-none bg-white/90 font-bold placeholder-pink-200 transition-all" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('bulk-count').select()}">
+                        <input type="text" id="bulk-name" enterkeyhint="next" aria-label="商品名" placeholder="例: 🍰 ケーキ" class="w-full border px-4 py-3 focus:outline-none bg-white/90 font-bold placeholder-pink-200 transition-all" onkeydown="if(event.key==='Enter' && !event.isComposing){event.preventDefault();document.getElementById('bulk-count').select()}">
                     </div>
                     <div class="w-full sm:w-24">
                         <label class="text-xs text-slate-500 font-black ml-1">いくつ？</label>
-                        <input type="number" id="bulk-count" value="1" min="1" class="w-full border px-3 py-3 focus:outline-none text-center bg-white/90 font-bold" onkeydown="if(event.key==='Enter') addBulkItem()">
+                        <input type="number" id="bulk-count" inputmode="numeric" aria-label="商品個数" value="1" min="1" max="1000" step="1" oninput="this.setCustomValidity('')" class="w-full border px-3 py-3 focus:outline-none text-center bg-white/90 font-bold" onkeydown="if(event.key==='Enter' && !event.isComposing) addBulkItem()">
                     </div>
                     <button onclick="addBulkItem()" class="btn-pop bg-pink-500 text-white font-black px-6 py-3 h-[52px] w-full sm:w-auto">
                         <i class="fas fa-plus"></i> ついか！
@@ -1344,15 +1414,21 @@
             </div>
 
             <!-- 結果表示エリア（盤面の上に置くことで、結果と次にタップするまるが同じ画面に収まる） -->
-            <div id="result-message" class="hidden bg-white p-6 text-center relative overflow-visible">
+            <div id="result-message" role="status" aria-live="polite" class="hidden bg-white p-6 text-center relative overflow-visible">
                 <div class="absolute top-0 left-0 w-full h-2.5 bg-black rounded-t-3xl"></div>
                 <div id="result-text" class="text-xl text-slate-700 font-bold relative z-10"></div>
             </div>
 
             <!-- キャンバスエリア -->
             <div class="relative">
+                <p id="board-scroll-hint" class="board-scroll-hint" hidden>↔ 横にスワイプして番号を選んでね</p>
                 <div class="canvas-container">
-                    <canvas id="amidaCanvas"></canvas>
+                    <div class="board-scroll" tabindex="0" role="region" aria-label="あみだくじ盤面。横にスクロールできます">
+                        <div class="board-content">
+                            <canvas id="amidaCanvas" aria-hidden="true"></canvas>
+                            <div id="participant-buttons" aria-label="参加者の番号"></div>
+                        </div>
+                    </div>
                     <!-- 👑 あたり確定演出（動画）: 盤面の上に重ねて出す -->
                     <div id="jackpot-video-layer" class="hidden absolute inset-0 z-20 flex items-center justify-center p-4 md:p-8" onclick="skipJackpotVideo()" aria-label="あたり確定演出">
                         <div id="jackpot-flash" class="jackpot-flash" aria-hidden="true"></div>
@@ -1375,7 +1451,7 @@
                 </div>
             </div>
 
-            <div class="soft-panel flex flex-wrap justify-between items-center p-4 gap-3">
+            <div class="game-controls soft-panel flex flex-wrap justify-between items-center p-4 gap-3">
                 <button onclick="resetView()" class="text-pink-500 hover:text-pink-600 font-black px-3 py-2 btn-pop bg-white">
                     <i class="fas fa-chevron-left mr-1"></i> もどる
                 </button>
@@ -1415,6 +1491,7 @@
                 </div>
                 <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
                     <ul id="summary-list" class="space-y-3"></ul>
+                    <p id="summary-unassigned" class="mt-4 rounded-xl bg-yellow-50 p-4 text-sm font-bold text-slate-700" hidden></p>
                 </div>
                 <div class="p-6 text-center bg-pink-50">
                     <button onclick="closeSummary()" class="btn-pop bg-pink-500 text-white font-black px-8 py-3">
@@ -1435,12 +1512,14 @@
 
     <script>
         const MIN_COUNT = 2;
-        const MAX_COUNT = 100;
+        const MAX_COUNT = 20;
+        const MAX_PRIZE_COUNT = 1000;
         const STORAGE_KEY = 'amidakuji-omiyage-v1';
         let currentCount = 4;
 
         let names = [];
         let resultBundles = [];
+        let declinedBundles = [];
         let horizontalLines = [];
         let bulkItems = [];
         // チャレンジ商品の種類（お酒・ぬいぐるみなど）。引く前に本人へ「挑戦 or 辞退」を確認する
@@ -1449,18 +1528,12 @@
             plush:   { flag: 'isPlush',   inputId: 'bulk-plush',   label: 'ぬいぐるみ', icon: '🧸', goIcon: '🧸', desc: 'ぬいぐるみなど大きいもの', badge: '🧸 大きい', badgeClass: 'text-pink-700 bg-pink-100/80 border-pink-200', go: 'おっきいの いっちゃえ〜 🧸' }
         };
         const CHALLENGE_KIND_KEYS = Object.keys(CHALLENGE_KINDS);
-        let challengeNames = emptyChallengeNames();
-        let jackpotNames = []; // 👑 あたり商品（当たったら大当たり演出）
         let pendingRevealCol = null;
         let pendingChallengeKinds = [];
         let pendingDeclined = new Set();
 
-        function emptyChallengeNames() {
-            const out = {};
-            CHALLENGE_KIND_KEYS.forEach(kind => { out[kind] = []; });
-            return out;
-        }
         let distributionMode = 'lottery';
+        let displayMode = 'standard';
         let animationDuration = 3000; // ms
         let currentSpeed = 'normal';
         let persistEnabled = true;
@@ -1492,32 +1565,50 @@
             return div.innerHTML;
         }
 
-        function kindsOfName(name) {
-            return CHALLENGE_KIND_KEYS.filter(kind => (challengeNames[kind] || []).includes(name));
+        function normalizePrize(prize, legacy = {}) {
+            if (prize && typeof prize === 'object') {
+                return { name: String(prize.name ?? ''), isAlcohol: Boolean(prize.isAlcohol),
+                    isPlush: Boolean(prize.isPlush), isJackpot: Boolean(prize.isJackpot) };
+            }
+            const name = String(prize ?? '');
+            const containsName = list => Array.isArray(list) && list.some(value => String(value) === name);
+            return { name,
+                isAlcohol: containsName(legacy.challengeNames?.alcohol || legacy.alcoholNames),
+                isPlush: containsName(legacy.challengeNames?.plush),
+                isJackpot: containsName(legacy.jackpotNames) };
+        }
+
+        function prizeKey(prize) {
+            const item = normalizePrize(prize);
+            return JSON.stringify([item.name, item.isAlcohol, item.isPlush, item.isJackpot]);
+        }
+
+        function kindsOfPrize(prize) {
+            return kindsOfItem(normalizePrize(prize));
         }
 
         function kindsOfItem(item) {
             return CHALLENGE_KIND_KEYS.filter(kind => Boolean(item?.[CHALLENGE_KINDS[kind].flag]));
         }
 
-        function isJackpotName(name) {
-            return jackpotNames.includes(name);
+        function isJackpotPrize(name) {
+            return Boolean(name?.isJackpot);
         }
 
         function bundleHasJackpot(bundle) {
-            return Array.isArray(bundle) && bundle.some(isJackpotName);
+            return Array.isArray(bundle) && bundle.some(isJackpotPrize);
         }
 
         // 商品名にすでに同じ絵文字が入っている場合は二重表示になるのでマークを付けない
         function challengeMark(name) {
-            const icons = kindsOfName(name).map(kind => CHALLENGE_KINDS[kind].icon);
-            if (isJackpotName(name)) icons.unshift('👑');
-            return icons.filter(icon => !name.includes(icon)).join('');
+            const icons = kindsOfPrize(name).map(kind => CHALLENGE_KINDS[kind].icon);
+            if (isJackpotPrize(name)) icons.unshift('👑');
+            return icons.filter(icon => !normalizePrize(name).name.includes(icon)).join('');
         }
 
         function bundleKinds(bundle) {
             const set = new Set();
-            if (Array.isArray(bundle)) bundle.forEach(name => kindsOfName(name).forEach(kind => set.add(kind)));
+            if (Array.isArray(bundle)) bundle.forEach(name => kindsOfPrize(name).forEach(kind => set.add(kind)));
             return set;
         }
 
@@ -1538,29 +1629,26 @@
         function expandPrizeItems() {
             const prizeItems = [];
             bulkItems.forEach(item => {
-                for (let i = 0; i < item.count; i++) prizeItems.push(item.name);
+                for (let i = 0; i < item.count; i++) prizeItems.push(normalizePrize(item));
             });
             return prizeItems;
         }
 
         function groupBundleItems(bundle) {
-            const grouped = [];
-            bundle.forEach(name => {
-                const existing = grouped.find(item => item.name === name);
-                if (existing) {
-                    existing.count += 1;
-                } else {
-                    grouped.push({ name, count: 1 });
-                }
+            const grouped = new Map();
+            bundle.forEach(prize => {
+                const key = prizeKey(prize);
+                if (grouped.has(key)) grouped.get(key).count += 1;
+                else grouped.set(key, { ...normalizePrize(prize), count: 1 });
             });
-            return grouped;
+            return [...grouped.values()];
         }
 
         function formatPrizeBundle(bundle) {
             if (!bundle || bundle.length === 0) return '★';
             return groupBundleItems(bundle)
                 .map(item => {
-                    const label = `${challengeMark(item.name)}${item.name}`;
+                    const label = `${challengeMark(item)}${item.name}`;
                     return item.count > 1 ? `${label}×${item.count}` : label;
                 })
                 .join(' + ');
@@ -1572,9 +1660,9 @@
             }
 
             const grouped = groupBundleItems(bundle);
-            const withMark = name => { const mark = challengeMark(name); return `${mark ? `${mark} ` : ''}${escapeHtml(name)}`; };
+            const withMark = item => { const mark = challengeMark(item); return `${mark ? `${mark} ` : ''}${escapeHtml(item.name)}`; };
             if (grouped.length === 1 && grouped[0].count === 1) {
-                return `<span>${withMark(grouped[0].name)}</span>`;
+                return `<span>${withMark(grouped[0])}</span>`;
             }
 
             const chipClass = size === 'large'
@@ -1582,7 +1670,7 @@
                 : 'text-sm md:text-base px-3 py-1.5';
             return `<div class="flex flex-wrap justify-center gap-2">${grouped.map(item => {
                 const countBadge = item.count > 1 ? `<span class="ml-2 text-xs bg-yellow-100 text-slate-600 px-2 py-0.5 rounded-full">×${item.count}</span>` : '';
-                return `<span class="inline-flex items-center max-w-full rounded-lg bg-white border border-pink-100 text-pink-500 font-black shadow-sm ${chipClass}"><span class="truncate">${withMark(item.name)}</span>${countBadge}</span>`;
+                return `<span class="inline-flex items-center max-w-full rounded-lg bg-white border border-pink-100 text-pink-500 font-black shadow-sm ${chipClass}"><span class="truncate">${withMark(item)}</span>${countBadge}</span>`;
             }).join('')}</div>`;
         }
 
@@ -1605,11 +1693,11 @@
             shuffle(indexes);
             const minLength = Math.min(...bundles.map(bundle => bundle.length));
             const shortestIndexes = indexes.filter(index => bundles[index].length === minLength);
-            const shortestMixedIndex = shortestIndexes.find(index => !bundles[index].includes(prizeName));
+            const shortestMixedIndex = shortestIndexes.find(index => !bundles[index].some(item => prizeKey(item) === prizeKey(prizeName)));
             if (shortestMixedIndex !== undefined) return shortestMixedIndex;
 
             const mixedIndexes = indexes
-                .filter(index => !bundles[index].includes(prizeName))
+                .filter(index => !bundles[index].some(item => prizeKey(item) === prizeKey(prizeName)))
                 .sort((a, b) => bundles[a].length - bundles[b].length);
             return mixedIndexes[0] ?? shortestIndexes[0] ?? 0;
         }
@@ -1641,14 +1729,10 @@
                 : buildStandardResultBundles(prizeItems);
         }
 
-        function summarizeBundles(bundles) {
-            const summary = {};
-            bundles.forEach(bundle => {
-                bundle.forEach(name => {
-                    summary[name] = (summary[name] || 0) + 1;
-                });
-            });
-            return summary;
+        function updateLineup() {
+            const allPrizes = [...resultBundles.flat(), ...declinedBundles.flat()];
+            document.getElementById('lineup-text').textContent = allPrizes.length
+                ? formatPrizeBundle(allPrizes) : '（まだ空っぽ…？ 🤔）';
         }
 
         function updateDistributionControls() {
@@ -1663,6 +1747,15 @@
             distributionMode = mode === 'auto' ? 'auto' : 'lottery';
             updateDistributionControls();
             updatePrizePreview();
+            saveAppState();
+        }
+
+        function setDisplayMode(mode) {
+            displayMode = mode === 'ipad' ? 'ipad' : 'standard';
+            document.body.classList.toggle('ipad-mode', displayMode === 'ipad');
+            document.getElementById('display-standard').setAttribute('aria-pressed', String(displayMode === 'standard'));
+            document.getElementById('display-ipad').setAttribute('aria-pressed', String(displayMode === 'ipad'));
+            if (isGamePanelOpen()) resizeCanvas();
             saveAppState();
         }
 
@@ -1704,16 +1797,16 @@
             if (!persistEnabled) return;
             try {
                 const payload = {
-                    version: 1,
+                    version: 2,
                     currentCount,
                     bulkItems,
                     distributionMode,
+                    displayMode,
                     speed: currentSpeed,
                     isPlaying: isGamePanelOpen(),
                     names,
                     resultBundles,
-                    challengeNames,
-                    jackpotNames,
+                    declinedBundles,
                     horizontalLines,
                     revealed: revealed.slice(0, currentCount),
                     revealedResults: revealedResults.slice(0, currentCount),
@@ -1732,7 +1825,7 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (!raw) return null;
                 const data = JSON.parse(raw);
-                if (!data || data.version !== 1) return null;
+                if (!data || ![1, 2].includes(data.version)) return null;
                 return data;
             } catch (err) {
                 console.warn('保存データの読み込みに失敗しました', err);
@@ -1745,7 +1838,7 @@
             return items
                 .map(item => ({
                     name: String(item?.name ?? '').trim(),
-                    count: Math.max(1, parseInt(item?.count, 10) || 1),
+                    count: Math.min(MAX_PRIZE_COUNT, Math.max(1, parseInt(item?.count, 10) || 1)),
                     isAlcohol: Boolean(item?.isAlcohol),
                     isPlush: Boolean(item?.isPlush),
                     isJackpot: Boolean(item?.isJackpot)
@@ -1757,11 +1850,12 @@
         function applyLoadedSetup(data) {
             if (!data) return;
             const count = parseInt(data.currentCount, 10);
-            if (!isNaN(count) && count >= MIN_COUNT && count <= MAX_COUNT) {
-                currentCount = count;
+            if (Number.isFinite(count)) {
+                currentCount = Math.max(MIN_COUNT, Math.min(MAX_COUNT, count));
             }
             bulkItems = sanitizeBulkItems(data.bulkItems);
             distributionMode = data.distributionMode === 'auto' ? 'auto' : 'lottery';
+            displayMode = data.displayMode === 'ipad' ? 'ipad' : 'standard';
             currentSpeed = ['slow', 'normal', 'fast'].includes(data.speed) ? data.speed : 'normal';
         }
 
@@ -1774,21 +1868,13 @@
         }
 
         function restoreGameSession(data) {
+            cancelGameWork();
             names = data.names.map((n, i) => String(n ?? i + 1));
             resultBundles = data.resultBundles.map(bundle =>
-                Array.isArray(bundle) ? bundle.map(name => String(name)) : []
+                Array.isArray(bundle) ? bundle.map(prize => normalizePrize(prize, data)) : []
             );
-            challengeNames = emptyChallengeNames();
-            if (data.challengeNames && typeof data.challengeNames === 'object') {
-                CHALLENGE_KIND_KEYS.forEach(kind => {
-                    const list = data.challengeNames[kind];
-                    challengeNames[kind] = Array.isArray(list) ? list.map(name => String(name)) : [];
-                });
-            } else if (Array.isArray(data.alcoholNames)) {
-                // 旧形式（お酒のみ）の保存データ
-                challengeNames.alcohol = data.alcoholNames.map(name => String(name));
-            }
-            jackpotNames = Array.isArray(data.jackpotNames) ? data.jackpotNames.map(name => String(name)) : [];
+            declinedBundles = Array.from({ length: currentCount }, (_, i) =>
+                Array.isArray(data.declinedBundles?.[i]) ? data.declinedBundles[i].map(prize => normalizePrize(prize, data)) : []);
             horizontalLines = data.horizontalLines
                 .filter(line => line && Number.isFinite(line.col) && Number.isFinite(line.y))
                 .map(line => ({ col: line.col, y: line.y }));
@@ -1798,11 +1884,7 @@
             paths = [];
             isAnimating = false;
 
-            const summary = summarizeBundles(resultBundles);
-            const hasItem = Object.keys(summary).length > 0;
-            const summaryText = data.lineupText
-                || (!hasItem ? '（まだ空っぽ…？ 🤔）' : Object.entries(summary).map(([n, c]) => `${n}×${c}`).join(' / '));
-            document.getElementById('lineup-text').textContent = summaryText;
+            updateLineup();
 
             document.getElementById('setup-panel').classList.add('hidden');
             document.getElementById('game-panel').classList.remove('hidden');
@@ -1812,7 +1894,7 @@
             closeSummary();
 
             // 座標は画面サイズ依存なので、開封済み分だけ再計算
-            setTimeout(() => {
+            scheduleGameTask(() => {
                 resizeCanvas();
                 paths = [];
                 for (let i = 0; i < currentCount; i++) {
@@ -1854,6 +1936,7 @@
             if (!confirm('保存した人数・おみやげ・抽選の途中経過を消しますか？\n（この操作はこのサイトのデータだけ消します）')) {
                 return;
             }
+            cancelGameWork();
             persistEnabled = false;
             try {
                 localStorage.removeItem(STORAGE_KEY);
@@ -1863,13 +1946,12 @@
 
             currentCount = 4;
             bulkItems = [];
-            challengeNames = emptyChallengeNames();
-            jackpotNames = [];
             closeAlcoholModal();
             distributionMode = 'lottery';
             currentSpeed = 'normal';
             names = [];
             resultBundles = [];
+            declinedBundles = [];
             horizontalLines = [];
             paths = [];
             revealed = new Array(MAX_COUNT).fill(false);
@@ -1886,6 +1968,7 @@
             updateDisplays();
             updateBulkList();
             updateDistributionControls();
+            setDisplayMode('standard');
             setSpeed('normal', { silent: true });
             setMascotSpeech('まっさらにしたよ！');
             persistEnabled = true;
@@ -2036,7 +2119,7 @@
         const COL_WIDTH = 60; // 1列あたりの理想幅
         const MIN_LOGICAL_WIDTH = 300;
         const HEADER_HEIGHT = 80;
-        const FOOTER_HEIGHT = 180; // 下部が見切れないようさらに余裕を持たせた（角丸クリッピング対策）
+        const FOOTER_HEIGHT = 130; // 結果ボックスと影のための余白
         const PADDING_SIDE = 60;
         
         // 番号まるの塗り（黒×ピンク×金のギャル配色）と、その上の数字色
@@ -2055,6 +2138,39 @@
         ];
         const BOARD_LINE = '#1c1220';
 
+        let gameGeneration = 0;
+        let animationFrame = null;
+        let activeAnimation = null;
+        let jackpotVideoCancel = null;
+        const gameTimers = new Set();
+
+        function scheduleGameTask(callback, delay) {
+            const generation = gameGeneration;
+            const timer = setTimeout(() => {
+                gameTimers.delete(timer);
+                if (generation === gameGeneration) callback();
+            }, delay);
+            gameTimers.add(timer);
+            return timer;
+        }
+
+        function cancelGameWork() {
+            gameGeneration += 1;
+            if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+            activeAnimation = null;
+            gameTimers.forEach(clearTimeout);
+            gameTimers.clear();
+            if (jackpotVideoCancel) jackpotVideoCancel();
+            jackpotVideoCancel = null;
+            jackpotVideoDone = null;
+            const video = document.getElementById('jackpot-video');
+            if (video) video.pause();
+            document.getElementById('jackpot-video-layer').classList.add('hidden');
+            document.querySelector('.canvas-container').classList.remove('is-shaking');
+            isAnimating = false;
+        }
+
         let paths = []; 
         let isAnimating = false;
         let revealed = new Array(MAX_COUNT).fill(false); 
@@ -2064,6 +2180,7 @@
             persistEnabled = false;
             const saved = loadAppState();
             applyLoadedSetup(saved);
+            setDisplayMode(displayMode);
             updateDisplays();
             updateBulkList();
             updateDistributionControls();
@@ -2112,8 +2229,15 @@
             const nameInput = document.getElementById('bulk-name');
             const countInput = document.getElementById('bulk-count');
             const name = nameInput.value.trim();
-            const count = parseInt(countInput.value);
-            if (!name || count < 1) return;
+            const count = Number(countInput.value);
+            if (!name) { nameInput.focus(); return; }
+            if (!Number.isInteger(count) || count < 1 || count > MAX_PRIZE_COUNT) {
+                countInput.setCustomValidity(`個数は1〜${MAX_PRIZE_COUNT}の整数を入れてね`);
+                countInput.reportValidity();
+                countInput.focus();
+                return;
+            }
+            countInput.setCustomValidity('');
             const item = { name, count };
             CHALLENGE_KIND_KEYS.forEach(kind => {
                 const input = document.getElementById(CHALLENGE_KINDS[kind].inputId);
@@ -2163,22 +2287,16 @@
         }
 
         function generateAmida() {
-            challengeNames = emptyChallengeNames();
-            CHALLENGE_KIND_KEYS.forEach(kind => {
-                challengeNames[kind] = bulkItems.filter(item => item[CHALLENGE_KINDS[kind].flag]).map(item => item.name);
-            });
-            jackpotNames = bulkItems.filter(item => item.isJackpot).map(item => item.name);
-            if (jackpotNames.length > 0) {
+            cancelGameWork();
+            declinedBundles = Array.from({ length: currentCount }, () => []);
+            if (bulkItems.some(item => item.isJackpot)) {
                 const jv = document.getElementById('jackpot-video');
                 if (jv && jv.preload !== 'auto') { jv.preload = 'auto'; jv.load(); }
             }
             closeAlcoholModal();
             resultBundles = buildResultBundles();
 
-            const summary = summarizeBundles(resultBundles);
-            const hasItem = Object.keys(summary).length > 0;
-            const summaryText = !hasItem ? "（まだ空っぽ…？ 🤔）" : Object.entries(summary).map(([n, c]) => `${challengeMark(n)}${n}×${c}`).join(' / ');
-            document.getElementById('lineup-text').textContent = summaryText;
+            updateLineup();
             setGameMascotSpeech(GAME_MASCOT_LINES[Math.floor(Math.random() * GAME_MASCOT_LINES.length)]);
 
             names = [];
@@ -2220,11 +2338,14 @@
             document.getElementById('result-message').classList.add('hidden');
             closeSummary();
 
-            setTimeout(resizeCanvas, 50);
+            resizeCanvas();
+            document.querySelector('.board-scroll').scrollLeft = 0;
+            scheduleGameTask(() => document.getElementById('game-panel').scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
             saveAppState();
         }
 
         function resetView() {
+            cancelGameWork();
             document.getElementById('game-panel').classList.add('hidden');
             document.getElementById('setup-panel').classList.remove('hidden');
             document.querySelector('header').classList.remove('hidden');
@@ -2243,26 +2364,41 @@
 
         // --- 描画・リサイズ処理（核心部分） ---
 
+        let canvasScale = 1;
+
         function resizeCanvas() {
-            const container = document.querySelector('.canvas-container');
-            const dpr = window.devicePixelRatio || 1;
-            
-            // 1. 描画の「土台」となる幅をコンテナの実際の幅に合わせる
-            // 人数による計算（COL_WIDTH）とコンテナ幅の大きい方を採用
-            const contentWidth = (currentCount * COL_WIDTH) + (PADDING_SIDE * 2);
-            logicalWidth = Math.max(container.offsetWidth - (currentCount <= 5 ? 40 : 0), contentWidth, MIN_LOGICAL_WIDTH);
-            logicalHeight = Math.max(800, logicalWidth * 0.8); // 縦にゆとりを持たせる
-            
-            // 2. 内部解像度を高精細にセット（リサイズ時のみ実行して負荷を軽減）
-            canvas.width = logicalWidth * dpr;
-            canvas.height = logicalHeight * dpr;
-            
-            // 3. 表示サイズ（CSS）— 幅はコンテナに合わせ、アスペクト比を維持
-            canvas.style.width = '100%';
-            canvas.style.height = 'auto';
-            canvas.style.aspectRatio = `${logicalWidth} / ${logicalHeight}`;
-            
+            const scroller = document.querySelector('.board-scroll');
+            const columnWidth = displayMode === 'ipad' ? COL_WIDTH : 48;
+            logicalWidth = Math.max(scroller.clientWidth, (currentCount - 1) * columnWidth + PADDING_SIDE * 2, MIN_LOGICAL_WIDTH);
+            logicalHeight = displayMode === 'ipad'
+                ? Math.max(420, Math.min(640, window.innerHeight * 0.65))
+                : Math.max(540, Math.min(800, scroller.clientWidth * 0.8));
+            // Keep the bitmap within tablet canvas limits for a wide board.
+            canvasScale = Math.min(window.devicePixelRatio || 1, 2, 4096 / logicalWidth,
+                Math.sqrt(8000000 / (logicalWidth * logicalHeight)));
+            canvas.width = Math.floor(logicalWidth * canvasScale);
+            canvas.height = Math.floor(logicalHeight * canvasScale);
+            canvas.style.width = `${logicalWidth}px`;
+            canvas.style.height = `${logicalHeight}px`;
+            document.querySelector('.board-content').style.width = `${logicalWidth}px`;
+            document.getElementById('board-scroll-hint').hidden = logicalWidth <= scroller.clientWidth + 1;
+            paths = paths.map(path => calculatePath(path.startIndex));
+            rebuildParticipantButtons();
             drawBoard();
+        }
+
+        function rebuildParticipantButtons() {
+            const picker = document.getElementById('participant-buttons');
+            picker.replaceChildren();
+            for (let i = 0; i < currentCount; i++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'participant-button';
+                button.style.left = `${getColX(i) - 24}px`;
+                button.setAttribute('aria-label', `${names[i]}番のくじを引く`);
+                button.addEventListener('click', () => requestReveal(i));
+                picker.appendChild(button);
+            }
         }
 
         function getColX(index) {
@@ -2272,10 +2408,14 @@
         }
 
         function drawBoard(currentPathInfo = null) {
-            const dpr = window.devicePixelRatio || 1;
-            
-            // スケールだけは描画のたびに確実に適用
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0); 
+            const buttons = document.getElementById('participant-buttons').children;
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = isAnimating || Boolean(revealed[i]);
+                buttons[i].setAttribute('aria-label', `${names[i]}番${revealed[i] ? '（抽選済み）' : 'のくじを引く'}`);
+            }
+            if (!currentPathInfo && activeAnimation) currentPathInfo = getAnimationPathInfo(activeAnimation);
+            // CSS座標を維持し、画面回転後も同じ番号・経路を描画する。
+            ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0);
             ctx.clearRect(0, 0, logicalWidth, logicalHeight);
             
             const lineTop = HEADER_HEIGHT;
@@ -2486,57 +2626,57 @@
             ctx.stroke();
         }
 
+        function getAnimationPathInfo(animation) {
+            const path = calculatePath(animation.startIndex);
+            const segments = path.coords.slice(1).map((end, i) => {
+                const start = path.coords[i];
+                return { start, end, length: Math.hypot(end.x - start.x, end.y - start.y) };
+            });
+            const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
+            return { segments, currentDist: animation.progress * totalLength,
+                color: lineColors[animation.startIndex % lineColors.length] };
+        }
+
         function animateSinglePath(pathData, onComplete) {
             isAnimating = true;
-            let totalLength = 0;
-            const segments = [];
-            for (let i = 0; i < pathData.coords.length - 1; i++) {
-                const dx = pathData.coords[i + 1].x - pathData.coords[i].x;
-                const dy = pathData.coords[i + 1].y - pathData.coords[i].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                segments.push({ start: pathData.coords[i], end: pathData.coords[i + 1], length: dist });
-                totalLength += dist;
-            }
-
+            const generation = gameGeneration;
+            const animation = { startIndex: pathData.startIndex, progress: 0 };
+            activeAnimation = animation;
             let startTime = performance.now();
-            const color = lineColors[pathData.startIndex % lineColors.length];
-            // 👑 あたり枠に向かう線は、途中(70%)で止めて確定演出の動画を挟む
-            const JACKPOT_CUE_RATIO = 0.7;
             let jackpotCuePending = bundleHasJackpot(resultBundles[pathData.endIndex]);
+            const duration = animationDuration;
 
             function loop(now) {
-                const elapsed = now - startTime;
-                const duration = animationDuration;
-                let currentDist = (elapsed / duration) * totalLength;
-                if (currentDist > totalLength) currentDist = totalLength;
-
-                if (jackpotCuePending && currentDist >= totalLength * JACKPOT_CUE_RATIO) {
+                if (generation !== gameGeneration) return;
+                animation.progress = Math.min(1, (now - startTime) / duration);
+                if (jackpotCuePending && animation.progress >= 0.7) {
                     jackpotCuePending = false;
-                    const pausedDist = totalLength * JACKPOT_CUE_RATIO;
-                    drawBoard({ segments, currentDist: pausedDist, color });
-                    const pausedElapsed = (pausedDist / totalLength) * duration;
+                    animation.progress = 0.7;
+                    drawBoard();
                     playJackpotVideo(() => {
-                        startTime = performance.now() - pausedElapsed; // 止めた位置から続きを走らせる
-                        requestAnimationFrame(loop);
+                        if (generation !== gameGeneration) return;
+                        startTime = performance.now() - 0.7 * duration;
+                        animationFrame = requestAnimationFrame(loop);
                     });
                     return;
                 }
-
-                drawBoard({ segments, currentDist, color });
-
-                if (currentDist < totalLength) {
-                    requestAnimationFrame(loop);
+                drawBoard();
+                if (animation.progress < 1) {
+                    animationFrame = requestAnimationFrame(loop);
                 } else {
+                    animationFrame = null;
+                    activeAnimation = null;
                     isAnimating = false;
-                    paths.push(pathData);
-                    revealedResults[pathData.endIndex] = true;
+                    const completedPath = calculatePath(pathData.startIndex);
+                    paths.push(completedPath);
+                    revealedResults[completedPath.endIndex] = true;
                     drawBoard();
-                    showResult(pathData);
+                    showResult(completedPath);
                     checkAllRevealed();
-                    if(onComplete) onComplete();
+                    if (onComplete) onComplete();
                 }
             }
-            requestAnimationFrame(loop);
+            animationFrame = requestAnimationFrame(loop);
         }
 
         function showResult(pathData) {
@@ -2549,6 +2689,9 @@
             const fanfare = isBlank ? 'ざんねん…？ ⭐' : isJackpot ? '👑 大当たり〜〜！！！ 👑' : 'やったね！！ 🎉';
             const fanfareClass = isJackpot ? 'mb-2 text-amber-600 text-xl font-black animate-boing' : 'mb-2 text-pink-600 text-sm font-black';
             msgText.innerHTML = `<div class="${fanfareClass}">${fanfare}</div><div class="text-xl mb-3"><span class="font-black text-sky-600 text-3xl">${escapeHtml(startName)}</span>番 は…</div><div class="text-3xl md:text-4xl font-black ${isJackpot ? 'text-amber-500' : 'text-pink-600'} drop-shadow-sm animate-boing">${formatPrizeBundleHtml(endBundle, 'large')}</div>`;
+            if (declinedBundles[pathData.startIndex]?.length) {
+                msgText.insertAdjacentHTML('beforeend', '<p class="mt-3 text-sm text-slate-600">辞退した商品は未配布にしました。</p>');
+            }
             msgBox.classList.toggle('result-jackpot', isJackpot);
             msgBox.classList.remove('hidden');
             msgBox.classList.remove('result-burst');
@@ -2561,18 +2704,19 @@
         }
 
         // 結果欄は盤面の直上にあるので、上端に合わせてスクロールすると結果とそのすぐ下の「タップするまる」が同時に見える。
-        // 登場アニメ(拡大)や複数商品の折り返しで高さが変わるので、少し後にもう一度合わせる
+        // 結果欄の高さが確定してからスクロールし、次の操作を妨げない。
         function scrollResultIntoView(msgBox) {
             const doScroll = () => {
                 msgBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
             };
-            setTimeout(doScroll, 120);
-            setTimeout(doScroll, 850);
+            scheduleGameTask(doScroll, 120);
         }
 
         function checkAllRevealed() {
             if (revealed.slice(0, currentCount).every(r => r === true)) {
-                setTimeout(() => showSummary(), 1500);
+                scheduleGameTask(() => {
+                    if (isGamePanelOpen() && revealed.slice(0, currentCount).every(Boolean)) showSummary();
+                }, 1500);
             }
         }
 
@@ -2589,6 +2733,10 @@
                 li.innerHTML = `<div class="flex items-start gap-3"><span class="px-3 h-8 rounded-xl bg-white border border-pink-100 flex items-center justify-center font-black text-pink-600 shadow-sm text-sm flex-shrink-0">${escapeHtml(names[i])}</span><span class="text-slate-400 text-sm pt-1">➔</span><div class="font-bold text-slate-700 text-lg min-w-0 flex-1">${formatPrizeBundleHtml(resultBundle)}</div></div>`;
                 list.appendChild(li);
             }
+            const unassigned = declinedBundles.flat();
+            const note = document.getElementById('summary-unassigned');
+            note.hidden = unassigned.length === 0;
+            note.textContent = unassigned.length ? `辞退で未配布：${formatPrizeBundle(unassigned)}` : '';
             modal.classList.remove('hidden');
             burstConfetti(32);
         }
@@ -2598,6 +2746,7 @@
         }
 
         function requestReveal(col) {
+            if (!isGamePanelOpen() || isAnimating || pendingRevealCol !== null || revealed[col]) return;
             // チャレンジ商品（お酒・ぬいぐるみなど）の当たり枠がまだ残っている場合だけ、本人に確認する
             const kinds = unrevealedChallengeKinds();
             if (kinds.length > 0) {
@@ -2617,7 +2766,7 @@
             document.getElementById('challenge-modal-title').textContent = kinds.length === 1
                 ? `${CHALLENGE_KINDS[kinds[0]].label}チャレンジする？`
                 : 'チャレンジする？';
-            document.getElementById('challenge-modal-desc').innerHTML = `おみやげに ${escapeHtml(labels)} があるよ！<br>辞退してもべつの商品が当たるかも ✨`;
+            document.getElementById('challenge-modal-desc').innerHTML = `おみやげに ${escapeHtml(labels)} があるよ！<br>辞退した商品は配らないよ。交換先がないときは未配布にするね ✨`;
             renderChallengeModalBody();
             document.getElementById('alcohol-modal').classList.remove('hidden');
         }
@@ -2656,6 +2805,7 @@
         }
 
         function startReveal(col, declinedKinds) {
+            if (!isGamePanelOpen() || isAnimating || revealed[col]) return;
             if (declinedKinds.length > 0) reassignChallengeAwayFrom(col, declinedKinds);
             revealed[col] = true;
             saveAppState();
@@ -2693,6 +2843,7 @@
 
             const timers = [];
             let advanced = false;
+            jackpotVideoCancel = () => { advanced = true; timers.forEach(clearTimeout); };
             const advance = () => {
                 if (advanced) return;
                 advanced = true;
@@ -2709,14 +2860,14 @@
             flash.classList.add('is-strobe');
             try { navigator.vibrate && navigator.vibrate([70, 40, 70, 40, 220]); } catch {}
             // 750ms: カットイン
-            timers.push(setTimeout(() => {
+            timers.push(scheduleGameTask(() => {
                 cutin.classList.remove('hidden');
                 setGameMascotSpeech('激アツきたーー！！ 🔥');
                 burstConfetti(70);
                 try { navigator.vibrate && navigator.vibrate([120, 60, 260]); } catch {}
             }, 750));
             // 2100ms: 動画へ
-            timers.push(setTimeout(advance, 2100));
+            timers.push(scheduleGameTask(advance, 2100));
         }
 
         function startJackpotVideo(onDone) {
@@ -2739,13 +2890,19 @@
                 // 白フラッシュで盤面に戻る
                 wrap.classList.add('hidden');
                 flash.className = 'jackpot-flash is-white';
-                setTimeout(() => {
+                scheduleGameTask(() => {
                     layer.classList.add('hidden');
                     flash.className = 'jackpot-flash';
                     setGameMascotSpeech('確定！！！ 👑✨');
                     burstConfetti(60);
                     onDone();
                 }, prefersReducedMotion() ? 0 : 380);
+            };
+            jackpotVideoCancel = () => {
+                finished = true;
+                clearTimeout(fallbackTimer);
+                video.removeEventListener('ended', finish);
+                video.removeEventListener('error', finish);
             };
             jackpotVideoDone = finish;
 
@@ -2760,9 +2917,10 @@
             setGameMascotSpeech('きた…！？ 👑');
 
             const armFallback = () => {
+                if (finished) return;
                 // 何かの理由で ended が来なくても、動画尺+2秒で必ず戻す
                 const dur = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 6;
-                fallbackTimer = setTimeout(finish, (dur + 2) * 1000);
+                fallbackTimer = scheduleGameTask(finish, (dur + 2) * 1000);
             };
 
             try {
@@ -2773,6 +2931,7 @@
             if (attempt && typeof attempt.then === 'function') {
                 attempt.then(armFallback).catch(() => {
                     // 音あり自動再生がブロックされたらミュートで再挑戦、それもダメなら演出スキップ
+                    if (finished) return;
                     video.muted = true;
                     video.play().then(armFallback).catch(finish);
                 });
@@ -2795,7 +2954,12 @@
                     candidates.push(i);
                 }
             }
-            if (candidates.length === 0) return;
+            if (candidates.length === 0) {
+                // No safe unopened bundle remains: keep declined items out of this person's result.
+                declinedBundles[col] = resultBundles[endIndex].filter(item => bundleHasKind([item], declinedKinds));
+                resultBundles[endIndex] = resultBundles[endIndex].filter(item => !bundleHasKind([item], declinedKinds));
+                return;
+            }
             const swapIndex = candidates[Math.floor(Math.random() * candidates.length)];
             [resultBundles[endIndex], resultBundles[swapIndex]] = [resultBundles[swapIndex], resultBundles[endIndex]];
         }
@@ -2856,14 +3020,8 @@
             handleCanvasInput(e.clientX, e.clientY);
         });
 
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            handleCanvasInput(touch.clientX, touch.clientY);
-        }, { passive: false });
-
         async function revealAll() {
-            if(isAnimating) return;
+            if (!isGamePanelOpen() || isAnimating || pendingRevealCol !== null) return;
             const unrevealedIndices = [];
             for(let i=0; i<currentCount; i++) if(!revealed[i]) unrevealedIndices.push(i);
             
@@ -2896,9 +3054,9 @@
 
         let resizeTimer;
         window.addEventListener('resize', () => {
-            if (!document.getElementById('game-panel').classList.contains('hidden') && !isAnimating) {
+            if (!document.getElementById('game-panel').classList.contains('hidden')) {
                 clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(resizeCanvas, 200);
+                resizeTimer = scheduleGameTask(resizeCanvas, 100);
             }
         });
 
