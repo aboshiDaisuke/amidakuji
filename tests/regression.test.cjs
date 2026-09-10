@@ -241,3 +241,19 @@ test('display mode persists and can switch mid-animation without resetting the d
     a.run("setDisplayMode('ipad'); applyLoadedSetup(loadAppState())");
     assert.equal(a.run('displayMode'), 'ipad');
 });
+
+test('registered prize counts can be changed in place within 1 and the maximum', () => {
+    const a = app();
+    a.run(`bulkItems=[{name:'クッキー',count:1}]; updateBulkList();`);
+    a.run('changeBulkItemCount(0, 1)');
+    assert.equal(a.run('bulkItems[0].count'), 2);
+    assert.equal(a.run('loadAppState().bulkItems[0].count'), 2);
+    a.run('changeBulkItemCount(0, -1); changeBulkItemCount(0, -1)');
+    assert.equal(a.run('bulkItems[0].count'), 1);
+    a.run('bulkItems[0].count = MAX_PRIZE_COUNT; changeBulkItemCount(0, 1)');
+    assert.equal(a.run('bulkItems[0].count'), a.run('MAX_PRIZE_COUNT'));
+    a.run('changeBulkItemCount(5, 1)');
+    assert.equal(a.run('bulkItems.length'), 1);
+    a.run('updateBulkList()');
+    assert.match(a.element('bulk-list').children.at(-1).innerHTML, /changeBulkItemCount\(0, -1\)/);
+});

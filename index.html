@@ -909,6 +909,14 @@
             box-shadow: 0 0 0 5px rgba(255, 134, 183, 0.14);
         }
 
+        .bulk-count-btn {
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+        .bulk-count-btn:hover:not(:disabled) { transform: scale(1.1); }
+        .bulk-count-btn:active:not(:disabled) { transform: scale(0.92); }
+        .bulk-count-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .ipad-mode .bulk-count-btn { width: 36px; height: 36px; font-size: 20px; }
+
         #prize-lineup,
         #result-message,
         #summary-modal > div,
@@ -2265,6 +2273,18 @@
             saveAppState();
         }
 
+        function changeBulkItemCount(index, delta) {
+            const item = bulkItems[index];
+            if (!item) return;
+            const next = Math.max(1, Math.min(MAX_PRIZE_COUNT, item.count + delta));
+            if (next === item.count) return;
+            item.count = next;
+            updateBulkList();
+            const shortName = item.name.length > 8 ? `${item.name.slice(0, 8)}…` : item.name;
+            setMascotSpeech(delta > 0 ? `「${shortName}」${next}こに ふやした！ ✨` : `「${shortName}」${next}こに へらした…`);
+            saveAppState();
+        }
+
         function updateBulkList() {
             const listEl = document.getElementById('bulk-list');
             listEl.innerHTML = '';
@@ -2280,7 +2300,7 @@
                 const alcoholBadge = itemKinds.map(kind => `<span class="${CHALLENGE_KINDS[kind].badgeClass} text-xs font-black px-3 py-1 rounded-full border inline-block mt-2 ml-1">${CHALLENGE_KINDS[kind].badge}</span>`).join('');
                 const jackpotBadge = item.isJackpot ? `<span class="text-amber-800 bg-yellow-200/80 border-yellow-300 text-xs font-black px-3 py-1 rounded-full border inline-block mt-2 ml-1">👑 あたり</span>` : '';
                 const itemIcon = item.isJackpot ? '👑' : (itemKinds.length ? CHALLENGE_KINDS[itemKinds[0]].icon : '🎁');
-                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-lg shadow-sm flex-shrink-0">${itemIcon}</span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="text-slate-600 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block mt-2">× ${item.count}</span>${jackpotBadge}${alcoholBadge}</div></div><button onclick="removeBulkItem(${index})" class="text-pink-500 hover:text-pink-600 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
+                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-lg shadow-sm flex-shrink-0">${itemIcon}</span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="inline-flex items-center gap-1 mt-2 align-middle"><button onclick="changeBulkItemCount(${index}, -1)" ${item.count <= 1 ? 'disabled' : ''} class="bulk-count-btn w-7 h-7 rounded-full bg-white text-pink-500 border border-pink-200 font-black text-base flex items-center justify-center" aria-label="${escapeHtml(item.name)}の個数を減らす">-</button><span class="text-slate-600 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block whitespace-nowrap" aria-live="polite">× ${item.count}</span><button onclick="changeBulkItemCount(${index}, 1)" ${item.count >= MAX_PRIZE_COUNT ? 'disabled' : ''} class="bulk-count-btn w-7 h-7 rounded-full bg-pink-500 text-white border border-pink-500 font-black text-base flex items-center justify-center" aria-label="${escapeHtml(item.name)}の個数を増やす">+</button></span>${jackpotBadge}${alcoholBadge}</div></div><button onclick="removeBulkItem(${index})" class="text-pink-500 hover:text-pink-600 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
                 listEl.appendChild(li);
             });
             updatePrizePreview();
