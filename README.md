@@ -23,6 +23,18 @@
 - Tailwind CSS（CDN）
 - Font Awesome アイコン
 - M PLUS Rounded 1c フォント
+- 3Dキャラ表示: [model-viewer](https://modelviewer.dev/)（CDN）
+
+## ハロウィン仕様
+
+- 3Dキャラは `assets/halloween/*.glb` にあります。元データ（約60MB）を gltf-transform でポリゴン数を減らし、テクスチャをWebP化・meshopt圧縮して、1体あたり約0.6MBにしています
+- 作り直すときは次を実行します（`hwpumpkin_…glb` → `pumpkin.glb`）
+
+```sh
+npx @gltf-transform/cli optimize 元ファイル.glb assets/halloween/pumpkin.glb \
+  --compress meshopt --texture-compress webp --texture-size 1024 \
+  --simplify-ratio 0.04 --simplify-error 0.001
+```
 
 ## 動作確認
 
@@ -72,3 +84,17 @@ iPadでは「iPad向け」を選び、番号をタップして抽選します。
 - POPデザインに刷新（グラデーションタイトル、太枠ボーダー、ステッカー風シャドウ）
 - 広報キャラクターイラストをヘッダーに配置
 - レスポンシブ対応（aspect-ratioベースのCanvas表示）
+
+## 通常版とハロウィン版の切り替え
+
+- 通常版は `main` ブランチ、ハロウィン版は `halloween` ブランチにあります
+- 公開サイト（GitHub Pages）は、どちらのブランチを公開するかで切り替えます
+
+```sh
+# ハロウィン版を公開
+gh api -X PUT repos/aboshiDaisuke/amidakuji/pages -f "source[branch]=halloween" -f "source[path]=/"
+# 通常版に戻す
+gh api -X PUT repos/aboshiDaisuke/amidakuji/pages -f "source[branch]=main" -f "source[path]=/"
+```
+
+GitHub の Settings → Pages → Branch でも同じ切り替えができます。反映まで1〜2分かかります。

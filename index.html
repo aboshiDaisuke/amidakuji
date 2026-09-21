@@ -6,6 +6,9 @@
     <title>おみやげ配布⭐️あみだくじ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- 3Dキャラ（assets/halloween/*.glb は meshopt 圧縮済みなのでデコーダーの場所を先に渡す） -->
+    <script data-config="model-viewer">self.ModelViewerElement = { meshoptDecoderLocation: 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.22.0/meshopt_decoder.js' };</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&family=Mochiy+Pop+One&display=swap');
         
@@ -1225,18 +1228,326 @@
         @media (prefers-reduced-motion: reduce) {
             body, body::before, .setup-mascot, .hero-logo-wrap { animation: none; }
         }
+
+        /* ===================== ハロウィン仕様 ===================== */
+        :root {
+            --hw-night: #1a0f2e;
+            --hw-plum: #3b1d5c;
+            --hw-pumpkin: #ff7a1a;
+            --hw-pumpkin-deep: #e8620c;
+            --hw-violet: #7c3aed;
+            --hw-lilac: #c4b5fd;
+            --hw-slime: #8fd14f;
+            --hw-cream: #fffaf2;
+            --shadow: 0 18px 50px rgba(124, 58, 237, 0.28), 0 2px 8px rgba(17, 17, 17, 0.2);
+        }
+
+        body {
+            background-color: var(--hw-night);
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22 viewBox=%220 0 300 300%22%3E%3Cpath d=%22M30 41Q30 50 39 50Q30 50 30 59Q30 50 21 50Q30 50 30 41Z%22 fill=%22%23fff%22 opacity=%220.8%22/%3E%3Cpath d=%22M210 24Q210 30 216 30Q210 30 210 36Q210 30 204 30Q210 30 210 24Z%22 fill=%22%23fff%22 opacity=%220.6%22/%3E%3Ccircle cx=%22120%22 cy=%22120%22 r=%221.6%22 fill=%22%23fff%22/%3E%3Cpath d=%22M250 193Q250 200 257 200Q250 200 250 207Q250 200 243 200Q250 200 250 193Z%22 fill=%22%23f5c518%22 opacity=%220.9%22/%3E%3Ccircle cx=%2270%22 cy=%22230%22 r=%221.3%22 fill=%22%23fff%22/%3E%3Ccircle cx=%22180%22 cy=%22260%22 r=%221%22 fill=%22%23fff%22/%3E%3Ccircle cx=%22270%22 cy=%22110%22 r=%221.2%22 fill=%22%23f5c518%22/%3E%3Ccircle cx=%22150%22 cy=%2270%22 r=%221%22 fill=%22%23fff%22/%3E%3C/svg%3E"),
+                radial-gradient(ellipse 120% 60% at 50% 110%, rgba(255, 122, 26, 0.35), transparent 60%),
+                linear-gradient(180deg, #120a22 0%, #2a1545 45%, #4a2366 100%);
+            background-size: 300px 300px, auto, auto;
+            background-position: 0 0, 0 0, 0 0;
+            background-attachment: scroll, fixed, fixed;
+            animation: hwStarDrift 160s linear infinite;
+        }
+
+        @keyframes hwStarDrift {
+            from { background-position: 0 0, 0 0, 0 0; }
+            to   { background-position: -300px 300px, 0 0, 0 0; }
+        }
+
+        body::before { opacity: 0.45; }
+
+        body::after {
+            background: repeating-linear-gradient(90deg, #111 0 14px, var(--hw-pumpkin) 14px 32px, var(--hw-violet) 32px 44px, #111 44px 52px);
+        }
+
+        /* 夜空の飾り */
+        .hw-sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .hw-moon {
+            position: absolute; top: 34px; right: max(24px, 6vw);
+            width: clamp(70px, 11vw, 140px); aspect-ratio: 1; border-radius: 50%;
+            background: radial-gradient(circle at 38% 36%, #fffbe6 0%, #ffe7a3 55%, #f7c86a 100%);
+            box-shadow: 0 0 40px rgba(255, 223, 140, 0.55), 0 0 110px rgba(255, 190, 90, 0.3);
+        }
+        .hw-moon::after {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background:
+                radial-gradient(circle at 62% 30%, rgba(214, 160, 70, 0.35) 0 9%, transparent 10%),
+                radial-gradient(circle at 34% 64%, rgba(214, 160, 70, 0.3) 0 12%, transparent 13%),
+                radial-gradient(circle at 70% 70%, rgba(214, 160, 70, 0.25) 0 6%, transparent 7%);
+        }
+        .hw-bat { position: absolute; width: 54px; color: #0d0718; opacity: 0.85; animation: hwBatFly 26s linear infinite; }
+        .hw-bat-1 { top: 16%; animation-delay: -4s; }
+        .hw-bat-2 { top: 42%; width: 38px; animation-duration: 34s; animation-delay: -18s; }
+        .hw-bat-3 { top: 68%; width: 46px; animation-duration: 30s; animation-delay: -9s; }
+        .hw-web { position: absolute; top: 0; left: 0; width: clamp(90px, 14vw, 170px); color: rgba(255, 255, 255, 0.22); }
+
+        @keyframes hwBatFly {
+            0%   { transform: translate(-80px, 0) scaleY(1); }
+            10%  { transform: translate(10vw, -18px) scaleY(0.6); }
+            20%  { transform: translate(20vw, 6px) scaleY(1); }
+            30%  { transform: translate(30vw, -14px) scaleY(0.6); }
+            40%  { transform: translate(40vw, 10px) scaleY(1); }
+            50%  { transform: translate(50vw, -16px) scaleY(0.6); }
+            60%  { transform: translate(60vw, 4px) scaleY(1); }
+            70%  { transform: translate(70vw, -12px) scaleY(0.6); }
+            80%  { transform: translate(80vw, 8px) scaleY(1); }
+            90%  { transform: translate(90vw, -10px) scaleY(0.6); }
+            100% { transform: translate(calc(100vw + 80px), 0) scaleY(1); }
+        }
+
+        /* ヘッダー */
+        .hw-kicker {
+            margin: 0 0 0.35rem;
+            color: var(--hw-pumpkin);
+            font-family: var(--display);
+            font-size: clamp(0.8rem, 2.4vw, 1.05rem);
+            letter-spacing: 0.22em;
+            text-shadow: 0 2px 0 #111, 0 0 18px rgba(255, 122, 26, 0.7);
+        }
+        .hero-logo {
+            filter:
+                drop-shadow(0 3px 0 #111)
+                drop-shadow(0 0 10px rgba(255, 190, 110, 0.55))
+                drop-shadow(0 0 28px rgba(255, 122, 26, 0.55))
+                drop-shadow(0 0 60px rgba(124, 58, 237, 0.55));
+        }
+
+        /* 3Dキャラ共通（横ドラッグでくるくる回す。縦スワイプはページのスクロールに回す） */
+        model-viewer.hw-model {
+            display: block;
+            width: 100%;
+            height: auto; /* model-viewer 既定の高さ150pxを外して aspect-ratio で決める */
+            background: transparent;
+            --poster-color: transparent;
+            --progress-bar-height: 0px; /* 読み込み中の細いバーは出さない */
+            cursor: grab;
+        }
+        model-viewer.hw-model:active { cursor: grabbing; }
+        model-viewer.hw-model:focus-visible { outline: 3px solid var(--hw-pumpkin); outline-offset: 2px; border-radius: 16px; }
+
+        .ghost-parade {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 6px clamp(0px, 1vw, 10px);
+            margin: 0.4rem auto 0;
+            max-width: 980px;
+        }
+        .ghost-slot {
+            position: relative;
+            width: clamp(64px, 9.4vw, 100px);
+            padding-bottom: 14px; /* 足元の影のぶん */
+        }
+        .ghost-slot model-viewer { aspect-ratio: 1; }
+
+        /* ふわふわ浮遊: 本体が上がると足元の影が小さく薄くなる */
+        .ghost-float {
+            animation: ghostFloat var(--float-dur, 3.8s) ease-in-out infinite;
+            animation-delay: var(--float-delay, 0s);
+            filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.3));
+            will-change: transform;
+        }
+        .ghost-slot::after {
+            content: '';
+            position: absolute;
+            left: 22%;
+            right: 22%;
+            bottom: 2px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5), transparent 70%);
+            animation: ghostShadow var(--float-dur, 3.8s) ease-in-out infinite;
+            animation-delay: var(--float-delay, 0s);
+            pointer-events: none;
+        }
+        .ghost-slot .speech-bubble {
+            left: 50%; bottom: calc(100% - 4px); translate: -50% 0;
+            font-size: 0.66rem; border-radius: 1rem;
+            pointer-events: none;
+        }
+        .ghost-slot .speech-bubble::after { left: 50%; translate: -50% 0; }
+        body.is-playing .ghost-parade { display: none; }
+
+        @keyframes ghostFloat {
+            0%, 100% { transform: translate(0, 0) rotate(-3deg); }
+            25% { transform: translate(3px, -12px) rotate(0deg); }
+            50% { transform: translate(0, -20px) rotate(3deg); }
+            75% { transform: translate(-3px, -10px) rotate(0deg); }
+        }
+        @keyframes ghostShadow {
+            0%, 100% { transform: scaleX(1); opacity: 1; }
+            50% { transform: scaleX(0.6); opacity: 0.45; }
+        }
+
+        @media (max-width: 640px) {
+            .ghost-slot { width: 30%; }
+        }
+
+        /* ---- くじを引く画面のおばけ（盤面・番号・ボタンには重ねない位置だけに置く） ---- */
+        .game-ghost-corner {
+            position: absolute;
+            top: -46px;
+            z-index: 5;
+            padding-bottom: 0;
+        }
+        .ghost-slot.game-ghost-corner { width: clamp(54px, 7.5vw, 80px); }
+        .game-ghost-corner.is-left { left: -12px; }
+        .game-ghost-corner.is-right { right: -12px; }
+        .game-ghost-corner::after { display: none; }
+
+        .game-bottom-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .game-bottom-row .game-mascot { flex-shrink: 0; opacity: 1; } /* 夜空の上だと0.94でも透けて見えるので不透明に */
+        .game-ghost-row {
+            display: flex;
+            align-items: flex-end;
+            gap: clamp(0px, 2vw, 18px);
+            padding-left: 4px;
+            margin-right: auto;
+        }
+        .game-ghost-row .ghost-slot { width: clamp(56px, 11vw, 104px); }
+        .ipad-mode .game-ghost-row { margin: 0 auto; }
+
+        .game-side-ghosts { display: none; }
+        .game-side-ghosts .ghost-slot {
+            position: fixed;
+            z-index: 5;
+            width: clamp(72px, calc((100vw - 1024px) / 2 - 36px), 120px);
+        }
+        .game-side-ghosts .is-l1 { left: 18px; top: 20vh; }
+        .game-side-ghosts .is-l2 { left: 28px; top: 58vh; }
+        .game-side-ghosts .is-r1 { right: 22px; top: 32vh; }
+        .game-side-ghosts .is-r2 { right: 14px; top: 68vh; }
+        @media (min-width: 1240px) {
+            body.is-playing .game-side-ghosts { display: block; }
+        }
+
+
+        /* カード・パネル */
+        .pop-card {
+            background: linear-gradient(180deg, var(--hw-cream), #f6efff);
+            box-shadow: 0 8px 0 var(--hw-pumpkin), 0 22px 50px rgba(0, 0, 0, 0.4);
+        }
+        .pop-card::before,
+        .canvas-container::before {
+            background: repeating-linear-gradient(90deg, var(--hw-pumpkin) 0 18px, #111 18px 26px, var(--hw-violet) 26px 40px, var(--hw-slime) 40px 48px);
+        }
+        .soft-panel { background: var(--hw-cream); box-shadow: 0 6px 0 var(--hw-pumpkin), 0 16px 36px rgba(0, 0, 0, 0.3); }
+        .canvas-container {
+            background:
+                linear-gradient(180deg, #ffffff, #f7f0ff),
+                repeating-linear-gradient(90deg, rgba(124, 58, 237, 0.08) 0 1px, transparent 1px 48px);
+            box-shadow: 0 8px 0 var(--hw-pumpkin), var(--shadow);
+        }
+        #game-panel .soft-panel, #game-panel #prize-lineup { background: rgba(255, 250, 242, 0.97) !important; }
+        #prize-lineup, #result-message, #summary-modal > div, #alcohol-modal > div {
+            box-shadow: 0 8px 0 var(--hw-pumpkin), var(--shadow);
+        }
+        .mini-stat, .distribution-option.is-active .distribution-option-content { box-shadow: 0 4px 0 var(--hw-pumpkin); }
+        .distribution-option.is-active .distribution-option-content { background: linear-gradient(135deg, #fff1e3, #f1e8ff); }
+        .distribution-icon { color: var(--hw-pumpkin); }
+        .speech-bubble { color: var(--hw-violet); box-shadow: 0 4px 0 var(--hw-pumpkin), 0 10px 18px rgba(0, 0, 0, 0.25); }
+        .helper-note { box-shadow: 0 4px 0 var(--hw-pumpkin); }
+        .hero-badge { background: var(--hw-pumpkin); color: #fff; }
+        .card-sticker { background: linear-gradient(145deg, #fff, #ffe9d6); }
+        .view-switch { background: var(--hw-cream); box-shadow: 0 4px 0 var(--hw-pumpkin); }
+        .view-switch button[aria-pressed="true"] { color: var(--hw-pumpkin); }
+        .board-scroll-hint { color: #fff; text-shadow: 0 1px 0 #111; }
+        .site-footer-inner { background: rgba(255, 250, 242, 0.9); border-color: rgba(196, 181, 253, 0.6); }
+        .site-footer .persist-clear:hover { color: var(--hw-pumpkin-deep); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--hw-pumpkin), var(--hw-violet)); }
+        .modal-overlay { background-color: rgba(18, 10, 34, 0.6); }
+        .btn-pop { box-shadow: 0 5px 0 #111, 0 12px 24px rgba(255, 122, 26, 0.22); }
+        .start-action .btn-pop { box-shadow: 0 7px 0 #111, 0 14px 28px rgba(255, 122, 26, 0.45) !important; }
+        #bulk-name:focus, #bulk-count:focus { border-color: rgba(255, 122, 26, 0.6) !important; box-shadow: 0 0 0 5px rgba(255, 122, 26, 0.16); }
+
+        /* Tailwind のピンク系ユーティリティをかぼちゃ色・むらさきに置き換え */
+        .bg-pink-500 { background-color: var(--hw-pumpkin) !important; }
+        .bg-pink-50 { background-color: #fff3e6 !important; }
+        .hover\:text-pink-600:hover, .text-pink-600 { color: var(--hw-pumpkin-deep) !important; }
+        .text-pink-500 { color: var(--hw-pumpkin) !important; }
+        .border-pink-100 { border-color: #eadcff !important; }
+        .border-pink-200 { border-color: #d9c6ff !important; }
+        .placeholder-pink-200::placeholder { color: #d4c2f5 !important; }
+        .accent-pink-400 { accent-color: var(--hw-pumpkin) !important; }
+        .border-pink-500 { border-color: var(--hw-pumpkin-deep) !important; }
+        .text-pink-700 { color: #9a3412 !important; }
+        .bg-pink-100\/80 { background-color: rgba(255, 231, 209, 0.8) !important; }
+        .bg-pink-50\/70, .bg-pink-50\/90, .hover\:bg-pink-50:hover { background-color: rgba(255, 243, 230, 0.85) !important; }
+
+        /* タップでくるっと回るときのひと跳ね */
+        .hw-hop { animation: hwHop 0.6s cubic-bezier(0.34, 1.5, 0.64, 1) !important; }
+        @keyframes hwHop {
+            0%, 100% { transform: translateY(0) scale(1); }
+            40% { transform: translateY(-14px) scale(1.06); }
+        }
+
+        .ipad-mode .hw-bat { animation: none; }
+        /* 左のギャル（手をふる子）は縦長なので、右のほうきの子と背丈がそろうように少し小さく */
+        .setup-mascot:not(.setup-mascot-right) img { width: 78%; margin: 0 auto; }
+        .setup-mascot:not(.setup-mascot-right) .hero-badge { right: 10% !important; }
+        @media (max-width: 640px) {
+            .hw-moon { top: 18px; right: 12px; opacity: 0.75; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body, .hw-bat, .ghost-float, .ghost-slot::after, .hw-hop { animation: none !important; }
+        }
     </style>
 </head>
 <body class="p-4 pt-8 md:p-8 md:pt-10 pb-6 min-h-screen relative">
     <!-- 紙吹雪レイヤー -->
     <div id="confetti-layer" aria-hidden="true"></div>
 
+    <!-- ハロウィンの夜空（月・コウモリ・クモの巣） -->
+    <div class="hw-sky" aria-hidden="true">
+        <div class="hw-moon"></div>
+        <svg class="hw-bat hw-bat-1" viewBox="0 0 64 32"><use href="#hw-bat-shape"/></svg>
+        <svg class="hw-bat hw-bat-2" viewBox="0 0 64 32"><use href="#hw-bat-shape"/></svg>
+        <svg class="hw-bat hw-bat-3" viewBox="0 0 64 32"><use href="#hw-bat-shape"/></svg>
+        <svg class="hw-web" viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="1.4"><path d="M0 0L120 120M0 0L120 60M0 0L60 120M0 0L120 20M0 0L20 120"/><path d="M28 0Q24 12 0 28M52 0Q46 24 0 52M78 0Q70 36 0 78M104 0Q94 50 0 104"/></g></svg>
+    </div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="hw-bat-shape" viewBox="0 0 64 32"><path fill="currentColor" d="M32 10c2-4 4-5 4-5l1 4c3 0 5 2 5 2 4-4 12-6 22-3-5 2-8 6-8 11-3-2-7-2-9 1-2-2-5-2-7 0-2 3-5 6-8 8-3-2-6-5-8-8-2-2-5-2-7 0-2-3-6-3-9-1 0-5-3-9-8-11 10-3 18-1 22 3 0 0 2-2 5-2l1-4s2 1 4 5z"/></symbol>
+    </svg>
+
     <header class="site-header text-center animate-pop-in relative z-10">
         <div class="hero-brand">
+            <p class="hw-kicker">🎃 HAPPY HALLOWEEN 🎃</p>
             <div class="inline-block relative hero-logo-wrap">
                 <h1 class="relative z-10 py-0">
                     <img class="hero-logo" src="assets/logo.png" alt="お土産専用あみだくじ">
                 </h1>
+            </div>
+            <!-- おばけパレード（ドラッグでくるくる回せる・タップでひとこと） -->
+            <div class="ghost-parade" aria-label="おばけたち">
+                <div class="ghost-slot" data-say="かぼちゃだよ〜" style="--float-delay: -0.00s; --float-dur: 3.4s">
+                    <div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/pumpkin.glb" alt="かぼちゃのおばけ（ドラッグで回せます）" camera-orbit="-12deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div>
+                </div>
+                <div class="ghost-slot" data-say="まほう かけちゃお" style="--float-delay: -0.60s; --float-dur: 4.0s">
+                    <div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/witch.glb" alt="まじょのおばけ（ドラッグで回せます）" camera-orbit="10deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div>
+                </div>
+                <div class="ghost-slot" data-say="いたずら するぞ〜" style="--float-delay: -1.20s; --float-dur: 4.6s">
+                    <div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/devil.glb" alt="こあくまのおばけ（ドラッグで回せます）" camera-orbit="-8deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div>
+                </div>
+                <div class="ghost-slot" data-say="ボルト ぴかぴか" style="--float-delay: -1.80s; --float-dur: 3.4s">
+                    <div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/franken.glb" alt="フランケンのおばけ（ドラッグで回せます）" camera-orbit="8deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div>
+                </div>
+                <div class="ghost-slot" data-say="ほどけちゃう〜" style="--float-delay: -2.40s; --float-dur: 4.0s">
+                    <div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/mummy.glb" alt="ミイラのおばけ（ドラッグで回せます）" camera-orbit="-10deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div>
+                </div>
+                <div class="ghost-slot" data-say="ハズレ 回収しま〜す" style="--float-delay: -3.00s; --float-dur: 4.6s">
+                    <div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/reaper.glb" alt="しにがみのおばけ（ドラッグで回せます）" camera-orbit="12deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div>
+                </div>
             </div>
         </div>
     </header>
@@ -1255,7 +1566,7 @@
 
             <div class="relative z-10 mb-3 md:mb-4 flex justify-center">
                 <div class="helper-note">
-                    今日の運だめし、めちゃ盛れ♡
+                    トリック・オア・おみやげ！ 🎃
                 </div>
             </div>
             
@@ -1275,14 +1586,14 @@
                 </div>
                 <div class="setup-mascot">
                     <div class="speech-bubble" id="mascot-speech">いっくよー！！ 🎁</div>
-                    <img src="assets/gal-main.png" alt="広報" class="w-full h-auto object-contain">
+                    <img src="assets/halloween/gal-hw-wave.png" alt="広報（ハロウィン）" class="w-full h-auto object-contain">
                     <div class="hero-badge absolute rotate-6 z-20" style="top: 6%; right: 2%;">
                         ラッキー係
                     </div>
                 </div>
                 <div class="setup-mascot setup-mascot-right" aria-hidden="true">
-                    <div class="speech-bubble" id="mascot-speech-right">もぐもぐ… 🍪</div>
-                    <img src="assets/gal-eat.png" alt="" class="w-full h-auto object-contain">
+                    <div class="speech-bubble" id="mascot-speech-right">ほうきで ひとっとび〜 🧹</div>
+                    <img src="assets/halloween/gal-hw-broom.png" alt="" class="w-full h-auto object-contain">
                 </div>
             </div>
 
@@ -1405,7 +1716,10 @@
 
         <!-- あみだくじ表示エリア -->
         <div id="game-panel" class="hidden space-y-6 animate-fade-in pb-4">
-            <div class="soft-panel p-4 text-center">
+            <div class="soft-panel p-4 text-center relative">
+                <!-- おばけ: 案内パネルの角からのぞく -->
+                <div class="ghost-slot game-ghost game-ghost-corner is-left" data-say="どれにする〜？" style="--float-delay: -0.4s; --float-dur: 3.6s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/witch.glb" alt="まじょのおばけ（ドラッグで回せます）" camera-orbit="20deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+                <div class="ghost-slot game-ghost game-ghost-corner is-right" data-say="ハズレ ひいちゃえ〜" style="--float-delay: -1.6s; --float-dur: 4.2s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/devil.glb" alt="こあくまのおばけ（ドラッグで回せます）" camera-orbit="-20deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
                 <p class="text-sm md:text-base font-black text-slate-700">
                     <i class="fas fa-hand-pointer text-yellow-500 mr-2"></i>
                     上のまるをタップ！ ひとりずつドキドキ発表 💓
@@ -1453,9 +1767,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="game-mascot" aria-hidden="true">
-                    <div class="speech-bubble" id="game-mascot-speech">がんばれ〜！</div>
-                    <img src="assets/gal-main.png" alt="">
+                <div class="game-bottom-row">
+                    <!-- おばけ: 盤面の下でふわふわ -->
+                    <div class="game-ghost-row">
+                        <div class="ghost-slot game-ghost " data-say="つぎ だれ〜？" style="--float-delay: -0.2s; --float-dur: 3.8s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/reaper.glb" alt="しにがみのおばけ（ドラッグで回せます）" camera-orbit="15deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+                        <div class="ghost-slot game-ghost " data-say="ドキドキするね" style="--float-delay: -1.3s; --float-dur: 3.4s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/pumpkin.glb" alt="かぼちゃのおばけ（ドラッグで回せます）" camera-orbit="-10deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+                        <div class="ghost-slot game-ghost " data-say="あたれ〜！" style="--float-delay: -2.1s; --float-dur: 4.4s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/mummy.glb" alt="ミイラのおばけ（ドラッグで回せます）" camera-orbit="10deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+                    </div>
+                    <div class="game-mascot" aria-hidden="true">
+                        <div class="speech-bubble" id="game-mascot-speech">がんばれ〜！</div>
+                        <img src="assets/halloween/gal-hw-wave.png" alt="">
+                    </div>
                 </div>
             </div>
 
@@ -1490,12 +1812,12 @@
         <!-- 結果一覧モーダル -->
         <div id="summary-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-lg relative max-h-[90vh] flex flex-col">
-                <div class="card-sticker sm" style="top: -14px; right: 16px; transform: rotate(8deg);" aria-hidden="true">🎉</div>
+                <div class="card-sticker sm" style="top: -14px; right: 16px; transform: rotate(8deg);" aria-hidden="true">🎃</div>
                 <div class="p-6 text-center border-b border-pink-100">
                     <h2 class="text-3xl font-black text-pink-600">
                         <i class="fas fa-crown text-yellow-500 mr-2"></i>結果はっぴょう〜！
                     </h2>
-                    <p class="text-slate-500 font-bold text-sm mt-1">みんなの運命が決まったよ ✨</p>
+                    <p class="text-slate-500 font-bold text-sm mt-1">みんなの運命が決まったよ 👻</p>
                 </div>
                 <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
                     <ul id="summary-list" class="space-y-3"></ul>
@@ -1510,6 +1832,14 @@
         </div>
 
     </main>
+
+    <!-- 抽選中だけ出る、画面の左右の余白のおばけ（広い画面のみ） -->
+    <div class="game-side-ghosts" aria-label="おばけたち">
+        <div class="ghost-slot game-ghost is-l1" data-say="かぼちゃパワー！" style="--float-delay: -0.5s; --float-dur: 4.0s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/pumpkin.glb" alt="かぼちゃのおばけ（ドラッグで回せます）" camera-orbit="25deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+        <div class="ghost-slot game-ghost is-l2" data-say="ボルト ぴかぴか" style="--float-delay: -2.2s; --float-dur: 3.6s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/franken.glb" alt="フランケンのおばけ（ドラッグで回せます）" camera-orbit="20deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+        <div class="ghost-slot game-ghost is-r1" data-say="ほどけちゃう〜" style="--float-delay: -1.1s; --float-dur: 3.8s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/mummy.glb" alt="ミイラのおばけ（ドラッグで回せます）" camera-orbit="-25deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+        <div class="ghost-slot game-ghost is-r2" data-say="まほう かけちゃお" style="--float-delay: -2.8s; --float-dur: 4.4s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/witch.glb" alt="まじょのおばけ（ドラッグで回せます）" camera-orbit="-20deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+    </div>
 
     <footer class="site-footer">
         <div class="site-footer-inner">
@@ -2001,16 +2331,16 @@
             'あたれ〜！ ✨',
             'わくわく…'
         ];
-        // 右のキャラ（お菓子を食べてる子）のセリフ
+        // 右のキャラ（ほうきに乗った魔女ギャル）のセリフ
         const RIGHT_MASCOT_LINES = [
-            'もぐもぐ… 🍪',
-            'これ おいしー！ 😋',
-            'ひとくち いる？',
+            'ほうきで ひとっとび〜 🧹',
+            'トリック・オア・トリート！ 🎃',
+            'おかし くれなきゃ いたずら♡',
             'おみやげ たのしみ〜 🎁',
             'まだ〜？ はやく引こ？',
             'あたり ぜったい わたし！',
-            'ん〜 あまい… 🍩',
-            'もう一個 たべちゃお 🍫'
+            'ハロウィン さいこ〜 🦇',
+            'まほう かけちゃお ✨'
         ];
         let mascotLineIndex = 0;
         let rightMascotLineIndex = 0;
@@ -2054,8 +2384,8 @@
             if (!layer) return;
             // 前回の紙吹雪が残ると読みにくいのでクリア
             layer.innerHTML = '';
-            const colors = ['#ff2d7a', '#f5c518', '#111111', '#ff4fa3', '#2ec4c6', '#ffffff'];
-            const emojis = ['✨', '💋', '⭐', '🐆', '🖤'];
+            const colors = ['#ff7a1a', '#f5c518', '#1a0f2e', '#8b5cf6', '#8fd14f', '#ffffff'];
+            const emojis = ['🎃', '👻', '🦇', '🍬', '✨'];
             for (let i = 0; i < count; i++) {
                 const piece = document.createElement('span');
                 const useEmoji = Math.random() < 0.22;
@@ -2130,19 +2460,19 @@
         const FOOTER_HEIGHT = 130; // 結果ボックスと影のための余白
         const PADDING_SIDE = 60;
         
-        // 番号まるの塗り（黒×ピンク×金のギャル配色）と、その上の数字色
+        // 番号まるの塗り（かぼちゃ×むらさき×夜のハロウィン配色）と、その上の数字色
         const colors = [
-            '#ff2d7a', '#f5c518', '#111111', '#ff4fa3', '#ffffff', '#2ec4c6',
-            '#ff2d7a', '#111111', '#f5c518', '#ff4fa3'
+            '#ff7a1a', '#7c3aed', '#1a0f2e', '#f5c518', '#ffffff', '#8fd14f',
+            '#ff7a1a', '#1a0f2e', '#a78bfa', '#f5c518'
         ];
         const nodeTextColors = [
-            '#ffffff', '#111111', '#f5c518', '#ffffff', '#ff2d7a', '#111111',
-            '#ffffff', '#ff4fa3', '#111111', '#ffffff'
+            '#ffffff', '#ffffff', '#ff9a3c', '#1a0f2e', '#7c3aed', '#1a0f2e',
+            '#ffffff', '#f5c518', '#1a0f2e', '#1a0f2e'
         ];
         // 通った道の色（盤面の線が黒なので黒は使わない）
         const lineColors = [
-            '#ff2d7a', '#f5c518', '#ff4fa3', '#2ec4c6', '#ff6f3c',
-            '#c86bff', '#ff2d7a', '#f5c518', '#ff4fa3', '#2ec4c6'
+            '#ff7a1a', '#8b5cf6', '#f5c518', '#8fd14f', '#ff4f6d',
+            '#c084fc', '#ff9a3c', '#22c55e', '#e879f9', '#fbbf24'
         ];
         const BOARD_LINE = '#1c1220';
 
@@ -2262,7 +2592,7 @@
             updateBulkList();
             const shortName = name.length > 8 ? `${name.slice(0, 8)}…` : name;
             setMascotSpeech(`「${shortName}」ついか！ ✨`);
-            setRightMascotSpeech(Math.random() < 0.5 ? 'それ たべていい？ 🤤' : 'えっ それ ほしい…！');
+            setRightMascotSpeech(Math.random() < 0.5 ? 'それ ほしい〜！ 🎃' : 'えっ それ いいな…！');
             saveAppState();
         }
 
@@ -2513,7 +2843,7 @@
                 // --- 参加者アイコン (上) ---
                 ctx.beginPath();
                 ctx.arc(x + 2, HEADER_HEIGHT / 2 + 5, radius + 3, 0, Math.PI * 2);
-                ctx.fillStyle = revealed[i] ? 'rgba(17, 17, 17, 0.18)' : '#f5c518';
+                ctx.fillStyle = revealed[i] ? 'rgba(17, 17, 17, 0.18)' : '#ff9a3c';
                 ctx.fill();
 
                 ctx.beginPath();
@@ -2562,14 +2892,14 @@
                 const boxY = lineBottom + 20; // フッターのゆとり分、少し下げる
                 
                 // ボックスの影（ボタンと同じ金のぷっくり影）
-                ctx.fillStyle = '#f5c518';
+                ctx.fillStyle = '#ff9a3c';
                 ctx.beginPath();
                 drawRoundRect(ctx, x - boxW/2, boxY + 5, boxW, boxH, 10);
                 ctx.fill();
                 
                 const isJackpotBox = isRevealed && bundleHasJackpot(resultBundles[i]);
-                ctx.fillStyle = isJackpotBox ? '#fff4c2' : isRevealed ? '#ffffff' : '#fff4f8';
-                ctx.strokeStyle = isJackpotBox ? '#c98a00' : isRevealed ? '#ff2d7a' : '#111111';
+                ctx.fillStyle = isJackpotBox ? '#fff4c2' : isRevealed ? '#ffffff' : '#f6f0ff';
+                ctx.strokeStyle = isJackpotBox ? '#c98a00' : isRevealed ? '#e8620c' : '#111111';
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
                 drawRoundRect(ctx, x - boxW/2, boxY, boxW, boxH, 10);
@@ -2577,7 +2907,7 @@
                 ctx.stroke();
 
                 if (isRevealed) {
-                    ctx.fillStyle = isJackpotBox ? '#c98a00' : '#ff2d7a';
+                    ctx.fillStyle = isJackpotBox ? '#c98a00' : '#e8620c';
                     const result = getCanvasResultLabel(resultBundles[i]);
                     let resFontSize = Math.min(18, boxW / 3.5);
                     ctx.font = `900 ${resFontSize}px "M PLUS Rounded 1c"`;
@@ -2586,7 +2916,7 @@
                     const displayResult = result.length > maxChars ? result.substring(0, maxChars) + '..' : result;
                     ctx.fillText(displayResult, x, boxY + boxH/2);
                 } else {
-                    ctx.fillStyle = '#ff2d7a';
+                    ctx.fillStyle = '#7c3aed';
                     ctx.font = `900 ${Math.min(28, boxW/1.8)}px "M PLUS Rounded 1c"`;
                     ctx.fillText("?", x, boxY + boxH/2);
                 }
@@ -3101,6 +3431,43 @@
         });
 
         init();
+    </script>
+    <script data-role="halloween-3d">
+        // 3Dキャラ: 横ドラッグで回す（model-viewer の camera-controls）。動かさずにタップしたときだけ、ひとことしゃべって跳ねる
+        document.querySelectorAll('.ghost-slot').forEach(slot => {
+            const float = slot.querySelector('.ghost-float');
+            let start = null;
+            slot.addEventListener('pointerdown', event => { start = { x: event.clientX, y: event.clientY }; });
+            slot.addEventListener('pointerup', event => {
+                if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
+                start = null;
+                slot.querySelector('.speech-bubble')?.remove();
+                const bubble = document.createElement('div');
+                bubble.className = 'speech-bubble';
+                bubble.textContent = slot.dataset.say;
+                slot.appendChild(bubble);
+                setTimeout(() => bubble.remove(), 1800);
+                float.classList.remove('hw-hop');
+                void float.offsetWidth;
+                float.classList.add('hw-hop');
+            });
+            float.addEventListener('animationend', event => {
+                if (event.animationName === 'hwHop') float.classList.remove('hw-hop');
+            });
+        });
+
+        // 結果が出るたび（ギャルがしゃべるたび）に、抽選画面のおばけがいっせいに跳ねる
+        const speakGameMascot = window.setGameMascotSpeech;
+        window.setGameMascotSpeech = text => {
+            speakGameMascot(text);
+            document.querySelectorAll('.game-ghost .ghost-float').forEach((float, i) => {
+                setTimeout(() => {
+                    float.classList.remove('hw-hop');
+                    void float.offsetWidth;
+                    float.classList.add('hw-hop');
+                }, i * 90);
+            });
+        };
     </script>
 </body>
 </html>
