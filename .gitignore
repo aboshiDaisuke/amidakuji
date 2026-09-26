@@ -1,16 +1,7 @@
 .DS_Store
 
-# 3Dキャラの元データ（約60MB/体）。軽量版は assets/halloween/ に置く
-/hw*_*.glb
+# 元画像・3Dキャラの元データなどの素材（この端末だけに置く。README の「素材」参照）
+/素材/
 
 # 自動操作ブラウザ（Playwright）の記録・スクショ
 .playwright-mcp/
-
-# 手元の元画像・参考画像（公開サイトでは使わない）
-/ChatGPT Image *.png
-/Grok_*.png
-/ipad-*-after.png
-/assets/gal-close.png
-/assets/gal-omiyage.png
-/assets/gal-peace.png
-/assets/gal-wave.png

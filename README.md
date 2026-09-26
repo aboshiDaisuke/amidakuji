@@ -32,10 +32,10 @@
 ## ハロウィン仕様
 
 - 3Dキャラは `assets/halloween/*.glb` にあります。元データ（約60MB）を gltf-transform でポリゴン数を減らし、テクスチャをWebP化・meshopt圧縮して、1体あたり約0.6MBにしています
-- 作り直すときは次を実行します（`hwpumpkin_…glb` → `pumpkin.glb`）
+- 元データは `素材/3Dキャラ元データ/` にあります（Gitには入れていません）。作り直すときは次を実行します（`hwpumpkin_…glb` → `pumpkin.glb`）
 
 ```sh
-npx @gltf-transform/cli optimize 元ファイル.glb assets/halloween/pumpkin.glb \
+npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/hwpumpkin_かぼちゃのおばけ.glb assets/halloween/pumpkin.glb \
   --compress meshopt --texture-compress webp --texture-size 1024 \
   --simplify-ratio 0.04 --simplify-error 0.001
 ```
@@ -102,3 +102,12 @@ gh api -X PUT repos/aboshiDaisuke/amidakuji/pages -f "source[branch]=main" -f "s
 ```
 
 GitHub の Settings → Pages → Branch でも同じ切り替えができます。反映まで1〜2分かかります。
+
+## 素材
+
+`素材/` には、サイトでは直接使っていない元画像をまとめています。この端末だけに置いていて、Gitには入れていません。
+
+- `ロゴ/`: 初代・ギャル版・ハロウィン版のロゴの元画像
+- `キャラ_初代/`、`キャラ_ギャル/`、`キャラ_ハロウィン/`: キャラクターの元画像（三面図やポーズ違い）
+- `3Dキャラ元データ/`: おばけ3Dキャラの元データ（1体約60MB）
+- `スクショ/`: 画面確認用のスクリーンショット
