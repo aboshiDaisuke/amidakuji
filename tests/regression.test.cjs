@@ -257,3 +257,59 @@ test('registered prize counts can be changed in place within 1 and the maximum',
     a.run('updateBulkList()');
     assert.match(a.element('bulk-list').children.at(-1).innerHTML, /changeBulkItemCount\(0, -1\)/);
 });
+
+function dayFromToday(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+test('filling from stock uses the nearest expiry first, skips expired lots and respects stock', () => {
+    const a = app();
+    a.run(`currentCount=5; stockItems=sanitizeStockItems([
+        {id:'late',name:'せんべい',count:9,expiry:'${dayFromToday(30)}'},
+        {id:'old',name:'古いクッキー',count:9,expiry:'${dayFromToday(-1)}'},
+        {id:'soon',name:'ケーキ',count:2,expiry:'${dayFromToday(1)}'},
+        {id:'none',name:'ぬいぐるみ',count:9}]);
+        fillFromStock();`);
+    assert.deepEqual(JSON.parse(a.run('JSON.stringify(bulkItems.map(i => [i.stockId, i.count]))')), [['soon', 2], ['late', 3]]);
+    a.run('fillFromStock()');
+    assert.equal(a.run('getPrizeStats().totalPrizes'), 5);
+    a.run(`bulkItems[0].count = 2; changeBulkItemCount(0, 1)`);
+    assert.equal(a.run('bulkItems[0].count'), 2, 'cannot put more into the list than the stock has');
+    assert.equal(a.run(`expiryInfo('${dayFromToday(-1)}').level`), 'expired');
+    assert.equal(a.run(`expiryInfo('${dayFromToday(0)}').level`), 'soon');
+    assert.equal(a.run(`expiryInfo('${dayFromToday(4)}').level`), 'ok');
+});
+
+test('finishing a draw takes the handed-out items from stock once, and can be undone', () => {
+    const a = app();
+    a.run(`currentCount=3; stockItems=sanitizeStockItems([{id:'cake',name:'ケーキ',count:5}]);
+        bulkItems=[{name:'ケーキ',count:2,stockId:'cake'},{name:'お茶',count:1}];
+        generateAmida(); restoreGameSession(loadAppState());`);
+    a.advance(50);
+    assert.equal(a.run(`resultBundles.flat().filter(p => p.stockId === 'cake').length`), 2, 'stock link survives save and restore');
+    a.run('revealAll(); showSummary(); showSummary();');
+    assert.equal(a.run('stockItems[0].count'), 3);
+    assert.deepEqual(JSON.parse(a.run('JSON.stringify(bulkItems.map(i => i.name))')), ['お茶']);
+    assert.equal(a.run(`JSON.parse(localStorage.getItem(STOCK_KEY)).items[0].count`), 3);
+    assert.match(a.element('summary-stock-text').textContent, /引きました.*ケーキ×2/);
+    a.run('toggleStockDeduction(); showSummary();');
+    assert.equal(a.run('stockItems[0].count'), 5, 'undo restores stock and is not re-applied by reopening the summary');
+    assert.equal(a.run('getPrizeStats().totalPrizes'), 3);
+    a.run('toggleStockDeduction()');
+    assert.equal(a.run('stockItems[0].count'), 3);
+});
+
+test('declined stock items are not taken from stock', () => {
+    const a = app();
+    a.run(`currentCount=2; stockItems=sanitizeStockItems([{id:'beer',name:'ビール',count:4,isAlcohol:true}]);
+        bulkItems=[{name:'ビール',count:2,isAlcohol:true,stockId:'beer'}]; generateAmida(); animationDuration=20;`);
+    for (let i = 0; i < 2; i++) {
+        a.run(`startReveal(${i},['alcohol'])`);
+        a.advance(40);
+    }
+    a.run('showSummary()');
+    assert.equal(a.run('stockItems[0].count'), 4);
+    assert.equal(a.element('summary-stock').hidden, true);
+});

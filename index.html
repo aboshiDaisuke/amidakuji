@@ -1507,6 +1507,64 @@
         @media (prefers-reduced-motion: reduce) {
             body, .hw-bat, .ghost-float, .ghost-slot::after, .hw-hop { animation: none !important; }
         }
+
+        /* ===================== おみやげの在庫（賞味期限・写真） ===================== */
+        .stock-panel > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+        .stock-panel > summary::-webkit-details-marker { display: none; }
+        .stock-panel .stock-chevron { margin-left: auto; color: #7c3aed; transition: transform 0.2s ease; }
+        .stock-panel[open] .stock-chevron { transform: rotate(180deg); }
+        .stock-summary-text { font-size: 0.8rem; font-weight: 900; color: #64748b; }
+        .stock-alert { font-size: 0.72rem; font-weight: 900; padding: 0.15rem 0.6rem; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+        .stock-form { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 0.75rem; align-items: end; }
+        .stock-form .stock-form-wide { grid-column: 1 / -1; }
+        /* スマホ: 1段目「写真・商品名」、2段目「個数・賞味期限」。広い画面: 写真の横に3つ並べる */
+        .stock-form-fields { display: contents; }
+        @media (min-width: 640px) {
+            .stock-form-fields { display: grid; grid-template-columns: minmax(0, 1fr) 84px 160px; gap: 0.6rem; }
+        }
+        .stock-form input[type="text"], .stock-form input[type="number"], .stock-form input[type="date"] {
+            width: 100%; min-height: 48px; border: 1px solid rgba(234, 220, 229, 0.95); border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9); padding: 0.6rem 0.75rem; font-weight: 700; color: #334155;
+        }
+        .stock-form input[type="number"] { text-align: center; }
+        .stock-form input:focus { outline: none; border-color: rgba(124, 58, 237, 0.5); box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.12); }
+        .stock-photo-btn {
+            position: relative; width: 76px; height: 76px; border-radius: 16px; overflow: hidden;
+            border: 2px dashed #c4b5fd; background: #f5f3ff; color: #7c3aed;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            font-size: 0.68rem; font-weight: 900;
+        }
+        .stock-photo-btn i { font-size: 1.35rem; }
+        .stock-photo-btn, .stock-thumb { cursor: pointer; }
+        .stock-photo-btn:focus-visible, .stock-thumb:focus-visible { outline: 3px solid #2ec4c6; outline-offset: 3px; }
+        /* display:none だとブラウザによってはファイル選択がひらかないので、見えないだけにする */
+        .file-input-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); pointer-events: none; }
+        .stock-photo-btn.has-photo { border: 2px solid #111; }
+        .stock-photo-btn img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .prize-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .stock-thumb {
+            position: relative; width: 56px; height: 56px; flex-shrink: 0; border-radius: 14px; overflow: hidden;
+            border: 1px solid #eadcff; background: #f5f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+        }
+        .stock-thumb .stock-thumb-cam {
+            position: absolute; right: 2px; bottom: 2px; width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(17, 17, 17, 0.72); color: #fff; font-size: 0.6rem; display: flex; align-items: center; justify-content: center;
+        }
+        .stock-row.is-expired { border-color: #fecaca !important; background: #fff5f5 !important; }
+        .stock-row.is-soon { border-color: #fde68a !important; background: #fffbeb !important; }
+        .expiry-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; font-weight: 900; padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid; max-width: 100%; }
+        .expiry-expired { color: #b91c1c; background: #fee2e2; border-color: #fecaca; }
+        .expiry-soon { color: #92400e; background: #fef3c7; border-color: #fde68a; }
+        .expiry-ok { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
+        .expiry-none { color: #64748b; background: #f1f5f9; border-color: #e2e8f0; }
+        .stock-to-list { font-size: 0.75rem; font-weight: 900; padding: 0.3rem 0.7rem; border-radius: 999px; background: #111; color: #f5c518; white-space: nowrap; }
+        .stock-to-list:disabled { opacity: 0.35; cursor: not-allowed; }
+        .stock-fill-btn { width: 100%; }
+        .prize-chip-thumb { width: 1.9em; height: 1.9em; border-radius: 0.5rem; overflow: hidden; flex-shrink: 0; margin-right: 0.45rem; border: 1px solid #eadcff; }
+        .prize-photo-lg {
+            width: min(170px, 42vw); aspect-ratio: 1; object-fit: cover; margin: 0 auto 0.75rem; display: block;
+            border-radius: 1.25rem; border: 3px solid #111; box-shadow: 0 5px 0 #f5c518, 0 14px 30px rgba(124, 58, 237, 0.25); background: #fff;
+        }
     </style>
 </head>
 <body class="p-4 pt-8 md:p-8 md:pt-10 pb-6 min-h-screen relative">
@@ -1602,6 +1660,71 @@
                 </div>
             </div>
 
+            <!-- おみやげの在庫（賞味期限・写真つき）。この端末のブラウザにだけ保存する -->
+            <details id="stock-panel" class="stock-panel relative z-10 bg-white/80 backdrop-blur-sm p-5 md:p-6 rounded-3xl mb-8 border-2 border-pink-100">
+                <summary>
+                    <span class="bg-black text-yellow-300 font-black px-4 py-1 rounded-full text-sm shadow-sm border-2 border-yellow-300 whitespace-nowrap">
+                        <i class="fas fa-box-open mr-1"></i> おみやげの在庫
+                    </span>
+                    <span id="stock-summary-text" class="stock-summary-text">まだ登録なし</span>
+                    <span id="stock-summary-alerts" class="flex flex-wrap gap-1"></span>
+                    <i class="fas fa-chevron-down stock-chevron" aria-hidden="true"></i>
+                </summary>
+
+                <div class="mt-5">
+                    <div class="stock-form">
+                        <label for="stock-photo-input" id="stock-photo-btn" class="stock-photo-btn" role="button" tabindex="0" onclick="choosePhotoFor(null)" onkeydown="openFilePickerByKey(event, 'stock-photo-input', null)" aria-label="写真をえらぶ">
+                            <i class="fas fa-camera"></i><span>写真</span>
+                        </label>
+                        <div class="stock-form-fields">
+                            <div class="stock-name-field min-w-0">
+                                <label for="stock-name" class="text-xs text-slate-500 font-black ml-1">商品名</label>
+                                <input type="text" id="stock-name" placeholder="例: 🍫 チョコクッキー" enterkeyhint="next" oninput="updateStockPhotoButton()">
+                            </div>
+                            <div>
+                                <label for="stock-count" class="text-xs text-slate-500 font-black ml-1">個数</label>
+                                <input type="number" id="stock-count" inputmode="numeric" value="1" min="1" max="1000" step="1" oninput="this.setCustomValidity('')">
+                            </div>
+                            <div>
+                                <label for="stock-expiry" class="text-xs text-slate-500 font-black ml-1">賞味期限</label>
+                                <input type="date" id="stock-expiry">
+                            </div>
+                        </div>
+                        <div class="stock-form-wide flex flex-wrap gap-x-6 gap-y-2 ml-1">
+                            <label class="flex items-center gap-2 text-sm font-black text-slate-600 select-none cursor-pointer w-fit">
+                                <input type="checkbox" id="stock-alcohol" class="w-4 h-4 accent-pink-400"> 🍺 お酒
+                            </label>
+                            <label class="flex items-center gap-2 text-sm font-black text-slate-600 select-none cursor-pointer w-fit">
+                                <input type="checkbox" id="stock-plush" class="w-4 h-4 accent-pink-400"> 🧸 大きい商品
+                            </label>
+                            <label class="flex items-center gap-2 text-sm font-black text-amber-700 select-none cursor-pointer w-fit">
+                                <input type="checkbox" id="stock-jackpot" class="w-4 h-4 accent-yellow-400"> 👑 あたり商品
+                            </label>
+                        </div>
+                        <button type="button" onclick="addStockItem()" class="stock-form-wide btn-pop bg-pink-500 text-white font-black px-6 py-3">
+                            <i class="fas fa-plus"></i> 在庫に入れる
+                        </button>
+                    </div>
+
+                    <div class="mt-4 bg-white/86 rounded-2xl p-3 shadow-inner border-2 border-pink-100 max-h-[420px] overflow-y-auto custom-scrollbar">
+                        <ul id="stock-list" class="space-y-2"></ul>
+                    </div>
+                    <p class="text-xs text-slate-500 font-bold mt-2 ml-1">※賞味期限が近い順に並びます。写真をタップすると撮りなおせます</p>
+
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
+                        <button type="button" onclick="exportStock()" class="btn-pop bg-white text-slate-600 font-black px-4 py-2 text-sm">
+                            <i class="fas fa-download mr-1"></i> バックアップを保存
+                        </button>
+                        <label for="stock-import-input" role="button" tabindex="0" onkeydown="openFilePickerByKey(event, 'stock-import-input')" class="btn-pop bg-white text-slate-600 font-black px-4 py-2 text-sm cursor-pointer">
+                            <i class="fas fa-upload mr-1"></i> バックアップから戻す
+                        </label>
+                    </div>
+                    <p class="text-xs text-slate-400 font-bold mt-2 text-center">在庫と写真はこの端末だけに保存されます。ホーム画面に追加して開くと消えにくくなります</p>
+                </div>
+                <input type="file" id="stock-photo-input" accept="image/*" class="file-input-hidden" tabindex="-1" aria-hidden="true" onchange="handleStockPhotoInput(this)">
+                <input type="file" id="stock-import-input" accept="application/json,.json" class="file-input-hidden" tabindex="-1" aria-hidden="true" onchange="importStock(this)">
+            </details>
+
             <!-- 中段：商品設定 -->
             <div class="relative z-10 bg-white/80 backdrop-blur-sm pt-7 p-5 md:p-6 md:pt-7 rounded-3xl mb-8 border-2 border-yellow-100 overflow-visible">
                 <div class="absolute -top-3 left-5 bg-black text-yellow-300 font-black px-4 py-1 rounded-full text-sm shadow-sm transform -rotate-1 border-2 border-yellow-300">
@@ -1636,6 +1759,12 @@
                         👑 あたり商品
                     </label>
                     <span class="text-xs font-bold text-slate-400 w-full">※🍺🧸は引く前に本人へ「チャレンジする？」と確認、👑は当たったら大当たり演出になります</span>
+                </div>
+
+                <div id="stock-fill-wrap" class="mb-4" hidden>
+                    <button type="button" id="stock-fill-btn" onclick="fillFromStock()" class="stock-fill-btn btn-pop bg-black text-yellow-300 font-black px-4 py-3">
+                        <i class="fas fa-box-open mr-1"></i> 在庫から、期限が近い順に人数分いれる
+                    </button>
                 </div>
 
                 <div class="bg-white/86 rounded-2xl p-4 shadow-inner border-2 border-pink-100 min-h-[100px] max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -1827,6 +1956,10 @@
                 <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
                     <ul id="summary-list" class="space-y-3"></ul>
                     <p id="summary-unassigned" class="mt-4 rounded-xl bg-yellow-50 p-4 text-sm font-bold text-slate-700" hidden></p>
+                    <div id="summary-stock" class="mt-4 rounded-xl bg-violet-50 border border-violet-100 p-4 text-sm font-bold text-slate-700 flex flex-wrap items-center justify-between gap-3" hidden>
+                        <p id="summary-stock-text" class="min-w-0 flex-1"></p>
+                        <button type="button" id="summary-stock-btn" onclick="toggleStockDeduction()" class="btn-pop bg-white text-slate-600 font-black px-4 py-2 text-xs">とりけす</button>
+                    </div>
                 </div>
                 <div class="p-6 text-center bg-pink-50">
                     <button onclick="closeSummary()" class="btn-pop bg-pink-500 text-white font-black px-8 py-3">
@@ -1910,8 +2043,11 @@
 
         function normalizePrize(prize, legacy = {}) {
             if (prize && typeof prize === 'object') {
-                return { name: String(prize.name ?? ''), isAlcohol: Boolean(prize.isAlcohol),
+                const item = { name: String(prize.name ?? ''), isAlcohol: Boolean(prize.isAlcohol),
                     isPlush: Boolean(prize.isPlush), isJackpot: Boolean(prize.isJackpot) };
+                // 在庫から入れた商品は、配り終わったときにその在庫から引けるように在庫IDを持たせる
+                if (isStockId(prize.stockId)) item.stockId = prize.stockId;
+                return item;
             }
             const name = String(prize ?? '');
             const containsName = list => Array.isArray(list) && list.some(value => String(value) === name);
@@ -2004,8 +2140,15 @@
 
             const grouped = groupBundleItems(bundle);
             const withMark = item => { const mark = challengeMark(item); return `${mark ? `${mark} ` : ''}${escapeHtml(item.name)}`; };
+            const thumb = item => {
+                const photo = photoFor(item.name);
+                return photo ? `<span class="prize-chip-thumb"><img class="prize-thumb" src="${photo}" alt=""></span>` : '';
+            };
             if (grouped.length === 1 && grouped[0].count === 1) {
-                return `<span>${withMark(grouped[0])}</span>`;
+                const photo = photoFor(grouped[0].name);
+                if (!photo) return `<span>${withMark(grouped[0])}</span>`;
+                if (size === 'large') return `<img class="prize-photo-lg" src="${photo}" alt=""><span>${withMark(grouped[0])}</span>`;
+                return `<span class="inline-flex items-center">${thumb(grouped[0])}<span>${withMark(grouped[0])}</span></span>`;
             }
 
             const chipClass = size === 'large'
@@ -2013,7 +2156,7 @@
                 : 'text-sm md:text-base px-3 py-1.5';
             return `<div class="flex flex-wrap justify-center gap-2">${grouped.map(item => {
                 const countBadge = item.count > 1 ? `<span class="ml-2 text-xs bg-yellow-100 text-slate-600 px-2 py-0.5 rounded-full">×${item.count}</span>` : '';
-                return `<span class="inline-flex items-center max-w-full rounded-lg bg-white border border-pink-100 text-pink-500 font-black shadow-sm ${chipClass}"><span class="truncate">${withMark(item)}</span>${countBadge}</span>`;
+                return `<span class="inline-flex items-center max-w-full rounded-lg bg-white border border-pink-100 text-pink-500 font-black shadow-sm ${chipClass}">${thumb(item)}<span class="truncate">${withMark(item)}</span>${countBadge}</span>`;
             }).join('')}</div>`;
         }
 
@@ -2153,6 +2296,7 @@
                     horizontalLines,
                     revealed: revealed.slice(0, currentCount),
                     revealedResults: revealedResults.slice(0, currentCount),
+                    stockState,
                     lineupText: document.getElementById('lineup-text')?.textContent || '',
                     savedAt: Date.now()
                 };
@@ -2179,13 +2323,17 @@
         function sanitizeBulkItems(items) {
             if (!Array.isArray(items)) return [];
             return items
-                .map(item => ({
-                    name: String(item?.name ?? '').trim(),
-                    count: Math.min(MAX_PRIZE_COUNT, Math.max(1, parseInt(item?.count, 10) || 1)),
-                    isAlcohol: Boolean(item?.isAlcohol),
-                    isPlush: Boolean(item?.isPlush),
-                    isJackpot: Boolean(item?.isJackpot)
-                }))
+                .map(item => {
+                    const clean = {
+                        name: String(item?.name ?? '').trim(),
+                        count: Math.min(MAX_PRIZE_COUNT, Math.max(1, parseInt(item?.count, 10) || 1)),
+                        isAlcohol: Boolean(item?.isAlcohol),
+                        isPlush: Boolean(item?.isPlush),
+                        isJackpot: Boolean(item?.isJackpot)
+                    };
+                    if (isStockId(item?.stockId)) clean.stockId = item.stockId;
+                    return clean;
+                })
                 .filter(item => item.name.length > 0)
                 .slice(0, 200);
         }
@@ -2224,6 +2372,8 @@
 
             revealed = Array.from({ length: currentCount }, (_, i) => Boolean(data.revealed?.[i]));
             revealedResults = Array.from({ length: currentCount }, (_, i) => Boolean(data.revealedResults?.[i]));
+            stockState = ['applied', 'undone'].includes(data.stockState) ? data.stockState : 'pending';
+            stockUndo = null;
             paths = [];
             isAnimating = false;
 
@@ -2296,6 +2446,8 @@
             resultBundles = [];
             declinedBundles = [];
             horizontalLines = [];
+            stockState = 'pending';
+            stockUndo = null;
             paths = [];
             revealed = new Array(MAX_COUNT).fill(false);
             revealedResults = new Array(MAX_COUNT).fill(false);
@@ -2523,6 +2675,8 @@
             persistEnabled = false;
             const saved = loadAppState();
             applyLoadedSetup(saved);
+            loadStock();
+            loadStockPhotos();
             setDisplayMode(displayMode);
             updateDisplays();
             updateBulkList();
@@ -2611,7 +2765,7 @@
         function changeBulkItemCount(index, delta) {
             const item = bulkItems[index];
             if (!item) return;
-            const next = Math.max(1, Math.min(MAX_PRIZE_COUNT, item.count + delta));
+            const next = Math.max(1, Math.min(bulkItemMax(item), item.count + delta));
             if (next === item.count) return;
             item.count = next;
             updateBulkList();
@@ -2626,6 +2780,7 @@
             if (bulkItems.length === 0) {
                 listEl.innerHTML = `<li class="text-slate-400 text-center py-6 flex flex-col items-center font-bold"><span class="text-4xl mb-2">🎁</span><span class="text-slate-500">ここにおみやげを入れてね！</span></li>`;
                 updatePrizePreview();
+                renderStock();
                 return;
             }
             bulkItems.forEach((item, index) => {
@@ -2635,10 +2790,533 @@
                 const alcoholBadge = itemKinds.map(kind => `<span class="${CHALLENGE_KINDS[kind].badgeClass} text-xs font-black px-3 py-1 rounded-full border inline-block mt-2 ml-1">${CHALLENGE_KINDS[kind].badge}</span>`).join('');
                 const jackpotBadge = item.isJackpot ? `<span class="text-amber-800 bg-yellow-200/80 border-yellow-300 text-xs font-black px-3 py-1 rounded-full border inline-block mt-2 ml-1">👑 あたり</span>` : '';
                 const itemIcon = item.isJackpot ? '👑' : (itemKinds.length ? CHALLENGE_KINDS[itemKinds[0]].icon : '🎁');
-                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-10 h-10 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-lg shadow-sm flex-shrink-0">${itemIcon}</span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="inline-flex items-center gap-1 mt-2 align-middle"><button onclick="changeBulkItemCount(${index}, -1)" ${item.count <= 1 ? 'disabled' : ''} class="bulk-count-btn w-7 h-7 rounded-full bg-white text-pink-500 border border-pink-200 font-black text-base flex items-center justify-center" aria-label="${escapeHtml(item.name)}の個数を減らす">-</button><span class="text-slate-600 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block whitespace-nowrap" aria-live="polite">× ${item.count}</span><button onclick="changeBulkItemCount(${index}, 1)" ${item.count >= MAX_PRIZE_COUNT ? 'disabled' : ''} class="bulk-count-btn w-7 h-7 rounded-full bg-pink-500 text-white border border-pink-500 font-black text-base flex items-center justify-center" aria-label="${escapeHtml(item.name)}の個数を増やす">+</button></span>${jackpotBadge}${alcoholBadge}</div></div><button onclick="removeBulkItem(${index})" class="text-pink-500 hover:text-pink-600 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
+                const photo = photoFor(item.name);
+                const lot = findStock(item.stockId);
+                const expiry = lot ? expiryInfo(lot.expiry) : null;
+                const expiryBadge = expiry && expiry.level !== 'none' ? `<span class="expiry-badge expiry-${expiry.level} mt-2 ml-1">${expiry.level === 'expired' ? '⚠ ' : ''}${expiry.label}</span>` : '';
+                const maxCount = bulkItemMax(item);
+                li.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1"><span class="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-lg shadow-sm flex-shrink-0 overflow-hidden">${photo ? `<img class="prize-thumb" src="${photo}" alt="">` : itemIcon}</span><div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base md:text-lg break-all block">${escapeHtml(item.name)}</span><span class="inline-flex items-center gap-1 mt-2 align-middle"><button onclick="changeBulkItemCount(${index}, -1)" ${item.count <= 1 ? 'disabled' : ''} class="bulk-count-btn w-7 h-7 rounded-full bg-white text-pink-500 border border-pink-200 font-black text-base flex items-center justify-center" aria-label="${escapeHtml(item.name)}の個数を減らす">-</button><span class="text-slate-600 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 inline-block whitespace-nowrap" aria-live="polite">× ${item.count}</span><button onclick="changeBulkItemCount(${index}, 1)" ${item.count >= maxCount ? 'disabled' : ''} class="bulk-count-btn w-7 h-7 rounded-full bg-pink-500 text-white border border-pink-500 font-black text-base flex items-center justify-center" aria-label="${escapeHtml(item.name)}の個数を増やす">+</button></span>${expiryBadge}${jackpotBadge}${alcoholBadge}</div></div><button onclick="removeBulkItem(${index})" class="text-pink-500 hover:text-pink-600 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-pink-50 transition flex-shrink-0" aria-label="商品を削除"><i class="fas fa-times"></i></button>`;
                 listEl.appendChild(li);
             });
             updatePrizePreview();
+            renderStock();
+        }
+
+        // ===================== おみやげの在庫（賞味期限・写真） =====================
+        // 在庫は localStorage、写真は容量が大きいので IndexedDB に保存する（どちらもこの端末だけ）。
+        // 写真は商品名をキーにして持つので、同じ名前で入れなおした在庫や、手で入れたおみやげにも同じ写真が出る。
+        const STOCK_KEY = 'amidakuji-stock-v1';
+        const STOCK_SOON_DAYS = 3;
+        const MAX_STOCK_ITEMS = 300;
+        const PHOTO_DATA_URL = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+        let stockItems = [];
+        const stockPhotos = new Map();
+        let pendingStockPhoto = null;
+        let photoTargetId = null;
+        // 写真の縮小中に「在庫に入れる」を押したとき、その写真が次の商品に付かないようにする
+        let photoPickSeq = 0;
+        // 1回の抽選で配った分を在庫から引いたか: pending=まだ / applied=引いた / undone=とりけした
+        let stockState = 'pending';
+        let stockUndo = null;
+
+        function isStockId(id) {
+            return typeof id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(id);
+        }
+
+        function createStockId() {
+            return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+        }
+
+        function sanitizeStockItems(items) {
+            if (!Array.isArray(items)) return [];
+            const seen = new Set();
+            return items
+                .map(item => ({
+                    id: isStockId(item?.id) ? item.id : createStockId(),
+                    name: String(item?.name ?? '').trim(),
+                    count: Math.min(MAX_PRIZE_COUNT, Math.max(0, parseInt(item?.count, 10) || 0)),
+                    expiry: /^\d{4}-\d{2}-\d{2}$/.test(item?.expiry) ? item.expiry : '',
+                    isAlcohol: Boolean(item?.isAlcohol),
+                    isPlush: Boolean(item?.isPlush),
+                    isJackpot: Boolean(item?.isJackpot)
+                }))
+                .filter(item => {
+                    if (!item.name || item.count < 1 || seen.has(item.id)) return false;
+                    seen.add(item.id);
+                    return true;
+                })
+                .slice(0, MAX_STOCK_ITEMS);
+        }
+
+        function loadStock() {
+            try {
+                const data = JSON.parse(localStorage.getItem(STOCK_KEY) || 'null');
+                stockItems = sanitizeStockItems(data?.items);
+            } catch (err) {
+                console.warn('在庫の読み込みに失敗しました', err);
+                stockItems = [];
+            }
+        }
+
+        function saveStock() {
+            try {
+                localStorage.setItem(STOCK_KEY, JSON.stringify({ version: 1, items: stockItems }));
+            } catch (err) {
+                console.warn('在庫の保存に失敗しました', err);
+            }
+        }
+
+        function findStock(id) {
+            return id ? stockItems.find(item => item.id === id) || null : null;
+        }
+
+        // おみやげリストに入れた数（在庫から入れた分だけ）
+        function reservedCount(id) {
+            return bulkItems.reduce((sum, item) => sum + (item.stockId === id ? item.count : 0), 0);
+        }
+
+        function bulkItemMax(item) {
+            const lot = findStock(item?.stockId);
+            return lot ? Math.min(MAX_PRIZE_COUNT, lot.count) : MAX_PRIZE_COUNT;
+        }
+
+        // 在庫を減らしたら、おみやげリストに入れた数が在庫を超えないように合わせる
+        function clampListToStock(id) {
+            const lot = findStock(id);
+            if (!lot) return;
+            let over = reservedCount(id) - lot.count;
+            for (let i = bulkItems.length - 1; i >= 0 && over > 0; i--) {
+                if (bulkItems[i].stockId !== id) continue;
+                const cut = Math.min(over, bulkItems[i].count);
+                bulkItems[i].count -= cut;
+                over -= cut;
+            }
+            bulkItems = bulkItems.filter(item => item.count > 0);
+        }
+
+        function expiryInfo(expiry) {
+            if (!expiry) return { level: 'none', days: Infinity, label: '期限なし' };
+            const [y, m, d] = expiry.split('-').map(Number);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const days = Math.round((new Date(y, m - 1, d) - today) / 86400000);
+            const dateText = `${m}/${d}`;
+            if (days < 0) return { level: 'expired', days, label: `期限切れ（${dateText}）` };
+            if (days === 0) return { level: 'soon', days, label: `今日まで（${dateText}）` };
+            if (days <= STOCK_SOON_DAYS) return { level: 'soon', days, label: `あと${days}日（${dateText}）` };
+            return { level: 'ok', days, label: `${dateText}まで` };
+        }
+
+        // 賞味期限が近い順（期限なしは最後）
+        function sortedStock() {
+            return [...stockItems].sort((a, b) =>
+                (a.expiry || '9999-99-99').localeCompare(b.expiry || '9999-99-99') || a.name.localeCompare(b.name, 'ja'));
+        }
+
+        function shortLabel(name) {
+            return name.length > 8 ? `${name.slice(0, 8)}…` : name;
+        }
+
+        // ---- 写真 ----
+        let photoDbPromise = null;
+        function photoStore(mode) {
+            if (typeof indexedDB === 'undefined') return Promise.reject(new Error('IndexedDB が使えません'));
+            if (!photoDbPromise) {
+                photoDbPromise = new Promise((resolve, reject) => {
+                    const req = indexedDB.open('amidakuji-photos', 1);
+                    req.onupgradeneeded = () => req.result.createObjectStore('photos');
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                }).catch(err => {
+                    photoDbPromise = null;
+                    throw err;
+                });
+            }
+            return photoDbPromise.then(db => db.transaction('photos', mode).objectStore('photos'));
+        }
+
+        function idbResult(req) {
+            return new Promise((resolve, reject) => {
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function photoKey(name) {
+            return String(name ?? '').trim();
+        }
+
+        function photoFor(name) {
+            return stockPhotos.get(photoKey(name)) || null;
+        }
+
+        async function loadStockPhotos() {
+            try {
+                const store = await photoStore('readonly');
+                const [keys, values] = await Promise.all([idbResult(store.getAllKeys()), idbResult(store.getAll())]);
+                keys.forEach((key, i) => {
+                    if (typeof values[i] === 'string' && PHOTO_DATA_URL.test(values[i])) stockPhotos.set(String(key), values[i]);
+                });
+                updateBulkList();
+            } catch (err) {
+                console.warn('写真の読み込みに失敗しました', err);
+            }
+        }
+
+        let photoSaveWarned = false;
+        async function storePhoto(name, dataUrl) {
+            stockPhotos.set(photoKey(name), dataUrl);
+            try {
+                const store = await photoStore('readwrite');
+                await idbResult(store.put(dataUrl, photoKey(name)));
+            } catch (err) {
+                console.warn('写真の保存に失敗しました', err);
+                if (photoSaveWarned) return;
+                photoSaveWarned = true;
+                alert('写真をこの端末に保存できませんでした。ページを開きなおすと写真が消えるかもしれません。');
+            }
+        }
+
+        // 端末に保存する量をおさえるため、長い辺 360px の JPEG（1枚 20〜30KB ほど）に縮める
+        function resizePhoto(file, maxSide = 360) {
+            return new Promise((resolve, reject) => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+                    const out = document.createElement('canvas');
+                    out.width = Math.max(1, Math.round(img.naturalWidth * scale));
+                    out.height = Math.max(1, Math.round(img.naturalHeight * scale));
+                    const g = out.getContext('2d');
+                    g.fillStyle = '#fff';
+                    g.fillRect(0, 0, out.width, out.height);
+                    g.drawImage(img, 0, 0, out.width, out.height);
+                    URL.revokeObjectURL(url);
+                    resolve(out.toDataURL('image/jpeg', 0.82));
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error('画像を読み込めませんでした'));
+                };
+                img.src = url;
+            });
+        }
+
+        // 写真ボタンは <label for="stock-photo-input"> なので、押すとブラウザがそのままファイル選択（iPadはカメラ/写真）をひらく。
+        // ここでは「どの写真として使うか」だけを覚える。id なし=登録フォームの写真 / id あり=登録済み在庫の写真を撮りなおす
+        function choosePhotoFor(id) {
+            photoTargetId = id;
+        }
+
+        // label はキーボードでは押せないので、Enter/スペースのときだけファイル選択をひらく
+        function openFilePickerByKey(event, inputId, photoId) {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            if (photoId !== undefined) choosePhotoFor(photoId);
+            document.getElementById(inputId).click();
+        }
+
+        async function handleStockPhotoInput(input) {
+            const file = input.files?.[0];
+            const targetId = photoTargetId;
+            photoTargetId = null;
+            input.value = '';
+            if (!file) return;
+            const seq = ++photoPickSeq;
+            let dataUrl;
+            try {
+                dataUrl = await resizePhoto(file);
+            } catch {
+                alert('この画像は読み込めませんでした。別の写真でためしてね');
+                return;
+            }
+            if (seq !== photoPickSeq) return;
+            if (targetId) {
+                const lot = findStock(targetId);
+                if (!lot) return;
+                await storePhoto(lot.name, dataUrl);
+                updateBulkList();
+                setMascotSpeech('写真かえたよ！ 📸');
+                return;
+            }
+            pendingStockPhoto = dataUrl;
+            updateStockPhotoButton();
+        }
+
+        function updateStockPhotoButton() {
+            const btn = document.getElementById('stock-photo-btn');
+            const photo = pendingStockPhoto || photoFor(document.getElementById('stock-name').value);
+            btn.classList.toggle('has-photo', Boolean(photo));
+            btn.innerHTML = photo ? `<img src="${photo}" alt="">` : '<i class="fas fa-camera"></i><span>写真</span>';
+        }
+
+        // ---- 在庫の登録・変更 ----
+        function addStockItem() {
+            const nameInput = document.getElementById('stock-name');
+            const countInput = document.getElementById('stock-count');
+            const expiryInput = document.getElementById('stock-expiry');
+            const name = nameInput.value.trim();
+            const count = Number(countInput.value);
+            if (!name) { nameInput.focus(); return; }
+            if (!Number.isInteger(count) || count < 1 || count > MAX_PRIZE_COUNT) {
+                countInput.setCustomValidity(`個数は1〜${MAX_PRIZE_COUNT}の整数を入れてね`);
+                countInput.reportValidity();
+                countInput.focus();
+                return;
+            }
+            countInput.setCustomValidity('');
+            const item = {
+                id: createStockId(), name, count,
+                expiry: /^\d{4}-\d{2}-\d{2}$/.test(expiryInput.value) ? expiryInput.value : '',
+                isAlcohol: Boolean(document.getElementById('stock-alcohol').checked),
+                isPlush: Boolean(document.getElementById('stock-plush').checked),
+                isJackpot: Boolean(document.getElementById('stock-jackpot').checked)
+            };
+            // 同じ商品・同じ期限・同じ設定なら1行にまとめる
+            const same = stockItems.find(lot => lot.name === item.name && lot.expiry === item.expiry
+                && lot.isAlcohol === item.isAlcohol && lot.isPlush === item.isPlush && lot.isJackpot === item.isJackpot);
+            if (same) {
+                same.count = Math.min(MAX_PRIZE_COUNT, same.count + count);
+            } else if (stockItems.length >= MAX_STOCK_ITEMS) {
+                alert(`在庫は${MAX_STOCK_ITEMS}件までです。使い終わったものを消してから入れてね`);
+                return;
+            } else {
+                stockItems.push(item);
+            }
+            if (pendingStockPhoto) storePhoto(name, pendingStockPhoto);
+            pendingStockPhoto = null;
+            photoPickSeq += 1;
+            nameInput.value = '';
+            countInput.value = 1;
+            expiryInput.value = '';
+            ['stock-alcohol', 'stock-plush', 'stock-jackpot'].forEach(id => { document.getElementById(id).checked = false; });
+            saveStock();
+            updateBulkList();
+            updateStockPhotoButton();
+            setMascotSpeech(`「${shortLabel(name)}」在庫に入れたよ！ 📦`);
+        }
+
+        function changeStockCount(id, delta) {
+            const lot = findStock(id);
+            if (!lot) return;
+            const next = Math.max(1, Math.min(MAX_PRIZE_COUNT, lot.count + delta));
+            if (next === lot.count) return;
+            lot.count = next;
+            clampListToStock(id);
+            saveStock();
+            updateBulkList();
+            saveAppState();
+        }
+
+        function removeStockItem(id) {
+            const lot = findStock(id);
+            if (!lot) return;
+            if (!confirm(`「${lot.name}」（${lot.count}個）を在庫から消しますか？`)) return;
+            stockItems = stockItems.filter(item => item.id !== id);
+            // おみやげリストに入れた分は、ふつうの商品として残す
+            bulkItems.forEach(item => { if (item.stockId === id) delete item.stockId; });
+            saveStock();
+            updateBulkList();
+            saveAppState();
+            setMascotSpeech('在庫からけしたよ');
+        }
+
+        // 在庫からおみやげリストへ入れる。入れた数を返す
+        function addStockToList(id, amount = 1, options = {}) {
+            const lot = findStock(id);
+            if (!lot) return 0;
+            if (!options.silent && expiryInfo(lot.expiry).level === 'expired'
+                && !confirm(`「${lot.name}」は賞味期限が切れています。リストに入れますか？`)) return 0;
+            const take = Math.min(amount, lot.count - reservedCount(id));
+            if (take <= 0) return 0;
+            const entry = bulkItems.find(item => item.stockId === id);
+            if (entry) {
+                entry.count += take;
+            } else {
+                bulkItems.push({ name: lot.name, count: take, isAlcohol: lot.isAlcohol, isPlush: lot.isPlush, isJackpot: lot.isJackpot, stockId: id });
+            }
+            if (!options.silent) {
+                updateBulkList();
+                saveAppState();
+                setMascotSpeech(`「${shortLabel(lot.name)}」リストに入れたよ！ ✨`);
+            }
+            return take;
+        }
+
+        // 足りない分（人数 − いまのおみやげ数）を、期限切れをのぞいて期限が近い順に入れる
+        function fillFromStock() {
+            const needed = currentCount - getPrizeStats().totalPrizes;
+            if (needed <= 0) {
+                setMascotSpeech('もう人数分そろってるよ！ 🎉');
+                return;
+            }
+            let remaining = needed;
+            for (const lot of sortedStock()) {
+                if (remaining <= 0) break;
+                if (expiryInfo(lot.expiry).level === 'expired') continue;
+                remaining -= addStockToList(lot.id, remaining, { silent: true });
+            }
+            const added = needed - remaining;
+            updateBulkList();
+            saveAppState();
+            if (added === 0) setMascotSpeech('入れられる在庫がないよ… 📦');
+            else if (remaining > 0) setMascotSpeech(`${added}こ入れたよ！ あと${remaining}枠は★になるよ`);
+            else setMascotSpeech(`期限が近い順に ${added}こ入れたよ！ ✨`);
+        }
+
+        function renderStock() {
+            const list = document.getElementById('stock-list');
+            const total = stockItems.reduce((sum, item) => sum + item.count, 0);
+            const levels = stockItems.map(item => expiryInfo(item.expiry).level);
+            const expired = levels.filter(level => level === 'expired').length;
+            const soon = levels.filter(level => level === 'soon').length;
+            document.getElementById('stock-summary-text').textContent = stockItems.length
+                ? `${stockItems.length}種類・${total}個` : 'まだ登録なし（タップでひらく）';
+            document.getElementById('stock-summary-alerts').innerHTML =
+                (expired ? `<span class="stock-alert expiry-expired">⚠ 期限切れ ${expired}</span>` : '')
+                + (soon ? `<span class="stock-alert expiry-soon">もうすぐ ${soon}</span>` : '');
+            document.getElementById('stock-fill-wrap').hidden = stockItems.length === 0;
+
+            if (stockItems.length === 0) {
+                list.innerHTML = `<li class="text-center py-6 flex flex-col items-center font-bold"><span class="text-4xl mb-2">📦</span><span class="text-slate-500">写真と賞味期限をつけて、在庫を入れてね</span></li>`;
+                return;
+            }
+            list.innerHTML = sortedStock().map(lot => {
+                const info = expiryInfo(lot.expiry);
+                const photo = photoFor(lot.name);
+                const kinds = kindsOfItem(lot);
+                const icon = lot.isJackpot ? '👑' : (kinds.length ? CHALLENGE_KINDS[kinds[0]].icon : '🎁');
+                const reserved = reservedCount(lot.id);
+                const name = escapeHtml(lot.name);
+                const flags = (lot.isJackpot ? '<span class="text-amber-800 bg-yellow-200/80 border-yellow-300 text-xs font-black px-2 py-0.5 rounded-full border">👑 あたり</span>' : '')
+                    + kinds.map(kind => `<span class="${CHALLENGE_KINDS[kind].badgeClass} text-xs font-black px-2 py-0.5 rounded-full border">${CHALLENGE_KINDS[kind].badge}</span>`).join('');
+                const rowState = info.level === 'expired' ? 'is-expired' : info.level === 'soon' ? 'is-soon' : '';
+                return `<li class="stock-row ${rowState} flex items-start gap-3 bg-white px-3 py-3 rounded-2xl border-2 border-pink-100 shadow-sm">`
+                    + `<label for="stock-photo-input" class="stock-thumb" role="button" tabindex="0" onclick="choosePhotoFor('${lot.id}')" onkeydown="openFilePickerByKey(event, 'stock-photo-input', '${lot.id}')" aria-label="${name}の写真をえらぶ">${photo ? `<img class="prize-thumb" src="${photo}" alt="">` : icon}<span class="stock-thumb-cam"><i class="fas fa-camera"></i></span></label>`
+                    + `<div class="min-w-0 flex-1"><span class="font-bold text-slate-700 text-base break-all block">${name}</span>`
+                    + `<div class="flex flex-wrap items-center gap-1.5 mt-1.5"><span class="expiry-badge expiry-${info.level}">${info.level === 'expired' ? '⚠ ' : ''}${info.label}</span>${flags}</div>`
+                    + `<div class="flex flex-wrap items-center gap-2 mt-2"><span class="inline-flex items-center gap-1">`
+                    + `<button onclick="changeStockCount('${lot.id}', -1)" ${lot.count <= 1 ? 'disabled' : ''} class="bulk-count-btn w-7 h-7 rounded-full bg-white text-pink-500 border border-pink-200 font-black text-base flex items-center justify-center" aria-label="${name}の在庫を減らす">-</button>`
+                    + `<span class="text-slate-600 text-xs font-black bg-yellow-100/80 px-3 py-1 rounded-full border border-yellow-100 whitespace-nowrap">在庫 ${lot.count}</span>`
+                    + `<button onclick="changeStockCount('${lot.id}', 1)" ${lot.count >= MAX_PRIZE_COUNT ? 'disabled' : ''} class="bulk-count-btn w-7 h-7 rounded-full bg-pink-500 text-white border border-pink-500 font-black text-base flex items-center justify-center" aria-label="${name}の在庫を増やす">+</button></span>`
+                    + `<button type="button" class="stock-to-list" onclick="addStockToList('${lot.id}')" ${reserved >= lot.count ? 'disabled' : ''}>＋リストへ${reserved ? `（${reserved}こ入れた）` : ''}</button></div></div>`
+                    + `<button onclick="removeStockItem('${lot.id}')" class="text-pink-500 hover:text-pink-600 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-pink-50 transition flex-shrink-0" aria-label="${name}を在庫から消す"><i class="fas fa-times"></i></button></li>`;
+            }).join('');
+        }
+
+        // ---- 配り終わったら在庫から引く ----
+        // 配った（=結果の枠に入った）商品のうち、在庫から入れたものを在庫IDごとに数える。辞退で未配布の分は引かない
+        function distributedStockUse() {
+            const used = new Map();
+            resultBundles.slice(0, currentCount).flat().forEach(prize => {
+                if (!prize?.stockId) return;
+                const entry = used.get(prize.stockId) || { name: prize.name, count: 0 };
+                entry.count += 1;
+                used.set(prize.stockId, entry);
+            });
+            return used;
+        }
+
+        function applyStockDeduction() {
+            if (stockState === 'applied') return;
+            const used = distributedStockUse();
+            if (used.size === 0) return;
+            stockUndo = { stock: JSON.parse(JSON.stringify(stockItems)), bulk: JSON.parse(JSON.stringify(bulkItems)) };
+            used.forEach(({ count }, id) => {
+                const lot = findStock(id);
+                if (lot) lot.count -= count;
+                // 配った分はおみやげリストからも外す（残りは次の組で使える）
+                let left = count;
+                bulkItems.forEach(item => {
+                    if (item.stockId !== id || left <= 0) return;
+                    const cut = Math.min(left, item.count);
+                    item.count -= cut;
+                    left -= cut;
+                });
+            });
+            stockItems = stockItems.filter(item => item.count > 0);
+            bulkItems = bulkItems.filter(item => item.count > 0);
+            stockState = 'applied';
+            saveStock();
+            updateBulkList();
+            saveAppState();
+        }
+
+        function undoStockDeduction() {
+            if (stockState !== 'applied' || !stockUndo) return;
+            stockItems = sanitizeStockItems(stockUndo.stock);
+            bulkItems = sanitizeBulkItems(stockUndo.bulk);
+            stockUndo = null;
+            stockState = 'undone';
+            saveStock();
+            updateBulkList();
+            saveAppState();
+        }
+
+        function toggleStockDeduction() {
+            if (stockState === 'applied') undoStockDeduction();
+            else applyStockDeduction();
+            renderSummaryStock();
+        }
+
+        function renderSummaryStock() {
+            const box = document.getElementById('summary-stock');
+            const used = distributedStockUse();
+            box.hidden = used.size === 0;
+            if (used.size === 0) return;
+            const text = [...used.values()].map(({ name, count }) => `${name}×${count}`).join('、');
+            const applied = stockState === 'applied';
+            document.getElementById('summary-stock-text').textContent = applied
+                ? `📦 在庫から引きました：${text}` : `📦 在庫からは引いていません：${text}`;
+            const btn = document.getElementById('summary-stock-btn');
+            btn.textContent = applied ? 'とりけす' : '在庫から引く';
+            // 引いたあとにページを開きなおすと、とりけすための控えがないのでボタンを出さない
+            btn.hidden = applied && !stockUndo;
+        }
+
+        // ---- バックアップ ----
+        function exportStock() {
+            const data = { app: 'amidakuji-stock', version: 1, exportedAt: new Date().toISOString(), items: stockItems, photos: Object.fromEntries(stockPhotos) };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const now = new Date();
+            const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `omiyage-zaiko-${stamp}.json`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+            setMascotSpeech('バックアップ保存したよ！ 💾');
+        }
+
+        async function importStock(input) {
+            const file = input.files?.[0];
+            input.value = '';
+            if (!file) return;
+            let data;
+            try {
+                data = JSON.parse(await file.text());
+            } catch {
+                alert('バックアップファイルを読み込めませんでした');
+                return;
+            }
+            if (data?.app !== 'amidakuji-stock' || !Array.isArray(data.items)) {
+                alert('このファイルは在庫のバックアップではないみたい');
+                return;
+            }
+            const items = sanitizeStockItems(data.items);
+            if (!confirm(`いまの在庫を、バックアップの ${items.length}件 に置きかえますか？`)) return;
+            stockItems = items;
+            // 置きかえた在庫にない在庫IDは、おみやげリストではふつうの商品にもどす
+            bulkItems.forEach(item => { if (item.stockId && !findStock(item.stockId)) delete item.stockId; });
+            const photos = Object.entries(data.photos && typeof data.photos === 'object' ? data.photos : {})
+                .filter(([, url]) => typeof url === 'string' && PHOTO_DATA_URL.test(url));
+            await Promise.all(photos.map(([name, url]) => storePhoto(name, url)));
+            saveStock();
+            updateBulkList();
+            saveAppState();
+            setMascotSpeech(`在庫を ${items.length}件 もどしたよ！`);
         }
 
         function generateAmida() {
@@ -2650,6 +3328,8 @@
             }
             closeAlcoholModal();
             resultBundles = buildResultBundles();
+            stockState = 'pending';
+            stockUndo = null;
 
             updateLineup();
             setGameMascotSpeech(GAME_MASCOT_LINES[Math.floor(Math.random() * GAME_MASCOT_LINES.length)]);
@@ -3092,6 +3772,8 @@
             const note = document.getElementById('summary-unassigned');
             note.hidden = unassigned.length === 0;
             note.textContent = unassigned.length ? `辞退で未配布：${formatPrizeBundle(unassigned)}` : '';
+            if (stockState === 'pending') applyStockDeduction();
+            renderSummaryStock();
             modal.classList.remove('hidden');
             burstConfetti(32);
         }
