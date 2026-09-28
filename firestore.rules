@@ -1,0 +1,77 @@
+rules_version = '2';
+
+// みんなの在庫（index.html の data-role="stock-cloud"）のルール。
+// Firebase コンソール → Firestore Database → ルール に、このファイルの中身をそのまま貼って「公開」する。
+//
+// shops/main            … { ownerUid, ownerEmail, members: [メールアドレス], createdAt }
+// shops/main/items/{id} … 在庫1行（商品名・個数・賞味期限・お酒/大きい/あたり）
+// shops/main/photos/{h} … 商品名ごとの写真（小さく縮めた JPEG の data URL）
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function isMember(shopId) {
+      return signedIn()
+        && myEmail() in get(/databases/$(database)/documents/shops/$(shopId)).data.members;
+    }
+
+    function stamped(d) {
+      return d.updatedAt == request.time && d.updatedBy == myEmail();
+    }
+
+    function validItem(d) {
+      return d.keys().hasOnly(['name', 'count', 'expiry', 'isAlcohol', 'isPlush', 'isJackpot', 'updatedAt', 'updatedBy'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 500
+        // 2台で同時に配ると一時的に0以下になることがある（アプリは1未満の行を見せずに消す）
+        && d.count is int && d.count >= -100000 && d.count <= 100000
+        && d.expiry is string && d.expiry.size() <= 10
+        && d.isAlcohol is bool && d.isPlush is bool && d.isJackpot is bool
+        && stamped(d);
+    }
+
+    function validPhoto(d) {
+      return d.keys().hasOnly(['name', 'dataUrl', 'updatedAt', 'updatedBy'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 500
+        && d.dataUrl is string && d.dataUrl.size() <= 500000
+        && d.dataUrl.matches('data:image/(jpeg|png|webp);base64,.*')
+        && stamped(d);
+    }
+
+    match /shops/{shopId} {
+      // まだ誰も使っていないか（ドキュメントなし）を確かめられるように、ないときの読み取りは許す
+      allow get: if signedIn() && (resource == null || myEmail() in resource.data.members);
+
+      // 最初にログインした人が持ち主になる
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['ownerUid', 'ownerEmail', 'members', 'createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == myEmail()
+        && request.resource.data.members == [myEmail()]
+        && request.resource.data.createdAt == request.time;
+
+      // メンバーの出し入れは持ち主だけ。持ち主は外せない
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+        && request.resource.data.members is list
+        && request.resource.data.members.size() <= 50
+        && myEmail() in request.resource.data.members;
+
+      match /items/{itemId} {
+        allow read, delete: if isMember(shopId);
+        allow create, update: if isMember(shopId) && validItem(request.resource.data);
+      }
+
+      match /photos/{photoId} {
+        allow read, delete: if isMember(shopId);
+        allow create, update: if isMember(shopId) && validPhoto(request.resource.data);
+      }
+    }
+  }
+}

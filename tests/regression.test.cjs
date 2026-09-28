@@ -313,3 +313,34 @@ test('declined stock items are not taken from stock', () => {
     assert.equal(a.run('stockItems[0].count'), 4);
     assert.equal(a.element('summary-stock').hidden, true);
 });
+
+test('shared stock: joining asks to merge, cloud snapshots replace the copy, and signing out forgets it', () => {
+    const a = app();
+    const ids = () => JSON.parse(a.run('JSON.stringify(stockItems.map(i => [i.id, i.count]))'));
+    a.run(`var pushed = []; window.stockCloud = { pushItems: items => pushed.push(items.map(i => i.id)), pushPhoto() {} };
+        stockItems = sanitizeStockItems([{id:'mine',name:'クッキー',count:2}]);
+        bulkItems = [{name:'クッキー',count:1,stockId:'mine'}, {name:'ケーキ',count:3,stockId:'shared'}];
+        onStockCloudState({ status: 'member', email: 'a@example.com' });
+        onStockCloudItems([{id:'shared',name:'ケーキ',count:3}], { fromCache: true });`);
+    assert.deepEqual(ids(), [['mine', 2]], 'a cached snapshot does not replace local stock before joining');
+    assert.equal(a.run('pushed.length'), 0);
+
+    a.run(`onStockCloudItems([{id:'shared',name:'ケーキ',count:3}], { fromCache: false });`);
+    assert.deepEqual(ids(), [['shared', 3], ['mine', 2]], 'local-only stock is merged into the shared stock');
+    assert.deepEqual(a.run('JSON.stringify(pushed.at(-1))'), '["shared","mine"]');
+    assert.equal(a.run('isStockCloudJoined()'), true);
+
+    a.run(`onStockCloudItems([{id:'shared',name:'ケーキ',count:1}], { fromCache: false });`);
+    assert.deepEqual(ids(), [['shared', 1]], 'someone else removed a lot and handed out cake');
+    assert.deepEqual(JSON.parse(a.run('JSON.stringify(bulkItems.map(i => [i.name, i.count, i.stockId || null]))')),
+        [['クッキー', 1, null], ['ケーキ', 1, 'shared']], 'the list follows the shared stock');
+
+    const before = a.run('pushed.length');
+    a.run(`changeStockCount('shared', 1)`);
+    assert.equal(a.run('pushed.length'), before + 1, 'local changes are sent to the shared stock');
+
+    a.run(`onStockCloudState({ status: 'signed-out' })`);
+    assert.deepEqual(ids(), [], 'signing out forgets the copy of the shared stock');
+    assert.equal(a.run('isStockCloudJoined()'), false);
+    assert.equal(a.run('loadStock(), stockItems.length'), 0);
+});

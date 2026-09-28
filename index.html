@@ -1560,6 +1560,18 @@
         .stock-to-list { font-size: 0.75rem; font-weight: 900; padding: 0.3rem 0.7rem; border-radius: 999px; background: #111; color: #f5c518; white-space: nowrap; }
         .stock-to-list:disabled { opacity: 0.35; cursor: not-allowed; }
         .stock-fill-btn { width: 100%; }
+        /* みんなの在庫（Googleログインで共有） */
+        .stock-cloud { border: 2px dashed #c4b5fd; background: #faf5ff; border-radius: 1rem; padding: 0.75rem 0.9rem; }
+        .stock-cloud.is-member { border-style: solid; border-color: #a7f3d0; background: #ecfdf5; }
+        .stock-cloud-title { font-size: 0.85rem; font-weight: 900; color: #334155; }
+        .stock-cloud-sub { font-size: 0.72rem; font-weight: 700; color: #64748b; word-break: break-all; }
+        .stock-cloud-btn { font-size: 0.78rem; font-weight: 900; padding: 0.4rem 0.9rem; border-radius: 999px; background: #fff; color: #334155; border: 2px solid #111; white-space: nowrap; }
+        .stock-cloud-btn.is-primary { background: #111; color: #f5c518; }
+        .stock-cloud-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .stock-cloud-members { margin-top: 0.6rem; }
+        .stock-cloud-members > summary { cursor: pointer; font-size: 0.78rem; font-weight: 900; color: #047857; }
+        .stock-cloud-members li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 700; color: #334155; padding: 0.25rem 0; word-break: break-all; }
+        .stock-cloud-members input { min-width: 0; flex: 1; border: 2px solid #d1fae5; border-radius: 999px; padding: 0.35rem 0.8rem; font-size: 0.8rem; font-weight: 700; background: #fff; }
         .prize-chip-thumb { width: 1.9em; height: 1.9em; border-radius: 0.5rem; overflow: hidden; flex-shrink: 0; margin-right: 0.45rem; border: 1px solid #eadcff; }
         .prize-photo-lg {
             width: min(170px, 42vw); aspect-ratio: 1; object-fit: cover; margin: 0 auto 0.75rem; display: block;
@@ -1660,7 +1672,7 @@
                 </div>
             </div>
 
-            <!-- おみやげの在庫（賞味期限・写真つき）。この端末のブラウザにだけ保存する -->
+            <!-- おみやげの在庫（賞味期限・写真つき）。ふだんはこの端末のブラウザに保存し、Googleでログインするとみんなで共有する -->
             <details id="stock-panel" class="stock-panel relative z-10 bg-white/80 backdrop-blur-sm p-5 md:p-6 rounded-3xl mb-8 border-2 border-pink-100">
                 <summary>
                     <span class="bg-black text-yellow-300 font-black px-4 py-1 rounded-full text-sm shadow-sm border-2 border-yellow-300 whitespace-nowrap">
@@ -1672,6 +1684,7 @@
                 </summary>
 
                 <div class="mt-5">
+                    <div id="stock-cloud" class="stock-cloud mb-4" aria-live="polite" hidden></div>
                     <div class="stock-form">
                         <label for="stock-photo-input" id="stock-photo-btn" class="stock-photo-btn" role="button" tabindex="0" onclick="choosePhotoFor(null)" onkeydown="openFilePickerByKey(event, 'stock-photo-input', null)" aria-label="写真をえらぶ">
                             <i class="fas fa-camera"></i><span>写真</span>
@@ -1719,7 +1732,7 @@
                             <i class="fas fa-upload mr-1"></i> バックアップから戻す
                         </label>
                     </div>
-                    <p class="text-xs text-slate-400 font-bold mt-2 text-center">在庫と写真はこの端末だけに保存されます。ホーム画面に追加して開くと消えにくくなります</p>
+                    <p id="stock-storage-note" class="text-xs text-slate-400 font-bold mt-2 text-center">在庫と写真はこの端末だけに保存されます。ホーム画面に追加して開くと消えにくくなります</p>
                 </div>
                 <input type="file" id="stock-photo-input" accept="image/*" class="file-input-hidden" tabindex="-1" aria-hidden="true" onchange="handleStockPhotoInput(this)">
                 <input type="file" id="stock-import-input" accept="application/json,.json" class="file-input-hidden" tabindex="-1" aria-hidden="true" onchange="importStock(this)">
@@ -2804,6 +2817,7 @@
 
         // ===================== おみやげの在庫（賞味期限・写真） =====================
         // 在庫は localStorage、写真は容量が大きいので IndexedDB に保存する（どちらもこの端末だけ）。
+        // Googleでログインしてメンバーになると、みんなの在庫（Firebase）をこの端末に写して使い、変更はクラウドにも送る（下の「みんなの在庫」）。
         // 写真は商品名をキーにして持つので、同じ名前で入れなおした在庫や、手で入れたおみやげにも同じ写真が出る。
         const STOCK_KEY = 'amidakuji-stock-v1';
         const STOCK_SOON_DAYS = 3;
@@ -2858,12 +2872,17 @@
             }
         }
 
-        function saveStock() {
+        function saveStockLocal() {
             try {
                 localStorage.setItem(STOCK_KEY, JSON.stringify({ version: 1, items: stockItems }));
             } catch (err) {
                 console.warn('在庫の保存に失敗しました', err);
             }
+        }
+
+        function saveStock() {
+            saveStockLocal();
+            if (stockCloudReady) window.stockCloud?.pushItems(stockItems);
         }
 
         function findStock(id) {
@@ -2965,6 +2984,11 @@
 
         let photoSaveWarned = false;
         async function storePhoto(name, dataUrl) {
+            if (stockCloudReady) window.stockCloud?.pushPhoto(photoKey(name), dataUrl);
+            await cachePhoto(name, dataUrl);
+        }
+
+        async function cachePhoto(name, dataUrl) {
             stockPhotos.set(photoKey(name), dataUrl);
             try {
                 const store = await photoStore('readwrite');
@@ -3170,8 +3194,8 @@
             const levels = stockItems.map(item => expiryInfo(item.expiry).level);
             const expired = levels.filter(level => level === 'expired').length;
             const soon = levels.filter(level => level === 'soon').length;
-            document.getElementById('stock-summary-text').textContent = stockItems.length
-                ? `${stockItems.length}種類・${total}個` : 'まだ登録なし（タップでひらく）';
+            document.getElementById('stock-summary-text').textContent = (stockCloudReady ? '☁️ ' : '') + (stockItems.length
+                ? `${stockItems.length}種類・${total}個` : 'まだ登録なし（タップでひらく）');
             document.getElementById('stock-summary-alerts').innerHTML =
                 (expired ? `<span class="stock-alert expiry-expired">⚠ 期限切れ ${expired}</span>` : '')
                 + (soon ? `<span class="stock-alert expiry-soon">もうすぐ ${soon}</span>` : '');
@@ -3306,7 +3330,8 @@
                 return;
             }
             const items = sanitizeStockItems(data.items);
-            if (!confirm(`いまの在庫を、バックアップの ${items.length}件 に置きかえますか？`)) return;
+            const target = stockCloudReady ? 'みんなの在庫' : 'いまの在庫';
+            if (!confirm(`${target}を、バックアップの ${items.length}件 に置きかえますか？`)) return;
             stockItems = items;
             // 置きかえた在庫にない在庫IDは、おみやげリストではふつうの商品にもどす
             bulkItems.forEach(item => { if (item.stockId && !findStock(item.stockId)) delete item.stockId; });
@@ -3317,6 +3342,185 @@
             updateBulkList();
             saveAppState();
             setMascotSpeech(`在庫を ${items.length}件 もどしたよ！`);
+        }
+
+        // ---- みんなの在庫（Googleログイン・Firebase） ----
+        // Firebase とのやりとりはページ最後の <script type="module" data-role="stock-cloud"> が window.stockCloud としてうけもつ。
+        // ここでは、届いたみんなの在庫をこの端末に写すことと、ログイン状態の表示をする。
+        const STOCK_CLOUD_KEY = 'amidakuji-stock-cloud-v1';
+        // off=Firebase未設定 / loading / signed-out / connecting / member / not-member / error
+        let stockCloudState = { status: 'off' };
+        // みんなの在庫を受け取りおわって、変更をクラウドへ送ってよいか
+        let stockCloudReady = false;
+
+        // この端末がみんなの在庫を写して使っているか（ログアウトしたら写した在庫を消すための目印）
+        function isStockCloudJoined() {
+            try {
+                return localStorage.getItem(STOCK_CLOUD_KEY) === 'joined';
+            } catch {
+                return false;
+            }
+        }
+
+        function setStockCloudJoined(joined) {
+            try {
+                if (joined) localStorage.setItem(STOCK_CLOUD_KEY, 'joined');
+                else localStorage.removeItem(STOCK_CLOUD_KEY);
+            } catch (err) {
+                console.warn('みんなの在庫の設定を保存できませんでした', err);
+            }
+        }
+
+        function onStockCloudState(state) {
+            stockCloudState = { ...stockCloudState, ...state };
+            if (state.status && state.status !== 'member') stockCloudReady = false;
+            // ログアウトしたり、メンバーから外れたりしたら、この端末に写したみんなの在庫は消す
+            if ((state.status === 'signed-out' || state.status === 'not-member') && isStockCloudJoined()) forgetCloudStock();
+            renderStockCloud();
+            renderStock();
+        }
+
+        function replaceStockFromCloud(items) {
+            stockItems = items;
+            // 誰かが消した在庫は、おみやげリストではふつうの商品にもどす。減った在庫はリストの数も合わせる
+            bulkItems.forEach(item => { if (item.stockId && !findStock(item.stockId)) delete item.stockId; });
+            stockItems.forEach(lot => clampListToStock(lot.id));
+            saveStockLocal();
+            updateBulkList();
+            saveAppState();
+        }
+
+        function onStockCloudItems(items, { fromCache }) {
+            const cloudItems = sanitizeStockItems(items);
+            if (isStockCloudJoined()) {
+                stockCloudReady = true;
+                replaceStockFromCloud(cloudItems);
+                return;
+            }
+            // この端末ではじめてみんなの在庫を使う。端末の在庫を足すかどうかは、クラウドの中身がわかってから聞く
+            if (fromCache) return;
+            const cloudIds = new Set(cloudItems.map(item => item.id));
+            const localOnly = stockItems.filter(item => !cloudIds.has(item.id));
+            const merge = localOnly.length > 0 && confirm(`この端末の在庫 ${localOnly.length}件を、みんなの在庫に入れますか？\n\n「キャンセル」にすると、この端末の在庫は使わずに、みんなの在庫に置きかわります`);
+            setStockCloudJoined(true);
+            stockCloudReady = true;
+            renderStockCloud();
+            if (!merge) {
+                replaceStockFromCloud(cloudItems);
+                return;
+            }
+            replaceStockFromCloud(sanitizeStockItems([...cloudItems, ...localOnly]));
+            window.stockCloud?.pushItems(stockItems);
+            new Set(localOnly.map(item => photoKey(item.name))).forEach(name => {
+                const photo = stockPhotos.get(name);
+                if (photo) window.stockCloud?.pushPhoto(name, photo);
+            });
+            setMascotSpeech(`在庫 ${localOnly.length}件 をみんなの在庫に入れたよ！ ☁️`);
+        }
+
+        function onStockCloudPhotos(photos) {
+            photos.forEach(([name, dataUrl]) => {
+                if (typeof dataUrl === 'string' && PHOTO_DATA_URL.test(dataUrl)) cachePhoto(name, dataUrl);
+            });
+            updateBulkList();
+            updateStockPhotoButton();
+        }
+
+        function forgetCloudStock() {
+            setStockCloudJoined(false);
+            stockCloudReady = false;
+            stockItems = [];
+            stockPhotos.clear();
+            stockUndo = null;
+            bulkItems.forEach(item => { delete item.stockId; });
+            saveStockLocal();
+            photoStore('readwrite').then(store => idbResult(store.clear())).catch(err => console.warn('写真の控えを消せませんでした', err));
+            updateBulkList();
+            updateStockPhotoButton();
+            saveAppState();
+        }
+
+        function stockCloudSignIn() {
+            window.stockCloud?.signIn();
+        }
+
+        function stockCloudSignOut() {
+            const pending = stockCloudState.pending ? '\n\n⚠ まだ送れていない変更があります。いまログアウトすると、その変更は消えます。' : '';
+            if (!confirm(`ログアウトしますか？\nこの端末に写した在庫と写真は消えます（みんなの在庫はそのまま残ります）。${pending}`)) return;
+            window.stockCloud?.signOut();
+        }
+
+        async function stockCloudAddMember() {
+            const input = document.getElementById('stock-cloud-member-input');
+            const email = input.value.trim().toLowerCase();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('追加する人のGoogleアカウントのメールアドレスを入れてね');
+                input.focus();
+                return;
+            }
+            try {
+                await window.stockCloud.addMember(email);
+                input.value = '';
+                setMascotSpeech('メンバーを追加したよ！ 🙌');
+            } catch (err) {
+                console.warn('メンバーを追加できませんでした', err);
+                alert('メンバーを追加できませんでした。ネットにつながっているか確かめてね');
+            }
+        }
+
+        async function stockCloudRemoveMember(index) {
+            const email = stockCloudState.members?.[index];
+            if (!email || !confirm(`${email} をメンバーから外しますか？\nその人は、みんなの在庫を見られなくなります`)) return;
+            try {
+                await window.stockCloud.removeMember(email);
+            } catch (err) {
+                console.warn('メンバーを外せませんでした', err);
+                alert('メンバーを外せませんでした。ネットにつながっているか確かめてね');
+            }
+        }
+
+        function renderStockCloud() {
+            const box = document.getElementById('stock-cloud');
+            const s = stockCloudState;
+            box.hidden = s.status === 'off';
+            box.classList.toggle('is-member', s.status === 'member');
+            document.getElementById('stock-storage-note').textContent = s.status === 'member'
+                ? '在庫と写真はメンバーみんなで共有されます。ネットがつながらない間の変更は、つながったときに送ります'
+                : '在庫と写真はこの端末だけに保存されます。ホーム画面に追加して開くと消えにくくなります';
+            if (box.hidden) return;
+            // 書きかけのメールアドレスと、メンバー欄の開き具合は描きなおしても残す
+            const typed = document.getElementById('stock-cloud-member-input')?.value || '';
+            const membersOpen = Boolean(document.getElementById('stock-cloud-members')?.open);
+            const email = escapeHtml(s.email || '');
+            const signInBtn = '<button type="button" class="stock-cloud-btn is-primary" onclick="stockCloudSignIn()"><i class="fab fa-google mr-1"></i>Googleでログイン</button>';
+            const signOutBtn = '<button type="button" class="stock-cloud-btn" onclick="stockCloudSignOut()">ログアウト</button>';
+            const row = (title, sub, button) => `<div class="flex flex-wrap items-center gap-2"><div class="min-w-0 flex-1"><p class="stock-cloud-title">${title}</p><p class="stock-cloud-sub">${sub}</p></div>${button}</div>`;
+            let html;
+            if (s.status === 'loading') {
+                html = row('☁️ みんなの在庫', 'よみこみ中…', '');
+            } else if (s.status === 'connecting') {
+                html = row('☁️ みんなの在庫', `${email} でつないでいます…`, signOutBtn);
+            } else if (s.status === 'not-member') {
+                const retryBtn = '<button type="button" class="stock-cloud-btn is-primary" onclick="window.stockCloud?.retry()">追加してもらった</button>';
+                html = row('🔒 まだメンバーではありません', `${email} を持ち主にメンバーとして追加してもらってね`, retryBtn + signOutBtn);
+            } else if (s.status === 'member') {
+                const sync = s.pending ? '⏳ 送信待ち（ネットにつながると送ります）' : '✓ 保存ずみ';
+                html = row('☁️ みんなの在庫', `${email} でログイン中・${sync}`, signOutBtn);
+                if (s.isOwner) {
+                    const members = (s.members || []).map((member, i) => `<li><i class="fas fa-user text-emerald-600"></i><span class="flex-1">${escapeHtml(member)}${member === s.email ? '（持ち主）' : ''}</span>`
+                        + (member === s.email ? '' : `<button type="button" class="stock-cloud-btn" onclick="stockCloudRemoveMember(${i})">外す</button>`) + '</li>').join('');
+                    html += `<details id="stock-cloud-members" class="stock-cloud-members" ${membersOpen ? 'open' : ''}><summary>👥 メンバー（${(s.members || []).length}人）を管理する</summary>`
+                        + `<ul class="mt-1">${members}</ul>`
+                        + `<div class="flex items-center gap-2 mt-2"><input type="email" id="stock-cloud-member-input" placeholder="追加する人のGmailアドレス" autocomplete="off" value="${escapeHtml(typed)}" onkeydown="if (event.key === 'Enter') stockCloudAddMember()">`
+                        + '<button type="button" class="stock-cloud-btn is-primary" onclick="stockCloudAddMember()">追加</button></div></details>';
+                }
+            } else if (s.status === 'error' && s.email) {
+                html = row('☁️ みんなの在庫', `${email} でログイン中・いまはこの端末の控えを表示しています`, signOutBtn);
+            } else {
+                html = row('☁️ みんなの在庫', 'Googleでログインすると、メンバーみんなで同じ在庫を使えます', signInBtn);
+            }
+            if (s.message) html += `<p class="stock-cloud-sub mt-2" style="color:#b91c1c">${escapeHtml(s.message)}</p>`;
+            box.innerHTML = html;
         }
 
         function generateAmida() {
@@ -4155,6 +4359,236 @@
                 }, i * 90);
             });
         };
+    </script>
+    <script type="module" data-role="stock-cloud">
+        // みんなの在庫: Googleでログインしたメンバーだけが、Firebase（Firestore）の同じ在庫を読み書きする。
+        // 設定値は Firebase コンソール → プロジェクトの設定 → マイアプリ（ウェブ）に出るもの。公開してよい値で、
+        // 誰が読み書きできるかは firestore.rules（Firebase コンソールのルールに貼る）で決める。
+        // null にすると何もしない（在庫はこの端末だけに保存）。
+        const FIREBASE_CONFIG = {
+            apiKey: 'AIzaSyAKdHurD_SrREHlaWFK5hWP3GGXIiH5XcE',
+            authDomain: 'omiyage-amidakuji.firebaseapp.com',
+            projectId: 'omiyage-amidakuji',
+            appId: '1:318445424823:web:6c5f8e56b3ddcdd39efd32'
+        };
+        const FIREBASE_VERSION = '12.19.0';
+        const SHOP_ID = 'main';
+
+        if (FIREBASE_CONFIG) startStockCloud().catch(err => {
+            console.warn('みんなの在庫を使えませんでした', err);
+            onStockCloudState({ status: 'error', message: 'みんなの在庫につなげませんでした。ネットにつながってから開きなおしてね' });
+        });
+
+        async function startStockCloud() {
+            onStockCloudState({ status: 'loading' });
+            const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
+            const [{ initializeApp }, fa, fs] = await Promise.all([
+                import(`${base}/firebase-app.js`),
+                import(`${base}/firebase-auth.js`),
+                import(`${base}/firebase-firestore.js`)
+            ]);
+            const app = initializeApp(FIREBASE_CONFIG);
+            const auth = fa.getAuth(app);
+            // ネットが切れている間の変更もこの端末にためておき、つながったら送る
+            const db = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
+            const shopRef = fs.doc(db, 'shops', SHOP_ID);
+            const itemsRef = fs.collection(shopRef, 'items');
+            const photosRef = fs.collection(shopRef, 'photos');
+
+            let user = null;
+            let unsubscribers = [];
+            let listening = false;
+            // 最後に受け取った（または送った）在庫。変わったところだけ送るために使う
+            let synced = new Map();
+            const pending = { items: false, photos: false };
+
+            function myEmail() {
+                return String(user?.email || '').toLowerCase();
+            }
+
+            function stamp() {
+                return { updatedAt: fs.serverTimestamp(), updatedBy: myEmail() };
+            }
+
+            function stopListening() {
+                unsubscribers.forEach(unsubscribe => unsubscribe());
+                unsubscribers = [];
+                listening = false;
+                synced = new Map();
+                pending.items = pending.photos = false;
+            }
+
+            function onListenError(err) {
+                console.warn('みんなの在庫を読めませんでした', err);
+                stopListening();
+                if (err.code === 'permission-denied') onStockCloudState({ status: 'not-member', pending: false });
+                else onStockCloudState({ status: 'error', pending: false, message: `みんなの在庫を読めませんでした（${err.code || err.message}）。開きなおしてね` });
+            }
+
+            function reportWriteError(err) {
+                // 誰かが先に消した在庫の個数を変えたときは、消えたままでよい
+                if (err.code === 'not-found') return;
+                console.warn('みんなの在庫に保存できませんでした', err);
+                onStockCloudState({ message: `みんなの在庫に保存できませんでした（${err.code || err.message}）` });
+            }
+
+            function setPending(kind, value) {
+                const before = pending.items || pending.photos;
+                pending[kind] = value;
+                if (before !== (pending.items || pending.photos)) onStockCloudState({ pending: pending.items || pending.photos });
+            }
+
+            function watchShop() {
+                let creating = false;
+                unsubscribers.push(fs.onSnapshot(shopRef, { includeMetadataChanges: true }, snap => {
+                    if (!snap.exists()) {
+                        if (snap.metadata.fromCache || creating) return;
+                        // まだ誰も使っていなければ、最初にログインした人が持ち主になる
+                        creating = true;
+                        fs.setDoc(shopRef, { ownerUid: user.uid, ownerEmail: myEmail(), members: [myEmail()], createdAt: fs.serverTimestamp() })
+                            .catch(onListenError);
+                        return;
+                    }
+                    const data = snap.data();
+                    const members = Array.isArray(data.members) ? data.members : [];
+                    if (!members.includes(myEmail())) {
+                        stopListening();
+                        onStockCloudState({ status: 'not-member', pending: false });
+                        return;
+                    }
+                    onStockCloudState({ status: 'member', email: myEmail(), isOwner: data.ownerUid === user.uid, members, message: '' });
+                    // お店を作った直後は、サーバーに届いてから在庫を読む（届く前はルールがメンバーだと確かめられない）
+                    if (!listening && !snap.metadata.hasPendingWrites) listenStock();
+                }, onListenError));
+            }
+
+            function itemData(data) {
+                return {
+                    name: String(data.name ?? ''), count: Number(data.count) || 0, expiry: String(data.expiry ?? ''),
+                    isAlcohol: Boolean(data.isAlcohol), isPlush: Boolean(data.isPlush), isJackpot: Boolean(data.isJackpot)
+                };
+            }
+
+            function listenStock() {
+                listening = true;
+                let first = true;
+                let wasFromCache = true;
+                unsubscribers.push(fs.onSnapshot(itemsRef, { includeMetadataChanges: true }, snap => {
+                    setPending('items', snap.metadata.hasPendingWrites);
+                    const reachedServer = wasFromCache && !snap.metadata.fromCache;
+                    wasFromCache = snap.metadata.fromCache;
+                    if (!first && !reachedServer && snap.docChanges().length === 0) return;
+                    first = false;
+                    synced = new Map(snap.docs.map(d => [d.id, itemData(d.data())]));
+                    onStockCloudItems(snap.docs.map(d => ({ id: d.id, ...d.data() })), { fromCache: snap.metadata.fromCache });
+                }, onListenError));
+                unsubscribers.push(fs.onSnapshot(photosRef, { includeMetadataChanges: true }, snap => {
+                    setPending('photos', snap.metadata.hasPendingWrites);
+                    const photos = snap.docChanges().filter(change => change.type !== 'removed')
+                        .map(change => [String(change.doc.data().name ?? ''), change.doc.data().dataUrl]);
+                    if (photos.length) onStockCloudPhotos(photos);
+                }, onListenError));
+            }
+
+            function pushItems(items) {
+                if (!listening) return;
+                const writes = [];
+                const keep = new Set();
+                items.forEach(item => {
+                    const data = itemData(item);
+                    const prev = synced.get(item.id);
+                    const ref = fs.doc(itemsRef, item.id);
+                    keep.add(item.id);
+                    synced.set(item.id, data);
+                    if (prev && JSON.stringify({ ...prev, count: 0 }) === JSON.stringify({ ...data, count: 0 })) {
+                        // 個数だけ変わったときは差分で送る。2台で同時に配っても、両方の分が引かれる
+                        if (prev.count !== data.count) writes.push(fs.updateDoc(ref, { count: fs.increment(data.count - prev.count), ...stamp() }));
+                    } else {
+                        writes.push(fs.setDoc(ref, { ...data, ...stamp() }));
+                    }
+                });
+                [...synced.keys()].filter(id => !keep.has(id)).forEach(id => {
+                    synced.delete(id);
+                    writes.push(fs.deleteDoc(fs.doc(itemsRef, id)));
+                });
+                writes.forEach(write => write.catch(reportWriteError));
+            }
+
+            // 写真は商品名ごとに1件。名前にはどんな文字も入るので、ドキュメントIDは名前のハッシュにする
+            async function photoId(name) {
+                const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(name)));
+                return Array.from(hash.slice(0, 16), byte => byte.toString(16).padStart(2, '0')).join('');
+            }
+
+            async function pushPhoto(name, dataUrl) {
+                if (!listening) return;
+                fs.setDoc(fs.doc(photosRef, await photoId(name)), { name, dataUrl, ...stamp() }).catch(reportWriteError);
+            }
+
+            function addMember(email) {
+                return fs.updateDoc(shopRef, { members: fs.arrayUnion(email) });
+            }
+
+            function removeMember(email) {
+                return fs.updateDoc(shopRef, { members: fs.arrayRemove(email) });
+            }
+
+            function authErrorMessage(err) {
+                if (err.code === 'auth/unauthorized-domain') return 'このサイトのアドレスが Firebase に登録されていません（Authentication → 設定 → 承認済みドメイン）';
+                if (err.code === 'auth/network-request-failed') return 'ネットにつながらないのでログインできませんでした';
+                return `ログインできませんでした（${err.code || err.message}）`;
+            }
+
+            async function signIn() {
+                const provider = new fa.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                try {
+                    await fa.signInWithPopup(auth, provider);
+                } catch (err) {
+                    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+                    // ポップアップが使えないとき（ホーム画面から開いたアプリなど）はページごとログイン画面へ移る
+                    if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
+                        await fa.signInWithRedirect(auth, provider);
+                        return;
+                    }
+                    onStockCloudState({ message: authErrorMessage(err) });
+                }
+            }
+
+            async function signOut() {
+                stopListening();
+                try {
+                    await fa.signOut(auth);
+                    // 共有の端末でもみんなの在庫が残らないように、Firebase がこの端末にためた控えも消す
+                    await fs.terminate(db);
+                    await fs.clearIndexedDbPersistence(db);
+                } catch (err) {
+                    console.warn('ログアウトの後かたづけに失敗しました', err);
+                }
+                location.reload();
+            }
+
+            // メンバーに追加してもらったあと、開きなおさずにもう一度たしかめる
+            function retry() {
+                if (!user) return;
+                stopListening();
+                onStockCloudState({ status: 'connecting', message: '' });
+                watchShop();
+            }
+
+            window.stockCloud = { signIn, signOut, retry, pushItems, pushPhoto, addMember, removeMember };
+            fa.getRedirectResult(auth).catch(err => onStockCloudState({ message: authErrorMessage(err) }));
+            fa.onAuthStateChanged(auth, next => {
+                stopListening();
+                user = next;
+                if (!user) {
+                    onStockCloudState({ status: 'signed-out', email: '', isOwner: false, members: [], pending: false });
+                    return;
+                }
+                onStockCloudState({ status: 'connecting', email: myEmail(), message: '' });
+                watchShop();
+            });
+        }
     </script>
 </body>
 </html>

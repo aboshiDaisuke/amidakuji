@@ -19,6 +19,7 @@
 - 在庫から、期限切れをのぞいて期限が近い順に人数分をおみやげリストへ入れる
 - 抽選が終わって結果一覧を出すと、配った分を在庫から自動で引く（結果一覧から取り消しできる）
 - 在庫と写真のバックアップ（JSONファイルに保存・読み込み）。在庫は localStorage、写真は IndexedDB に、この端末だけで保存
+- みんなの在庫: Googleでログインしたメンバーで、同じ在庫と写真を共有する（Firebase。下の「みんなの在庫の準備」）
 
 ## 技術構成
 
@@ -39,6 +40,27 @@ npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/hwpumpkin_かぼ
   --compress meshopt --texture-compress webp --texture-size 1024 \
   --simplify-ratio 0.04 --simplify-error 0.001
 ```
+
+## みんなの在庫の準備（Firebase）
+
+在庫の共有には Firebase の無料プラン（Spark）のプロジェクト `omiyage-amidakuji`（Firestore は `asia-northeast1`）を使っています。`index.html` の `FIREBASE_CONFIG` を `null` にすると、これまでどおり在庫はこの端末だけに保存されます。
+
+ルールを変えたら、`firebase deploy --only firestore:rules` で反映します（`firebase.json` / `.firebaserc` 設定ずみ）。
+
+プロジェクトを作りなおすときの手順:
+
+1. [Firebase コンソール](https://console.firebase.google.com) でプロジェクトを作る（Google アナリティクスは不要）
+2. Authentication → ログイン方法 で「Google」を有効にする。設定 → 承認済みドメイン に `aboshidaisuke.github.io` を足す
+3. Firestore Database を作成する（場所は `asia-northeast1` など。本番環境モード）。ルール タブに `firestore.rules` の中身を貼って公開する
+4. プロジェクトの設定 → マイアプリ で「ウェブ」アプリを登録し、出てきた `firebaseConfig` を `index.html` の `FIREBASE_CONFIG` に入れる
+5. 公開したら、持ち主がいちばん最初にログインする（最初にログインした人が持ち主になり、在庫パネルの「メンバーを管理する」でほかの人のGmailアドレスを追加できる）
+
+しくみ:
+
+- 在庫は `shops/main/items` に1行ずつ、写真は `shops/main/photos` に商品名ごとに入る。メンバーは `shops/main` の `members`
+- 個数の増減は差分で送るので、2台で同時に配っても両方の分が引かれる
+- ネットが切れている間の変更は端末にためて、つながったら送る。ログアウトすると端末に写した在庫と写真は消える
+- 手元での確認は Firebase エミュレーター（`firebase emulators:start --only auth,firestore`。Java が必要）で、`FIREBASE_CONFIG` を `demo-` で始まるプロジェクトにし、`connectAuthEmulator` / `connectFirestoreEmulator` をつないだコピーを使う
 
 ## 動作確認
 
