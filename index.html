@@ -1568,10 +1568,6 @@
         .stock-cloud-btn { font-size: 0.78rem; font-weight: 900; padding: 0.4rem 0.9rem; border-radius: 999px; background: #fff; color: #334155; border: 2px solid #111; white-space: nowrap; }
         .stock-cloud-btn.is-primary { background: #111; color: #f5c518; }
         .stock-cloud-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .stock-cloud-members { margin-top: 0.6rem; }
-        .stock-cloud-members > summary { cursor: pointer; font-size: 0.78rem; font-weight: 900; color: #047857; }
-        .stock-cloud-members li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 700; color: #334155; padding: 0.25rem 0; word-break: break-all; }
-        .stock-cloud-members input { min-width: 0; flex: 1; border: 2px solid #d1fae5; border-radius: 999px; padding: 0.35rem 0.8rem; font-size: 0.8rem; font-weight: 700; background: #fff; }
         .prize-chip-thumb { width: 1.9em; height: 1.9em; border-radius: 0.5rem; overflow: hidden; flex-shrink: 0; margin-right: 0.45rem; border: 1px solid #eadcff; }
         .prize-photo-lg {
             width: min(170px, 42vw); aspect-ratio: 1; object-fit: cover; margin: 0 auto 0.75rem; display: block;
@@ -1724,18 +1720,9 @@
                     </div>
                     <p class="text-xs text-slate-500 font-bold mt-2 ml-1">※賞味期限が近い順に並びます。写真をタップすると撮りなおせます</p>
 
-                    <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
-                        <button type="button" onclick="exportStock()" class="btn-pop bg-white text-slate-600 font-black px-4 py-2 text-sm">
-                            <i class="fas fa-download mr-1"></i> バックアップを保存
-                        </button>
-                        <label for="stock-import-input" role="button" tabindex="0" onkeydown="openFilePickerByKey(event, 'stock-import-input')" class="btn-pop bg-white text-slate-600 font-black px-4 py-2 text-sm cursor-pointer">
-                            <i class="fas fa-upload mr-1"></i> バックアップから戻す
-                        </label>
-                    </div>
                     <p id="stock-storage-note" class="text-xs text-slate-400 font-bold mt-2 text-center">在庫と写真はこの端末だけに保存されます。ホーム画面に追加して開くと消えにくくなります</p>
                 </div>
                 <input type="file" id="stock-photo-input" accept="image/*" class="file-input-hidden" tabindex="-1" aria-hidden="true" onchange="handleStockPhotoInput(this)">
-                <input type="file" id="stock-import-input" accept="application/json,.json" class="file-input-hidden" tabindex="-1" aria-hidden="true" onchange="importStock(this)">
             </details>
 
             <!-- 中段：商品設定 -->
@@ -3298,52 +3285,6 @@
             btn.hidden = applied && !stockUndo;
         }
 
-        // ---- バックアップ ----
-        function exportStock() {
-            const data = { app: 'amidakuji-stock', version: 1, exportedAt: new Date().toISOString(), items: stockItems, photos: Object.fromEntries(stockPhotos) };
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-            const now = new Date();
-            const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `omiyage-zaiko-${stamp}.json`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-            setMascotSpeech('バックアップ保存したよ！ 💾');
-        }
-
-        async function importStock(input) {
-            const file = input.files?.[0];
-            input.value = '';
-            if (!file) return;
-            let data;
-            try {
-                data = JSON.parse(await file.text());
-            } catch {
-                alert('バックアップファイルを読み込めませんでした');
-                return;
-            }
-            if (data?.app !== 'amidakuji-stock' || !Array.isArray(data.items)) {
-                alert('このファイルは在庫のバックアップではないみたい');
-                return;
-            }
-            const items = sanitizeStockItems(data.items);
-            const target = stockCloudReady ? 'みんなの在庫' : 'いまの在庫';
-            if (!confirm(`${target}を、バックアップの ${items.length}件 に置きかえますか？`)) return;
-            stockItems = items;
-            // 置きかえた在庫にない在庫IDは、おみやげリストではふつうの商品にもどす
-            bulkItems.forEach(item => { if (item.stockId && !findStock(item.stockId)) delete item.stockId; });
-            const photos = Object.entries(data.photos && typeof data.photos === 'object' ? data.photos : {})
-                .filter(([, url]) => typeof url === 'string' && PHOTO_DATA_URL.test(url));
-            await Promise.all(photos.map(([name, url]) => storePhoto(name, url)));
-            saveStock();
-            updateBulkList();
-            saveAppState();
-            setMascotSpeech(`在庫を ${items.length}件 もどしたよ！`);
-        }
-
         // ---- みんなの在庫（Googleログイン・Firebase） ----
         // Firebase とのやりとりはページ最後の <script type="module" data-role="stock-cloud"> が window.stockCloud としてうけもつ。
         // ここでは、届いたみんなの在庫をこの端末に写すことと、ログイン状態の表示をする。
@@ -3450,35 +3391,6 @@
             window.stockCloud?.signOut();
         }
 
-        async function stockCloudAddMember() {
-            const input = document.getElementById('stock-cloud-member-input');
-            const email = input.value.trim().toLowerCase();
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                alert('追加する人のGoogleアカウントのメールアドレスを入れてね');
-                input.focus();
-                return;
-            }
-            try {
-                await window.stockCloud.addMember(email);
-                input.value = '';
-                setMascotSpeech('メンバーを追加したよ！ 🙌');
-            } catch (err) {
-                console.warn('メンバーを追加できませんでした', err);
-                alert('メンバーを追加できませんでした。ネットにつながっているか確かめてね');
-            }
-        }
-
-        async function stockCloudRemoveMember(index) {
-            const email = stockCloudState.members?.[index];
-            if (!email || !confirm(`${email} をメンバーから外しますか？\nその人は、みんなの在庫を見られなくなります`)) return;
-            try {
-                await window.stockCloud.removeMember(email);
-            } catch (err) {
-                console.warn('メンバーを外せませんでした', err);
-                alert('メンバーを外せませんでした。ネットにつながっているか確かめてね');
-            }
-        }
-
         function renderStockCloud() {
             const box = document.getElementById('stock-cloud');
             const s = stockCloudState;
@@ -3488,9 +3400,6 @@
                 ? '在庫と写真はメンバーみんなで共有されます。ネットがつながらない間の変更は、つながったときに送ります'
                 : '在庫と写真はこの端末だけに保存されます。ホーム画面に追加して開くと消えにくくなります';
             if (box.hidden) return;
-            // 書きかけのメールアドレスと、メンバー欄の開き具合は描きなおしても残す
-            const typed = document.getElementById('stock-cloud-member-input')?.value || '';
-            const membersOpen = Boolean(document.getElementById('stock-cloud-members')?.open);
             const email = escapeHtml(s.email || '');
             const signInBtn = '<button type="button" class="stock-cloud-btn is-primary" onclick="stockCloudSignIn()"><i class="fab fa-google mr-1"></i>Googleでログイン</button>';
             const signOutBtn = '<button type="button" class="stock-cloud-btn" onclick="stockCloudSignOut()">ログアウト</button>';
@@ -3501,19 +3410,10 @@
             } else if (s.status === 'connecting') {
                 html = row('☁️ みんなの在庫', `${email} でつないでいます…`, signOutBtn);
             } else if (s.status === 'not-member') {
-                const retryBtn = '<button type="button" class="stock-cloud-btn is-primary" onclick="window.stockCloud?.retry()">追加してもらった</button>';
-                html = row('🔒 まだメンバーではありません', `${email} を持ち主にメンバーとして追加してもらってね`, retryBtn + signOutBtn);
+                html = row('🔒 このアカウントでは使えません', `${email} ではなく、最初にログインした持ち主のGoogleアカウントでログインしなおしてね`, signOutBtn);
             } else if (s.status === 'member') {
                 const sync = s.pending ? '⏳ 送信待ち（ネットにつながると送ります）' : '✓ 保存ずみ';
                 html = row('☁️ みんなの在庫', `${email} でログイン中・${sync}`, signOutBtn);
-                if (s.isOwner) {
-                    const members = (s.members || []).map((member, i) => `<li><i class="fas fa-user text-emerald-600"></i><span class="flex-1">${escapeHtml(member)}${member === s.email ? '（持ち主）' : ''}</span>`
-                        + (member === s.email ? '' : `<button type="button" class="stock-cloud-btn" onclick="stockCloudRemoveMember(${i})">外す</button>`) + '</li>').join('');
-                    html += `<details id="stock-cloud-members" class="stock-cloud-members" ${membersOpen ? 'open' : ''}><summary>👥 メンバー（${(s.members || []).length}人）を管理する</summary>`
-                        + `<ul class="mt-1">${members}</ul>`
-                        + `<div class="flex items-center gap-2 mt-2"><input type="email" id="stock-cloud-member-input" placeholder="追加する人のGmailアドレス" autocomplete="off" value="${escapeHtml(typed)}" onkeydown="if (event.key === 'Enter') stockCloudAddMember()">`
-                        + '<button type="button" class="stock-cloud-btn is-primary" onclick="stockCloudAddMember()">追加</button></div></details>';
-                }
             } else if (s.status === 'error' && s.email) {
                 html = row('☁️ みんなの在庫', `${email} でログイン中・いまはこの端末の控えを表示しています`, signOutBtn);
             } else {
@@ -4525,14 +4425,6 @@
                 fs.setDoc(fs.doc(photosRef, await photoId(name)), { name, dataUrl, ...stamp() }).catch(reportWriteError);
             }
 
-            function addMember(email) {
-                return fs.updateDoc(shopRef, { members: fs.arrayUnion(email) });
-            }
-
-            function removeMember(email) {
-                return fs.updateDoc(shopRef, { members: fs.arrayRemove(email) });
-            }
-
             function authErrorMessage(err) {
                 if (err.code === 'auth/unauthorized-domain') return 'このサイトのアドレスが Firebase に登録されていません（Authentication → 設定 → 承認済みドメイン）';
                 if (err.code === 'auth/network-request-failed') return 'ネットにつながらないのでログインできませんでした';
@@ -4568,15 +4460,7 @@
                 location.reload();
             }
 
-            // メンバーに追加してもらったあと、開きなおさずにもう一度たしかめる
-            function retry() {
-                if (!user) return;
-                stopListening();
-                onStockCloudState({ status: 'connecting', message: '' });
-                watchShop();
-            }
-
-            window.stockCloud = { signIn, signOut, retry, pushItems, pushPhoto, addMember, removeMember };
+            window.stockCloud = { signIn, signOut, pushItems, pushPhoto };
             fa.getRedirectResult(auth).catch(err => onStockCloudState({ message: authErrorMessage(err) }));
             fa.onAuthStateChanged(auth, next => {
                 stopListening();
