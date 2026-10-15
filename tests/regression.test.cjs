@@ -167,6 +167,24 @@ test('returning during jackpot prelude cancels both video and old draw', () => {
     assert.equal(a.run('paths.length'), 0);
 });
 
+test('jackpot runs prelude, video and the 確定 finale before showing the result; taps skip each stage', () => {
+    const a = app();
+    a.run(`currentCount=2; bulkItems=[{name:'大当たり',count:2,isJackpot:true}]; generateAmida(); animationDuration=20; startReveal(0,[]);`);
+    a.advance(16);
+    assert.equal(a.element('jackpot-video-wrap').classList.contains('hidden'), true);
+    a.run('skipJackpotVideo()'); // prelude -> video
+    assert.equal(a.element('jackpot-video-wrap').classList.contains('hidden'), false);
+    a.run('skipJackpotVideo()'); // video -> finale
+    assert.equal(a.element('jackpot-finale').classList.contains('hidden'), false);
+    assert.equal(a.element('jackpot-video-layer').classList.contains('hidden'), false);
+    assert.equal(a.run('paths.length'), 0);
+    a.advance(2400); // finale ends by itself
+    assert.equal(a.element('jackpot-video-layer').classList.contains('hidden'), true);
+    a.advance(100);
+    assert.equal(a.run('paths.length'), 1);
+    assert.equal(a.element('result-message').classList.contains('result-jackpot'), true);
+});
+
 test('rotation updates completed and animating paths without changing destinations', () => {
     const a = app();
     a.run('generateAmida(); animationDuration=20; startReveal(1,[])');

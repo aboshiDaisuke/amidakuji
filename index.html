@@ -239,6 +239,28 @@
             animation: confettiFall linear forwards;
         }
 
+        .confetti-piece.emoji.big {
+            font-size: 1.9rem;
+        }
+
+        /* 花火: 1点から放射状に飛び散る火花 */
+        .firework-spark {
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            margin: -4.5px 0 0 -4.5px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 10px 2px currentColor;
+            animation: sparkFly 1.1s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes sparkFly {
+            0% { transform: translate3d(0, 0, 0) scale(1.4); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: translate3d(var(--dx), calc(var(--dy) + 60px), 0) scale(0.3); opacity: 0; }
+        }
+
         .confetti-piece.circle {
             width: 11px;
             height: 11px;
@@ -945,10 +967,150 @@
         }
 
         #jackpot-video-layer {
-            background: rgba(17, 17, 17, 0.55);
-            backdrop-filter: blur(3px);
-            border-radius: 24px;
+            z-index: 70;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, rgba(60, 10, 40, 0.72), rgba(8, 4, 16, 0.9) 70%);
+            backdrop-filter: blur(4px);
             cursor: pointer;
+        }
+
+        /* 確定の瞬間、画面ごとドンッと揺れる */
+        #jackpot-video-layer.is-impact {
+            animation: layerImpact 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes layerImpact {
+            0% { transform: scale(1.06); }
+            20% { transform: translate3d(-14px, 8px, 0) scale(1.03); }
+            40% { transform: translate3d(12px, -7px, 0) scale(1.02); }
+            60% { transform: translate3d(-7px, 4px, 0); }
+            80% { transform: translate3d(4px, -2px, 0); }
+            100% { transform: none; }
+        }
+
+        /* 後光: ゆっくり回る光線（1点あたりの明暗は1秒に2回未満） */
+        .jp-rays {
+            position: absolute;
+            inset: -60%;
+            pointer-events: none;
+            background: repeating-conic-gradient(from 0deg, rgba(245, 197, 24, 0.55) 0deg 11.25deg, rgba(255, 45, 122, 0.12) 11.25deg 22.5deg);
+            -webkit-mask-image: radial-gradient(circle, #000 12%, transparent 58%);
+            mask-image: radial-gradient(circle, #000 12%, transparent 58%);
+            animation: raysSpin 12s linear infinite, raysIn 0.5s ease-out both;
+        }
+
+        .jp-rays.is-rainbow {
+            background: repeating-conic-gradient(from 0deg, rgba(255, 45, 122, 0.6) 0deg 7.5deg, rgba(245, 197, 24, 0.6) 7.5deg 15deg, rgba(46, 196, 198, 0.55) 15deg 22.5deg, rgba(200, 107, 255, 0.55) 22.5deg 30deg);
+            -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 66%);
+            mask-image: radial-gradient(circle, #000 18%, transparent 66%);
+            animation: raysSpin 16s linear infinite, raysIn 0.35s ease-out both;
+        }
+
+        @keyframes raysSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes raysIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 保留変化: 青 → 緑 → 赤 と色が上がっていく玉 */
+        .jp-hold {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: clamp(150px, 36vmin, 270px);
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            border: 5px solid #111;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle at 34% 28%, #fff 0 7%, var(--hold-c1) 32%, var(--hold-c2) 100%);
+            box-shadow: 0 0 0 6px #fff, 0 0 0 10px #111, 0 0 60px 10px var(--hold-glow), 0 0 140px 30px var(--hold-glow);
+        }
+
+        .jp-hold.lv1 { --hold-c1: #5ab0ff; --hold-c2: #1740c8; --hold-glow: rgba(90, 176, 255, 0.75); }
+        .jp-hold.lv2 { --hold-c1: #7dff7a; --hold-c2: #0c9a3a; --hold-glow: rgba(125, 255, 122, 0.75); }
+        .jp-hold.lv3 { --hold-c1: #ff5a5a; --hold-c2: #b00020; --hold-glow: rgba(255, 60, 60, 0.85); }
+
+        .jp-hold.is-pop {
+            animation: holdPop 0.42s cubic-bezier(0.2, 1.6, 0.4, 1) both, holdQuake 0.14s linear 0.42s infinite;
+        }
+
+        .jp-hold-text {
+            font-family: var(--display);
+            font-size: clamp(3.6rem, 15vmin, 7.5rem);
+            line-height: 1;
+            color: #fff;
+            -webkit-text-stroke: 4px #111;
+            paint-order: stroke fill;
+            text-shadow: 0 6px 0 #111;
+        }
+
+        @keyframes holdPop {
+            0% { transform: translate(-50%, -50%) scale(0.35) rotate(-24deg); }
+            60% { transform: translate(-50%, -50%) scale(1.28) rotate(7deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0); }
+        }
+
+        @keyframes holdQuake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(calc(-50% - 4px), calc(-50% + 3px)) rotate(-1.5deg); }
+            75% { transform: translate(calc(-50% + 4px), calc(-50% - 3px)) rotate(1.5deg); }
+        }
+
+        /* 動画のあとの「確定」スタンプ */
+        .jp-finale {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            align-content: center;
+            gap: 1rem;
+            pointer-events: none;
+        }
+
+        .jp-finale-stamp {
+            font-family: var(--display);
+            font-size: clamp(5.5rem, 30vmin, 15rem);
+            line-height: 1;
+            background: linear-gradient(180deg, #fffbe0 0%, #f5c518 42%, #ff8a00 52%, #ffe36b 70%, #fff6c8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 7px 0 #111) drop-shadow(0 0 18px rgba(245, 197, 24, 0.95)) drop-shadow(0 0 60px rgba(255, 45, 122, 0.85));
+            animation: stampSlam 0.5s cubic-bezier(0.2, 1.5, 0.35, 1) both, stampThrob 0.55s ease-in-out 0.5s infinite alternate;
+        }
+
+        .jp-finale-sub {
+            padding: 0.35em 1.1em;
+            border: 4px solid #111;
+            border-radius: 999px;
+            background: #f5c518;
+            color: #111;
+            font-size: clamp(1.1rem, 4.6vmin, 2.1rem);
+            font-weight: 900;
+            white-space: nowrap;
+            box-shadow: 0 6px 0 #111, 0 0 40px rgba(245, 197, 24, 0.9);
+            animation: subPop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 0.32s both;
+        }
+
+        @keyframes stampSlam {
+            0% { transform: scale(4.2) rotate(-16deg); opacity: 0; }
+            55% { transform: scale(0.86) rotate(3deg); opacity: 1; }
+            100% { transform: scale(1) rotate(-5deg); opacity: 1; }
+        }
+
+        @keyframes stampThrob {
+            from { transform: scale(1) rotate(-5deg); }
+            to { transform: scale(1.09) rotate(-3deg); }
+        }
+
+        @keyframes subPop {
+            0% { transform: translateY(30px) scale(0.4); opacity: 0; }
+            100% { transform: none; opacity: 1; }
         }
 
         /* 動画窓: レインボーに回る枠 + 金の発光で登場 */
@@ -990,7 +1152,6 @@
         .jackpot-flash {
             position: absolute;
             inset: 0;
-            border-radius: 24px;
             pointer-events: none;
             opacity: 0;
             background: #fff;
@@ -1088,7 +1249,14 @@
             .jackpot-cutin-band,
             .jackpot-cutin-text,
             .jackpot-flash,
-            .canvas-container.is-shaking {
+            .canvas-container.is-shaking,
+            #jackpot-video-layer.is-impact,
+            .jp-rays,
+            .jp-hold,
+            .jp-finale-stamp,
+            .jp-finale-sub,
+            #result-message.result-jackpot::before,
+            .jp-fanfare {
                 animation: none !important;
             }
         }
@@ -1109,7 +1277,37 @@
 
         #result-message.result-jackpot {
             background: linear-gradient(180deg, #fffdf2, #fff3bf) !important;
-            box-shadow: 0 8px 0 #111, 0 0 0 6px rgba(245, 197, 24, 0.55), 0 18px 40px rgba(245, 197, 24, 0.4) !important;
+            box-shadow: 0 8px 0 #111, 0 0 0 6px rgba(245, 197, 24, 0.55), 0 18px 40px rgba(245, 197, 24, 0.4), 0 0 70px rgba(255, 45, 122, 0.35) !important;
+        }
+
+        /* 大当たりの結果欄: レインボーの枠がぐるぐる回る */
+        #result-message.result-jackpot::before {
+            content: '';
+            position: absolute;
+            inset: -11px;
+            padding: 6px;
+            border-radius: 30px;
+            pointer-events: none;
+            background: conic-gradient(from var(--rb, 0deg), #ff2d7a, #f5c518, #2ec4c6, #c86bff, #ff2d7a);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            filter: drop-shadow(0 0 10px rgba(245, 197, 24, 0.9));
+            animation: rainbowSpin 1.6s linear infinite;
+        }
+
+        .jp-fanfare {
+            display: inline-block;
+            font-family: var(--display);
+            font-size: clamp(1.6rem, 6vw, 2.4rem);
+            line-height: 1.2;
+            background: linear-gradient(90deg, #ff2d7a, #f5a300, #18a8aa, #a64dff, #ff2d7a);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 3px 0 #111);
+            animation: rainbowText 1.2s linear infinite, boing 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) both;
         }
 
         .distribution-option-content {
@@ -1196,7 +1394,93 @@
         #summary-modal > div { max-height: calc(100dvh - 40px); }
         #summary-list { overflow-wrap: anywhere; }
         .ipad-mode .view-switch { position: sticky; top: max(8px, env(safe-area-inset-top)); }
+        /* 抽選中は盤面を大きく見せたいので、表示切り替えは上に貼りつけない */
+        .ipad-mode.is-playing .view-switch { position: relative; top: auto; }
+
+        /* ---- iPad横向き（くじを引く本番の向き）: 結果欄は1行の帯、下のバーは細め、盤面を最大に ---- */
+        @media (orientation: landscape) {
+            body.ipad-mode #result-message { padding: 12px 20px 10px; }
+            .ipad-mode #result-text {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                column-gap: 18px;
+                row-gap: 2px;
+            }
+            .ipad-mode #result-text > * { margin: 0 !important; }
+            .ipad-mode #result-text > div:nth-child(2) { font-size: 1.15rem; }
+            .ipad-mode #result-text > div:nth-child(2) .text-3xl { font-size: 1.6rem; line-height: 1.2; }
+            .ipad-mode #result-text > div:nth-child(3) { font-size: 1.9rem; line-height: 1.2; }
+            .ipad-mode #result-text .jp-fanfare { font-size: 1.5rem; }
+            .ipad-mode .game-controls { padding: 8px 14px; }
+            .ipad-mode .game-bottom-row { display: none; }
+        }
         .ipad-mode .game-controls { position: sticky; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 25; }
+        .controls-mascot { display: none; }
+        .ipad-mode .controls-mascot {
+            display: flex;
+            flex: 1 1 0;
+            min-width: 0;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .controls-mascot-face {
+            position: relative;
+            flex-shrink: 0;
+            width: 84px;
+            height: 84px;
+            margin: -30px 0 -10px; /* バーから上にはみ出して顔を出す */
+            overflow: hidden;
+            border: 3px solid #111;
+            border-radius: 50%;
+            outline: 3px solid #fff;
+            background: linear-gradient(160deg, #ffb35c, #a66bff);
+            box-shadow: 0 4px 0 var(--hw-pumpkin, #ff7a1a);
+        }
+        .controls-mascot-face img {
+            position: absolute;
+            /* 顔（目と口）が丸の中央にくる位置 */
+            left: -18px;
+            top: -22px;
+            width: 131px;
+            max-width: none;
+            height: auto;
+        }
+        .controls-mascot-bubble {
+            position: relative;
+            display: flex;
+            min-width: 0;
+            padding: 8px 14px;
+            border: 2.5px solid #111;
+            border-radius: 16px;
+            background: #fff;
+        }
+        .controls-mascot-speech {
+            display: block;
+            min-width: 0;
+            color: #6d28d9;
+            font-weight: 900;
+            font-size: 17px;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .controls-mascot-bubble::before {
+            content: '';
+            position: absolute;
+            left: -9px;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            margin-top: -6px;
+            border-left: 2.5px solid #111;
+            border-bottom: 2.5px solid #111;
+            background: #fff;
+            transform: rotate(45deg);
+        }
         .ipad-mode #game-panel, .ipad-mode #result-message { scroll-margin-top: 88px; }
         .ipad-mode button:not(.participant-button), .ipad-mode .persist-clear,
         .ipad-mode label:has(input[type="checkbox"]) { min-height: 48px; }
@@ -1395,15 +1679,17 @@
         }
 
         /* ---- くじを引く画面のおばけ（盤面・番号・ボタンには重ねない位置だけに置く） ---- */
+        .board-frame { position: relative; }
         .game-ghost-corner {
+            --corner-w: clamp(64px, 10vw, 100px);
             position: absolute;
-            top: -46px;
+            top: calc(14px - var(--corner-w));
             z-index: 5;
             padding-bottom: 0;
         }
-        .ghost-slot.game-ghost-corner { width: clamp(54px, 7.5vw, 80px); }
-        .game-ghost-corner.is-left { left: -12px; }
-        .game-ghost-corner.is-right { right: -12px; }
+        .ghost-slot.game-ghost-corner { width: var(--corner-w); }
+        .game-ghost-corner.is-left { left: -14px; }
+        .game-ghost-corner.is-right { right: -14px; }
         .game-ghost-corner::after { display: none; }
 
         .game-bottom-row {
@@ -1448,12 +1734,16 @@
             background: repeating-linear-gradient(90deg, var(--hw-pumpkin) 0 18px, #111 18px 26px, var(--hw-violet) 26px 40px, var(--hw-slime) 40px 48px);
         }
         .soft-panel { background: var(--hw-cream); box-shadow: 0 6px 0 var(--hw-pumpkin), 0 16px 36px rgba(0, 0, 0, 0.3); }
+        /* 盤面の左上・右上の角にクモの巣 */
         .canvas-container {
             background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%237c3aed' stroke-opacity='0.32' stroke-width='1.6'%3E%3Cpath d='M0 0L120 120M0 0L120 60M0 0L60 120M0 0L120 20M0 0L20 120'/%3E%3Cpath d='M28 0Q24 12 0 28M52 0Q46 24 0 52M78 0Q70 36 0 78M104 0Q94 50 0 104'/%3E%3C/g%3E%3C/svg%3E") left top / clamp(70px, 12vw, 130px) no-repeat,
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%237c3aed' stroke-opacity='0.32' stroke-width='1.6' transform='translate(120 0) scale(-1 1)'%3E%3Cpath d='M0 0L120 120M0 0L120 60M0 0L60 120M0 0L120 20M0 0L20 120'/%3E%3Cpath d='M28 0Q24 12 0 28M52 0Q46 24 0 52M78 0Q70 36 0 78M104 0Q94 50 0 104'/%3E%3C/g%3E%3C/svg%3E") right top / clamp(70px, 12vw, 130px) no-repeat,
                 linear-gradient(180deg, #ffffff, #f7f0ff),
                 repeating-linear-gradient(90deg, rgba(124, 58, 237, 0.08) 0 1px, transparent 1px 48px);
             box-shadow: 0 8px 0 var(--hw-pumpkin), var(--shadow);
         }
+
         #game-panel .soft-panel, #game-panel #prize-lineup { background: rgba(255, 250, 242, 0.97) !important; }
         #prize-lineup, #result-message, #summary-modal > div, #alcohol-modal > div {
             box-shadow: 0 8px 0 var(--hw-pumpkin), var(--shadow);
@@ -1578,6 +1868,28 @@
 <body class="p-4 pt-8 md:p-8 md:pt-10 pb-6 min-h-screen relative">
     <!-- 紙吹雪レイヤー -->
     <div id="confetti-layer" aria-hidden="true"></div>
+
+    <!-- 👑 あたり確定演出: 画面いっぱいに重ねて出す（保留変化 → 激アツ → 動画 → 確定） -->
+    <div id="jackpot-video-layer" class="hidden fixed inset-0 flex items-center justify-center p-4 md:p-8" onclick="skipJackpotVideo()" aria-label="あたり確定演出">
+        <div id="jackpot-rays" class="jp-rays hidden" aria-hidden="true"></div>
+        <div id="jackpot-flash" class="jackpot-flash" aria-hidden="true"></div>
+        <div id="jackpot-hold" class="jp-hold hidden" aria-hidden="true"><span id="jackpot-hold-text" class="jp-hold-text">?</span></div>
+        <div id="jackpot-cutin" class="jackpot-cutin hidden" aria-hidden="true">
+            <div class="jackpot-cutin-band"><span class="jackpot-cutin-text">激アツ!!!</span></div>
+        </div>
+        <div id="jackpot-video-wrap" class="jackpot-video-wrap hidden">
+            <div class="jackpot-video-frame">
+                <video id="jackpot-video" class="block w-full h-auto" playsinline preload="metadata">
+                    <source src="./あたり.mp4" type="video/mp4">
+                </video>
+                <div class="jackpot-video-skip">タップでスキップ ▶▶</div>
+            </div>
+        </div>
+        <div id="jackpot-finale" class="jp-finale hidden" aria-hidden="true">
+            <div class="jp-finale-stamp">確定</div>
+            <div class="jp-finale-sub">👑 プレミアム大当たり 👑</div>
+        </div>
+    </div>
 
     <!-- ハロウィンの夜空（月・コウモリ・クモの巣） -->
     <div class="hw-sky" aria-hidden="true">
@@ -1851,9 +2163,6 @@
         <!-- あみだくじ表示エリア -->
         <div id="game-panel" class="hidden space-y-6 animate-fade-in pb-4">
             <div class="soft-panel p-4 text-center relative">
-                <!-- おばけ: 案内パネルの角からのぞく -->
-                <div class="ghost-slot game-ghost game-ghost-corner is-left" data-say="どれにする〜？" style="--float-delay: -0.4s; --float-dur: 3.6s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/witch.glb" alt="まじょのおばけ（ドラッグで回せます）" camera-orbit="20deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
-                <div class="ghost-slot game-ghost game-ghost-corner is-right" data-say="ハズレ ひいちゃえ〜" style="--float-delay: -1.6s; --float-dur: 4.2s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/devil.glb" alt="こあくまのおばけ（ドラッグで回せます）" camera-orbit="-20deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
                 <p class="text-sm md:text-base font-black text-slate-700">
                     <i class="fas fa-hand-pointer text-yellow-500 mr-2"></i>
                     上のまるをタップ！ ひとりずつドキドキ発表 💓
@@ -1878,6 +2187,10 @@
             <!-- キャンバスエリア -->
             <div class="relative">
                 <p id="board-scroll-hint" class="board-scroll-hint" hidden>↔ 横にスワイプして番号を選んでね</p>
+                <div class="board-frame">
+                    <!-- おばけ: 盤面の上の角にちょこんと座る（くじを引く間も見える） -->
+                    <div class="ghost-slot game-ghost game-ghost-corner is-left" data-say="どれにする〜？" style="--float-delay: -0.4s; --float-dur: 3.6s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/witch.glb" alt="まじょのおばけ（ドラッグで回せます）" camera-orbit="20deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+                    <div class="ghost-slot game-ghost game-ghost-corner is-right" data-say="ハズレ ひいちゃえ〜" style="--float-delay: -1.6s; --float-dur: 4.2s"><div class="ghost-float"><model-viewer class="hw-model" src="assets/halloween/devil.glb" alt="こあくまのおばけ（ドラッグで回せます）" camera-orbit="-20deg 82deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
                 <div class="canvas-container">
                     <div class="board-scroll" tabindex="0" role="region" aria-label="あみだくじ盤面。横にスクロールできます">
                         <div class="board-content">
@@ -1885,21 +2198,7 @@
                             <div id="participant-buttons" aria-label="参加者の番号"></div>
                         </div>
                     </div>
-                    <!-- 👑 あたり確定演出（動画）: 盤面の上に重ねて出す -->
-                    <div id="jackpot-video-layer" class="hidden absolute inset-0 z-20 flex items-center justify-center p-4 md:p-8" onclick="skipJackpotVideo()" aria-label="あたり確定演出">
-                        <div id="jackpot-flash" class="jackpot-flash" aria-hidden="true"></div>
-                        <div id="jackpot-cutin" class="jackpot-cutin hidden" aria-hidden="true">
-                            <div class="jackpot-cutin-band"><span class="jackpot-cutin-text">激アツ!!!</span></div>
-                        </div>
-                        <div id="jackpot-video-wrap" class="jackpot-video-wrap hidden">
-                            <div class="jackpot-video-frame">
-                                <video id="jackpot-video" class="block w-full h-auto" playsinline preload="metadata">
-                                    <source src="./あたり.mp4" type="video/mp4">
-                                </video>
-                                <div class="jackpot-video-skip">タップでスキップ ▶▶</div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
                 </div>
                 <div class="game-bottom-row">
                     <!-- おばけ: 盤面の下でふわふわ -->
@@ -1919,6 +2218,11 @@
                 <button onclick="resetView()" class="text-pink-500 hover:text-pink-600 font-black px-3 py-2 btn-pop bg-white">
                     <i class="fas fa-chevron-left mr-1"></i> もどる
                 </button>
+                <!-- iPad表示: 下に貼りつくバーの中にギャル（くじを引く間もずっと見える） -->
+                <div class="controls-mascot" aria-hidden="true">
+                    <span class="controls-mascot-face"><img src="assets/halloween/gal-hw-wave.png" alt=""></span>
+                    <span class="controls-mascot-bubble"><span class="controls-mascot-speech" id="controls-mascot-speech">がんばれ〜！</span></span>
+                </div>
                 <div class="flex gap-3">
                      <button onclick="resetPaths()" class="px-5 py-2 bg-white text-slate-500 font-black hover:bg-slate-50 transition btn-pop text-sm">
                         <i class="fas fa-undo mr-1"></i> もういっかい
@@ -2519,6 +2823,7 @@
 
         function setGameMascotSpeech(text) {
             applySpeechText(document.getElementById('game-mascot-speech'), text);
+            applySpeechText(document.getElementById('controls-mascot-speech'), text);
         }
 
         function rotateMascotSpeech() {
@@ -2535,18 +2840,21 @@
             setRightMascotSpeech(RIGHT_MASCOT_LINES[rightMascotLineIndex]);
         }
 
-        function burstConfetti(count = 28) {
+        // gold: 大当たり用の金色＋👑💰、keep: 前の紙吹雪や花火を消さずに重ねる
+        function burstConfetti(count = 28, { gold = false, keep = false } = {}) {
             if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             const layer = document.getElementById('confetti-layer');
             if (!layer) return;
             // 前回の紙吹雪が残ると読みにくいのでクリア
-            layer.innerHTML = '';
-            const colors = ['#ff7a1a', '#f5c518', '#1a0f2e', '#8b5cf6', '#8fd14f', '#ffffff'];
-            const emojis = ['🎃', '👻', '🦇', '🍬', '✨'];
+            if (!keep) layer.innerHTML = '';
+            const colors = gold
+                ? ['#f5c518', '#ffe36b', '#ff8a00', '#ff2d7a', '#ffffff', '#c86bff']
+                : ['#ff7a1a', '#f5c518', '#1a0f2e', '#8b5cf6', '#8fd14f', '#ffffff'];
+            const emojis = gold ? ['👑', '💰', '✨', '🎃', '💎'] : ['🎃', '👻', '🦇', '🍬', '✨'];
             for (let i = 0; i < count; i++) {
                 const piece = document.createElement('span');
-                const useEmoji = Math.random() < 0.22;
-                piece.className = 'confetti-piece' + (useEmoji ? ' emoji' : (Math.random() < 0.35 ? ' circle' : ''));
+                const useEmoji = Math.random() < (gold ? 0.32 : 0.22);
+                piece.className = 'confetti-piece' + (useEmoji ? (gold ? ' emoji big' : ' emoji') : (Math.random() < 0.35 ? ' circle' : ''));
                 if (useEmoji) {
                     piece.textContent = emojis[i % emojis.length];
                 } else {
@@ -2614,7 +2922,9 @@
         const COL_WIDTH = 60; // 1列あたりの理想幅
         const MIN_LOGICAL_WIDTH = 300;
         const HEADER_HEIGHT = 80;
-        const FOOTER_HEIGHT = 130; // 結果ボックスと影のための余白
+        // 結果ボックスと影のための余白。iPad横向きでは線を長く引けるよう少し詰める（resizeCanvas で切り替え）
+        let FOOTER_HEIGHT = 130;
+        let BOX_GAP = 20; // 線の下端から結果ボックスまで
         const PADDING_SIDE = 60;
         
         // 番号まるの塗り（かぼちゃ×むらさき×夜のハロウィン配色）と、その上の数字色
@@ -3479,7 +3789,7 @@
 
             resizeCanvas();
             document.querySelector('.board-scroll').scrollLeft = 0;
-            scheduleGameTask(() => document.getElementById('game-panel').scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
+            scheduleGameTask(() => scrollBoardGoalIntoView(document.getElementById('game-panel')), 50);
             saveAppState();
         }
 
@@ -3507,10 +3817,16 @@
 
         function resizeCanvas() {
             const scroller = document.querySelector('.board-scroll');
-            const columnWidth = displayMode === 'ipad' ? COL_WIDTH : 48;
+            const landscape = isIpadLandscape();
+            FOOTER_HEIGHT = landscape ? 104 : 130;
+            BOX_GAP = landscape ? 12 : 20;
+            // iPad横向きは列の幅を詰めて、20人まで横スワイプなしで収める（ボタン幅48pxより狭くはしない）
+            const columnWidth = displayMode !== 'ipad' ? 48
+                : landscape ? Math.max(48, Math.min(COL_WIDTH, (scroller.clientWidth - PADDING_SIDE * 2) / Math.max(1, currentCount - 1)))
+                : COL_WIDTH;
             logicalWidth = Math.max(scroller.clientWidth, (currentCount - 1) * columnWidth + PADDING_SIDE * 2, MIN_LOGICAL_WIDTH);
             logicalHeight = displayMode === 'ipad'
-                ? Math.max(420, Math.min(640, window.innerHeight * 0.65))
+                ? ipadBoardHeight(logicalWidth > scroller.clientWidth + 1)
                 : Math.max(540, Math.min(800, scroller.clientWidth * 0.8));
             // Keep the bitmap within tablet canvas limits for a wide board.
             canvasScale = Math.min(window.devicePixelRatio || 1, 2, 4096 / logicalWidth,
@@ -3524,6 +3840,41 @@
             paths = paths.map(path => calculatePath(path.startIndex));
             rebuildParticipantButtons();
             drawBoard();
+        }
+
+        // iPad表示: 結果欄・盤面（ゴールの箱まで）・下に貼りつくバーが1画面に収まる高さにする。
+        // Safari のツールバーの出し入れで高さが揺れないよう、小さいほうの画面の高さで計算する。
+        const IPAD_BAR_FALLBACK = 86;
+        // くじを引くのは iPad の横向きが前提。横向きは結果欄を1行の帯にして、そのぶん盤面を高くする
+        function isIpadLandscape() {
+            return displayMode === 'ipad' && window.innerWidth > window.innerHeight;
+        }
+        function ipadControlsReserve() {
+            const bar = document.querySelector('.game-controls');
+            const barH = Math.min(120, bar?.getBoundingClientRect().height || IPAD_BAR_FALLBACK);
+            return barH + 12 + 10; // バーの高さ + 画面下からの浮き + すきま
+        }
+        function ipadBoardHeight(hasScrollHint) {
+            const viewH = Math.min(window.innerHeight, document.documentElement?.clientHeight || window.innerHeight);
+            const reserved = 12          // 画面上のすきま
+                + (isIpadLandscape() ? 80 : 170) // 結果欄（横向きは1行の帯）
+                + 16                     // 結果欄と盤面のすきま
+                + (hasScrollHint ? 34 : 0) // 「横にスワイプ」の案内
+                + 38                     // 盤面の枠・余白・影
+                + ipadControlsReserve();
+            return Math.max(360, Math.min(640, viewH - reserved));
+        }
+
+        // くじを引いたら、盤面の一番下（ゴールの箱）まで必ず見えるようにスクロールする。
+        // preferTop（結果欄など）も一緒に入るならそれを上端に、入らないときはゴールを優先する。
+        function scrollBoardGoalIntoView(preferTop) {
+            const board = document.querySelector('.canvas-container');
+            if (!board || typeof window.scrollTo !== 'function') return;
+            const viewH = window.innerHeight;
+            const bottomCover = displayMode === 'ipad' ? ipadControlsReserve() : 12;
+            const goalTarget = window.scrollY + board.getBoundingClientRect().bottom + 8 - (viewH - bottomCover);
+            const preferTarget = preferTop ? window.scrollY + preferTop.getBoundingClientRect().top - 12 : -Infinity;
+            window.scrollTo({ top: Math.max(0, goalTarget, preferTarget), behavior: 'smooth' });
         }
 
         function rebuildParticipantButtons() {
@@ -3678,7 +4029,7 @@
                 const isRevealed = revealedResults[i];
                 const boxW = Math.min(Math.max(46, colSpacing * 0.9), PADDING_SIDE * 2 - 8);
                 const boxH = 72; // 高さを固定して見切れを防止
-                const boxY = lineBottom + 20; // フッターのゆとり分、少し下げる
+                const boxY = lineBottom + BOX_GAP; // フッターのゆとり分、少し下げる
                 
                 // ボックスの影（ボタンと同じ金のぷっくり影）
                 ctx.fillStyle = '#ff9a3c';
@@ -3705,9 +4056,9 @@
                     const displayResult = result.length > maxChars ? result.substring(0, maxChars) + '..' : result;
                     ctx.fillText(displayResult, x, boxY + boxH/2);
                 } else {
-                    ctx.fillStyle = '#7c3aed';
-                    ctx.font = `900 ${Math.min(28, boxW/1.8)}px "M PLUS Rounded 1c"`;
-                    ctx.fillText("?", x, boxY + boxH/2);
+                    // まだ開いていない箱はジャック・オ・ランタン
+                    ctx.font = `${Math.min(32, boxW / 1.6)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+                    ctx.fillText('🎃', x, boxY + boxH/2 + 2);
                 }
             }
         }
@@ -3826,7 +4177,7 @@
             const isBlank = !endBundle || endBundle.length === 0;
             const isJackpot = bundleHasJackpot(endBundle);
             const fanfare = isBlank ? 'ざんねん…？ ⭐' : isJackpot ? '👑 大当たり〜〜！！！ 👑' : 'やったね！！ 🎉';
-            const fanfareClass = isJackpot ? 'mb-2 text-amber-600 text-xl font-black animate-boing' : 'mb-2 text-pink-600 text-sm font-black';
+            const fanfareClass = isJackpot ? 'mb-2 jp-fanfare' : 'mb-2 text-pink-600 text-sm font-black';
             msgText.innerHTML = `<div class="${fanfareClass}">${fanfare}</div><div class="text-xl mb-3"><span class="font-black text-sky-600 text-3xl">${escapeHtml(startName)}</span>番 は…</div><div class="text-3xl md:text-4xl font-black ${isJackpot ? 'text-amber-500' : 'text-pink-600'} drop-shadow-sm animate-boing">${formatPrizeBundleHtml(endBundle, 'large')}</div>`;
             if (declinedBundles[pathData.startIndex]?.length) {
                 msgText.insertAdjacentHTML('beforeend', '<p class="mt-3 text-sm text-slate-600">辞退した商品は未配布にしました。</p>');
@@ -3837,7 +4188,14 @@
             void msgBox.offsetWidth;
             msgBox.classList.add('result-burst');
             setGameMascotSpeech(isBlank ? 'つぎこそ〜！' : isJackpot ? '大当たりキター！！ 👑✨' : 'あたり〜！！ ✨');
-            burstConfetti(isBlank ? 14 : isJackpot ? 90 : 28);
+            if (isJackpot) {
+                burstConfetti(120, { gold: true, keep: true });
+                burstFireworks(30, 28);
+                scheduleGameTask(() => burstFireworks(70, 24), 260);
+                playJackpotSfx('chime');
+            } else {
+                burstConfetti(isBlank ? 14 : 28);
+            }
             saveAppState();
             scrollResultIntoView(msgBox);
         }
@@ -3845,10 +4203,7 @@
         // 結果欄は盤面の直上にあるので、上端に合わせてスクロールすると結果とそのすぐ下の「タップするまる」が同時に見える。
         // 結果欄の高さが確定してからスクロールし、次の操作を妨げない。
         function scrollResultIntoView(msgBox) {
-            const doScroll = () => {
-                msgBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            };
-            scheduleGameTask(doScroll, 120);
+            scheduleGameTask(() => scrollBoardGoalIntoView(msgBox), 120);
         }
 
         function checkAllRevealed() {
@@ -3951,7 +4306,9 @@
             revealed[col] = true;
             saveAppState();
             drawBoard();
-            animateSinglePath(calculatePath(col));
+            const path = calculatePath(col);
+            if (bundleHasJackpot(resultBundles[path.endIndex])) jackpotAudioContext();
+            animateSinglePath(path);
         }
 
         // ---- 👑 あたり確定演出（動画） ----
@@ -3961,20 +4318,108 @@
             return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         }
 
-        // 前フリ: 盤面が揺れる → ピンク/白のストロボ → 「激アツ!!!」カットイン → 動画へ
+        // 効果音は Web Audio でその場で合成する（音源ファイル不要）。タップ中に作って再生を許可させる。
+        let jackpotAudio = null;
+        function jackpotAudioContext() {
+            const AudioCtor = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtor) return null;
+            try {
+                if (!jackpotAudio) jackpotAudio = new AudioCtor();
+                if (jackpotAudio.state === 'suspended') jackpotAudio.resume().catch(() => {});
+            } catch { return null; }
+            return jackpotAudio;
+        }
+
+        function playJackpotSfx(kind) {
+            const ac = jackpotAudioContext();
+            if (!ac) return;
+            const t = ac.currentTime;
+            const out = ac.createGain();
+            out.gain.value = 0.22;
+            out.connect(ac.destination);
+            const tone = (type, f0, f1, start, dur, vol = 1) => {
+                const osc = ac.createOscillator();
+                const gain = ac.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(f0, t + start);
+                if (f1 !== f0) osc.frequency.exponentialRampToValueAtTime(f1, t + start + dur);
+                gain.gain.setValueAtTime(0.0001, t + start);
+                gain.gain.exponentialRampToValueAtTime(vol, t + start + 0.012);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + start + dur);
+                osc.connect(gain);
+                gain.connect(out);
+                osc.start(t + start);
+                osc.stop(t + start + dur + 0.05);
+            };
+            const C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.5;
+            if (kind === 'don') { // ドンッ
+                tone('sine', 170, 38, 0, 0.5, 1);
+                tone('square', 95, 45, 0, 0.14, 0.4);
+            } else if (kind === 'rise') { // ギュイィィン（ため）
+                tone('sawtooth', 120, 1400, 0, 1.4, 0.3);
+                tone('square', 240, 2800, 0.1, 1.3, 0.12);
+            } else if (kind === 'kyuin') { // キュイーン！
+                tone('sawtooth', 500, 3400, 0, 0.55, 0.35);
+                tone('square', 1000, 5200, 0.04, 0.5, 0.15);
+                tone('sine', 1800, 1800, 0.5, 0.6, 0.25);
+            } else if (kind === 'fanfare') { // パパパパーン！
+                tone('sine', 170, 38, 0, 0.6, 1);
+                [C5, E5, G5, C6].forEach((f, i) => tone('square', f, f, i * 0.1, 0.16, 0.35));
+                [C5, E5, G5, C6, C6 * 1.5].forEach(f => tone('triangle', f, f, 0.42, 1.5, 0.3));
+                tone('sawtooth', 2000, 6000, 0.42, 0.4, 0.08);
+            } else if (kind === 'chime') { // キラキラーン
+                [1318.5, 1568, 2093, 2637].forEach((f, i) => tone('triangle', f, f, i * 0.07, 0.6, 0.28));
+            }
+        }
+
+        function jackpotVibrate(pattern) {
+            try { navigator.vibrate && navigator.vibrate(pattern); } catch {}
+        }
+
+        // 画面上の (x%, y%) から放射状に火花を飛ばす
+        function burstFireworks(xPct, yPct, count = 28) {
+            if (prefersReducedMotion()) return;
+            const layer = document.getElementById('confetti-layer');
+            if (!layer) return;
+            const colors = ['#f5c518', '#ff2d7a', '#2ec4c6', '#c86bff', '#ffffff', '#ff8a00', '#7dff7a'];
+            const hue = Math.floor(Math.random() * colors.length);
+            for (let i = 0; i < count; i++) {
+                const spark = document.createElement('span');
+                const angle = (i / count) * Math.PI * 2 + Math.random() * 0.25;
+                const dist = 80 + Math.random() * 120;
+                spark.className = 'firework-spark';
+                spark.style.left = `${xPct}%`;
+                spark.style.top = `${yPct}%`;
+                spark.style.color = colors[(hue + (i % 3)) % colors.length];
+                spark.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+                spark.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+                layer.appendChild(spark);
+                setTimeout(() => spark.remove(), 1300);
+            }
+        }
+
+        // 前フリ: 保留が 青→緑→赤 と変化 → 後光＋「激アツ!!!」カットイン → 動画 → 「確定」
         function playJackpotVideo(onDone) {
             const layer = document.getElementById('jackpot-video-layer');
             const flash = document.getElementById('jackpot-flash');
             const cutin = document.getElementById('jackpot-cutin');
             const wrap = document.getElementById('jackpot-video-wrap');
+            const hold = document.getElementById('jackpot-hold');
+            const holdText = document.getElementById('jackpot-hold-text');
+            const rays = document.getElementById('jackpot-rays');
+            const finale = document.getElementById('jackpot-finale');
             const board = document.querySelector('.canvas-container');
             if (!layer || !wrap) { onDone(); return; }
 
             wrap.classList.add('hidden');
             cutin.classList.add('hidden');
+            hold.classList.add('hidden');
+            rays.className = 'jp-rays hidden';
+            finale.classList.add('hidden');
+            layer.classList.remove('is-impact');
             flash.className = 'jackpot-flash';
             layer.classList.remove('hidden');
-            layer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            board.scrollIntoView({ behavior: 'smooth', block: 'center' });
             setGameMascotSpeech('ん…！？ なんかきた…！？');
 
             if (prefersReducedMotion()) {
@@ -3991,24 +4436,90 @@
                 timers.forEach(clearTimeout);
                 board.classList.remove('is-shaking');
                 cutin.classList.add('hidden');
+                hold.classList.add('hidden');
                 flash.className = 'jackpot-flash';
                 startJackpotVideo(onDone);
             };
             jackpotVideoDone = advance; // 前フリ中にタップされたら動画へ飛ばす
 
-            // 0ms: 揺れ + ストロボ + バイブ
+            const setHold = (level, text) => {
+                hold.className = `jp-hold lv${level}`;
+                holdText.textContent = text;
+                void hold.offsetWidth;
+                hold.classList.add('is-pop');
+                playJackpotSfx('don');
+            };
+
+            // 0ms: 青保留 + 揺れ + ため音
             board.classList.add('is-shaking');
-            flash.classList.add('is-strobe');
-            try { navigator.vibrate && navigator.vibrate([70, 40, 70, 40, 220]); } catch {}
-            // 750ms: カットイン
+            setHold(1, '?');
+            playJackpotSfx('rise');
+            jackpotVibrate([60, 40, 60]);
+            // 480ms: 緑に変化
             timers.push(scheduleGameTask(() => {
+                setHold(2, '!?');
+                setGameMascotSpeech('え、色かわった…！？');
+                jackpotVibrate([80, 40, 80]);
+            }, 480));
+            // 960ms: 赤に変化 + ピンクの光
+            timers.push(scheduleGameTask(() => {
+                setHold(3, '!!');
+                flash.classList.add('is-strobe');
+                setGameMascotSpeech('赤！？ 赤きたーー！！');
+                jackpotVibrate([120, 50, 120]);
+            }, 960));
+            // 1500ms: 後光 + 激アツカットイン
+            timers.push(scheduleGameTask(() => {
+                hold.classList.add('hidden');
+                rays.className = 'jp-rays';
                 cutin.classList.remove('hidden');
+                playJackpotSfx('don');
+                playJackpotSfx('kyuin');
                 setGameMascotSpeech('激アツきたーー！！ 🔥');
-                burstConfetti(70);
-                try { navigator.vibrate && navigator.vibrate([120, 60, 260]); } catch {}
-            }, 750));
-            // 2100ms: 動画へ
-            timers.push(scheduleGameTask(advance, 2100));
+                burstConfetti(80, { gold: true });
+                burstFireworks(22, 30);
+                jackpotVibrate([150, 60, 300]);
+            }, 1500));
+            timers.push(scheduleGameTask(() => burstFireworks(78, 34), 1800));
+            // 3000ms: 動画へ
+            timers.push(scheduleGameTask(advance, 3000));
+        }
+
+        // 動画のあと: 虹の後光 + 「確定」スタンプ + 花火 + ファンファーレ。タップで先へ。
+        function playJackpotFinale(onDone) {
+            const layer = document.getElementById('jackpot-video-layer');
+            const rays = document.getElementById('jackpot-rays');
+            const finale = document.getElementById('jackpot-finale');
+            let ended = false;
+            const timers = [];
+            const end = () => {
+                if (ended) return;
+                ended = true;
+                timers.forEach(clearTimeout);
+                jackpotVideoDone = null;
+                jackpotVideoCancel = null;
+                finale.classList.add('hidden');
+                rays.className = 'jp-rays hidden';
+                layer.classList.remove('is-impact');
+                layer.classList.add('hidden');
+                onDone();
+            };
+            jackpotVideoCancel = () => { ended = true; timers.forEach(clearTimeout); };
+            jackpotVideoDone = end;
+
+            rays.className = 'jp-rays is-rainbow';
+            finale.classList.remove('hidden');
+            layer.classList.remove('is-impact');
+            void layer.offsetWidth;
+            layer.classList.add('is-impact');
+            playJackpotSfx('fanfare');
+            setGameMascotSpeech('確定！！！ 👑✨');
+            jackpotVibrate([90, 40, 90, 40, 450]);
+            burstConfetti(110, { gold: true });
+            [[24, 30, 150], [76, 26, 380], [50, 18, 600], [18, 66, 820], [82, 62, 1020], [50, 72, 1250]]
+                .forEach(([x, y, delay]) => timers.push(scheduleGameTask(() => burstFireworks(x, y, 30), delay)));
+            timers.push(scheduleGameTask(() => burstConfetti(70, { gold: true, keep: true }), 800));
+            timers.push(scheduleGameTask(end, prefersReducedMotion() ? 1200 : 2300));
         }
 
         function startJackpotVideo(onDone) {
@@ -4028,16 +4539,10 @@
                 video.removeEventListener('error', finish);
                 jackpotVideoDone = null;
                 try { video.pause(); } catch {}
-                // 白フラッシュで盤面に戻る
+                // 白フラッシュ → 「確定」演出へ
                 wrap.classList.add('hidden');
                 flash.className = 'jackpot-flash is-white';
-                scheduleGameTask(() => {
-                    layer.classList.add('hidden');
-                    flash.className = 'jackpot-flash';
-                    setGameMascotSpeech('確定！！！ 👑✨');
-                    burstConfetti(60);
-                    onDone();
-                }, prefersReducedMotion() ? 0 : 380);
+                playJackpotFinale(onDone);
             };
             jackpotVideoCancel = () => {
                 finished = true;
@@ -4054,7 +4559,7 @@
             wrap.style.animation = 'none';
             void wrap.offsetWidth;
             wrap.style.animation = '';
-            burstConfetti(40);
+            burstConfetti(40, { gold: true });
             setGameMascotSpeech('きた…！？ 👑');
 
             const armFallback = () => {
