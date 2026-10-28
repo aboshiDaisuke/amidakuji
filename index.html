@@ -1850,6 +1850,16 @@
         .stock-to-list { font-size: 0.75rem; font-weight: 900; padding: 0.3rem 0.7rem; border-radius: 999px; background: #111; color: #f5c518; white-space: nowrap; }
         .stock-to-list:disabled { opacity: 0.35; cursor: not-allowed; }
         .stock-fill-btn { width: 100%; }
+        /* バーコード読み取り */
+        .stock-scan-btn { min-height: 48px; padding: 0.6rem 1.1rem; border-radius: 999px; background: #111; color: #f5c518; font-weight: 900; font-size: 0.95rem; white-space: nowrap; }
+        .stock-scan-btn i { margin-right: 0.3rem; }
+        .barcode-chip { display: inline-flex; align-items: center; gap: 0.4rem; min-width: 0; max-width: 100%; font-size: 0.78rem; font-weight: 900; color: #5b21b6; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 999px; padding: 0.3rem 0.4rem 0.3rem 0.8rem; }
+        .barcode-chip[hidden] { display: none; }
+        .barcode-chip-text { min-width: 0; overflow-wrap: anywhere; }
+        .barcode-chip button { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; color: #7c3aed; }
+        .barcode-video-wrap { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 1rem; overflow: hidden; background: #111; }
+        .barcode-video-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .barcode-guide { position: absolute; left: 10%; right: 10%; top: 32%; bottom: 32%; border: 3px solid #f5c518; border-radius: 0.75rem; box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.35); }
         /* みんなの在庫（Googleログインで共有） */
         .stock-cloud { border: 2px dashed #c4b5fd; background: #faf5ff; border-radius: 1rem; padding: 0.75rem 0.9rem; }
         .stock-cloud.is-member { border-style: solid; border-color: #a7f3d0; background: #ecfdf5; }
@@ -1994,6 +2004,12 @@
                 <div class="mt-5">
                     <div id="stock-cloud" class="stock-cloud mb-4" aria-live="polite" hidden></div>
                     <div class="stock-form">
+                        <div class="stock-form-wide flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="openBarcodeScanner()" class="stock-scan-btn">
+                                <i class="fas fa-barcode"></i> バーコードを読む
+                            </button>
+                            <span id="stock-barcode-chip" class="barcode-chip" aria-live="polite" hidden></span>
+                        </div>
                         <label for="stock-photo-input" id="stock-photo-btn" class="stock-photo-btn" role="button" tabindex="0" onclick="choosePhotoFor(null)" onkeydown="openFilePickerByKey(event, 'stock-photo-input', null)" aria-label="写真をえらぶ">
                             <i class="fas fa-camera"></i><span>写真</span>
                         </label>
@@ -2244,6 +2260,23 @@
                 </h2>
                 <p id="challenge-modal-desc" class="text-slate-500 font-bold text-sm mb-5"></p>
                 <div id="challenge-modal-body" class="flex flex-col gap-3"></div>
+            </div>
+        </div>
+
+        <!-- バーコード読み取り（在庫に入れるとき）。カメラが使えないときは番号を手で入れる -->
+        <div id="barcode-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="barcode-modal-title">
+            <div class="bg-white w-full max-w-sm relative p-6 text-center">
+                <h2 id="barcode-modal-title" class="text-2xl font-black text-pink-600 mb-3"><i class="fas fa-barcode mr-1"></i>バーコードを読む</h2>
+                <div class="barcode-video-wrap">
+                    <video id="barcode-video" playsinline muted></video>
+                    <div class="barcode-guide" aria-hidden="true"></div>
+                </div>
+                <p id="barcode-status" class="text-slate-600 font-bold text-sm mt-3" aria-live="polite"></p>
+                <div class="flex gap-2 mt-4">
+                    <input type="text" id="barcode-manual" inputmode="numeric" autocomplete="off" aria-label="バーコードの番号" placeholder="番号を手で入れる" class="flex-1 min-w-0 border px-3 py-3 font-bold" onkeydown="if(event.key==='Enter' && !event.isComposing) submitManualBarcode()">
+                    <button type="button" onclick="submitManualBarcode()" class="btn-pop bg-pink-500 text-white font-black px-4">決定</button>
+                </div>
+                <button type="button" onclick="closeBarcodeScanner()" class="mt-4 w-full font-black text-slate-600 py-3 rounded-full border-2 border-slate-200">とじる</button>
             </div>
         </div>
 
@@ -2987,6 +3020,7 @@
             applyLoadedSetup(saved);
             loadStock();
             loadStockPhotos();
+            loadBarcodes();
             setDisplayMode(displayMode);
             updateDisplays();
             updateBulkList();
@@ -3371,6 +3405,237 @@
             btn.innerHTML = photo ? `<img src="${photo}" alt="">` : '<i class="fas fa-camera"></i><span>写真</span>';
         }
 
+        // ---- バーコード（JANコード）から商品名 ----
+        // バーコードには番号しか入っていないので、在庫に入れたときの「番号 → 商品名・お酒/大きい/あたり」を名前帳に覚えておき、
+        // 次に同じバーコードを読んだら自動で入れる。知らない番号は Open Food Facts（無料・登録不要）でさがし、なければ手で入れてもらう。
+        // 名前帳は localStorage に保存し、みんなの在庫を使っているときはクラウドにも送ってメンバーで共有する。
+        const BARCODE_KEY = 'amidakuji-barcodes-v1';
+        // iPhone/iPad の Safari はバーコード読み取り（BarcodeDetector）がないので、同じ使い方ができる部品をCDNから読む
+        const BARCODE_LIB = 'https://cdn.jsdelivr.net/npm/barcode-detector@3.1.3/pure/+esm';
+        const BARCODE_FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e'];
+        const barcodeBook = new Map();
+        let pendingBarcode = '';
+        let barcodeScan = null;
+        let barcodeDetectorPromise = null;
+        let barcodeLookupSeq = 0;
+        let barcodeCloudSeeded = false;
+
+        function isBarcode(code) {
+            return typeof code === 'string' && /^\d{8,14}$/.test(code);
+        }
+
+        function sanitizeBarcodeEntry(entry) {
+            const name = String(entry?.name ?? '').trim().slice(0, 500);
+            if (!name) return null;
+            return { name, isAlcohol: Boolean(entry.isAlcohol), isPlush: Boolean(entry.isPlush), isJackpot: Boolean(entry.isJackpot) };
+        }
+
+        function loadBarcodes() {
+            try {
+                const data = JSON.parse(localStorage.getItem(BARCODE_KEY) || 'null');
+                Object.entries(data?.codes || {}).forEach(([code, entry]) => {
+                    const clean = sanitizeBarcodeEntry(entry);
+                    if (isBarcode(code) && clean) barcodeBook.set(code, clean);
+                });
+            } catch (err) {
+                console.warn('バーコードの名前帳の読み込みに失敗しました', err);
+            }
+        }
+
+        function saveBarcodesLocal() {
+            try {
+                localStorage.setItem(BARCODE_KEY, JSON.stringify({ version: 1, codes: Object.fromEntries(barcodeBook) }));
+            } catch (err) {
+                console.warn('バーコードの名前帳の保存に失敗しました', err);
+            }
+        }
+
+        function rememberBarcode(code, item) {
+            const entry = sanitizeBarcodeEntry(item);
+            if (!isBarcode(code) || !entry) return;
+            const prev = barcodeBook.get(code);
+            if (prev && JSON.stringify(prev) === JSON.stringify(entry)) return;
+            barcodeBook.set(code, entry);
+            saveBarcodesLocal();
+            if (stockCloudReady) window.stockCloud?.pushBarcode(code, entry);
+        }
+
+        function renderBarcodeChip(state) {
+            const chip = document.getElementById('stock-barcode-chip');
+            chip.hidden = !pendingBarcode;
+            if (!pendingBarcode) {
+                chip.innerHTML = '';
+                return;
+            }
+            const notes = {
+                known: '登録ずみの商品',
+                looking: '名前をさがしています…',
+                found: 'ネットで見つけた名前です。ちがったら直してね',
+                new: 'はじめての商品。名前を入れると次から自動で入ります'
+            };
+            chip.innerHTML = `<span class="barcode-chip-text"><i class="fas fa-barcode mr-1"></i>${pendingBarcode}・${notes[state] || ''}</span>`
+                + '<button type="button" onclick="clearPendingBarcode()" aria-label="読んだバーコードをとりけす"><i class="fas fa-times"></i></button>';
+        }
+
+        function clearPendingBarcode() {
+            pendingBarcode = '';
+            barcodeLookupSeq += 1;
+            renderBarcodeChip();
+        }
+
+        function createBarcodeDetector() {
+            if (!barcodeDetectorPromise) {
+                barcodeDetectorPromise = (async () => {
+                    if ('BarcodeDetector' in window) {
+                        const supported = await window.BarcodeDetector.getSupportedFormats();
+                        const formats = BARCODE_FORMATS.filter(format => supported.includes(format));
+                        if (formats.length) return new window.BarcodeDetector({ formats });
+                    }
+                    const { BarcodeDetector } = await import(BARCODE_LIB);
+                    return new BarcodeDetector({ formats: BARCODE_FORMATS });
+                })().catch(err => {
+                    barcodeDetectorPromise = null;
+                    throw err;
+                });
+            }
+            return barcodeDetectorPromise;
+        }
+
+        function setBarcodeStatus(text) {
+            document.getElementById('barcode-status').textContent = text;
+        }
+
+        async function openBarcodeScanner() {
+            if (barcodeScan) return;
+            const session = barcodeScan = { stream: null, timer: 0 };
+            document.getElementById('barcode-manual').value = '';
+            document.getElementById('barcode-modal').classList.remove('hidden');
+            if (!navigator.mediaDevices?.getUserMedia) {
+                setBarcodeStatus('このブラウザではカメラが使えません。バーコードの下の番号を手で入れてね');
+                return;
+            }
+            setBarcodeStatus('カメラを準備しています…');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+                if (barcodeScan !== session) {
+                    stream.getTracks().forEach(track => track.stop());
+                    return;
+                }
+                session.stream = stream;
+                const video = document.getElementById('barcode-video');
+                video.srcObject = stream;
+                await video.play();
+                const detector = await createBarcodeDetector();
+                if (barcodeScan !== session) return;
+                setBarcodeStatus('黄色い枠にバーコードを入れてね');
+                scanBarcodeFrame(session, detector);
+            } catch (err) {
+                console.warn('バーコードを読む準備ができませんでした', err);
+                if (barcodeScan !== session) return;
+                setBarcodeStatus(err?.name === 'NotAllowedError'
+                    ? 'カメラの使用が許可されていません。ブラウザの設定で許可するか、番号を手で入れてね'
+                    : 'カメラを使えませんでした。バーコードの下の番号を手で入れてね');
+            }
+        }
+
+        async function scanBarcodeFrame(session, detector) {
+            if (barcodeScan !== session) return;
+            const video = document.getElementById('barcode-video');
+            try {
+                if (video.readyState >= 2) {
+                    const codes = await detector.detect(video);
+                    const code = codes.map(found => found.rawValue).find(isBarcode);
+                    if (code && barcodeScan === session) {
+                        onBarcodeRead(code);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn('バーコードを読めませんでした', err);
+            }
+            if (barcodeScan === session) session.timer = setTimeout(() => scanBarcodeFrame(session, detector), 250);
+        }
+
+        function closeBarcodeScanner() {
+            const session = barcodeScan;
+            barcodeScan = null;
+            if (session) {
+                clearTimeout(session.timer);
+                session.stream?.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('barcode-video').srcObject = null;
+            document.getElementById('barcode-modal').classList.add('hidden');
+        }
+
+        function submitManualBarcode() {
+            const input = document.getElementById('barcode-manual');
+            const code = input.value.replace(/\D/g, '');
+            if (!isBarcode(code)) {
+                setBarcodeStatus('番号は8〜14けたの数字で入れてね');
+                input.focus();
+                return;
+            }
+            onBarcodeRead(code);
+        }
+
+        function onBarcodeRead(code) {
+            closeBarcodeScanner();
+            navigator.vibrate?.(60);
+            applyBarcode(code);
+        }
+
+        async function applyBarcode(code) {
+            pendingBarcode = code;
+            const seq = ++barcodeLookupSeq;
+            const nameInput = document.getElementById('stock-name');
+            const known = barcodeBook.get(code);
+            if (known) {
+                nameInput.value = known.name;
+                document.getElementById('stock-alcohol').checked = known.isAlcohol;
+                document.getElementById('stock-plush').checked = known.isPlush;
+                document.getElementById('stock-jackpot').checked = known.isJackpot;
+                updateStockPhotoButton();
+                renderBarcodeChip('known');
+                setMascotSpeech(`「${shortLabel(known.name)}」だね！ 賞味期限を入れてね 📅`);
+                document.getElementById('stock-expiry').focus();
+                return;
+            }
+            renderBarcodeChip('looking');
+            const found = await lookupBarcodeName(code);
+            if (seq !== barcodeLookupSeq) return;
+            if (found) {
+                nameInput.value = found;
+                updateStockPhotoButton();
+                renderBarcodeChip('found');
+                setMascotSpeech('名前を見つけたよ！ ちがったら直してね 🔍');
+            } else {
+                renderBarcodeChip('new');
+                setMascotSpeech('はじめての商品だよ！ 名前を入れてね ✏️');
+            }
+            nameInput.focus();
+        }
+
+        // Open Food Facts は日本のおみやげは少ないが、大手メーカーのお菓子などは見つかることがある
+        async function lookupBarcodeName(code) {
+            let timer = 0;
+            try {
+                const controller = new AbortController();
+                timer = setTimeout(() => controller.abort(), 6000);
+                const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name_ja,product_name,brands`, { signal: controller.signal });
+                if (!res.ok) return '';
+                const product = (await res.json())?.product;
+                const name = String(product?.product_name_ja || product?.product_name || '').trim();
+                if (!name) return '';
+                const brand = String(product.brands || '').split(',')[0].trim();
+                return (brand && !name.includes(brand) ? `${brand} ${name}` : name).slice(0, 60);
+            } catch (err) {
+                console.warn('商品名をさがせませんでした', err);
+                return '';
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
         // ---- 在庫の登録・変更 ----
         function addStockItem() {
             const nameInput = document.getElementById('stock-name');
@@ -3406,6 +3671,8 @@
             }
             if (pendingStockPhoto) storePhoto(name, pendingStockPhoto);
             pendingStockPhoto = null;
+            if (pendingBarcode) rememberBarcode(pendingBarcode, item);
+            clearPendingBarcode();
             photoPickSeq += 1;
             nameInput.value = '';
             countInput.value = 1;
@@ -3677,11 +3944,31 @@
             updateStockPhotoButton();
         }
 
+        // みんなの名前帳を受け取ったら、この端末の名前帳に足す。はじめて受け取ったときは、この端末だけで覚えていた分をクラウドへ送る
+        function onStockCloudBarcodes(entries, { fromCache }) {
+            const cloudCodes = new Set();
+            entries.forEach(([code, entry]) => {
+                const clean = sanitizeBarcodeEntry(entry);
+                if (!isBarcode(code) || !clean) return;
+                cloudCodes.add(code);
+                barcodeBook.set(code, clean);
+            });
+            saveBarcodesLocal();
+            if (fromCache || barcodeCloudSeeded) return;
+            barcodeCloudSeeded = true;
+            barcodeBook.forEach((entry, code) => {
+                if (!cloudCodes.has(code)) window.stockCloud?.pushBarcode(code, entry);
+            });
+        }
+
         function forgetCloudStock() {
             setStockCloudJoined(false);
             stockCloudReady = false;
             stockItems = [];
             stockPhotos.clear();
+            barcodeBook.clear();
+            barcodeCloudSeeded = false;
+            saveBarcodesLocal();
             stockUndo = null;
             bulkItems.forEach(item => { delete item.stockId; });
             saveStockLocal();
@@ -4799,6 +5086,7 @@
             const shopRef = fs.doc(db, 'shops', SHOP_ID);
             const itemsRef = fs.collection(shopRef, 'items');
             const photosRef = fs.collection(shopRef, 'photos');
+            const barcodesRef = fs.collection(shopRef, 'barcodes');
 
             let user = null;
             let unsubscribers = [];
@@ -4893,6 +5181,10 @@
                         .map(change => [String(change.doc.data().name ?? ''), change.doc.data().dataUrl]);
                     if (photos.length) onStockCloudPhotos(photos);
                 }, onListenError));
+                // バーコードの名前帳は在庫のおまけなので、読めなくても在庫はそのまま使えるようにする
+                unsubscribers.push(fs.onSnapshot(barcodesRef, snap => {
+                    onStockCloudBarcodes(snap.docs.map(d => [d.id, d.data()]), { fromCache: snap.metadata.fromCache });
+                }, err => console.warn('バーコードの名前帳を読めませんでした', err)));
             }
 
             function pushItems(items) {
@@ -4930,6 +5222,14 @@
                 fs.setDoc(fs.doc(photosRef, await photoId(name)), { name, dataUrl, ...stamp() }).catch(reportWriteError);
             }
 
+            // バーコードの名前帳は番号ごとに1件（ドキュメントIDが番号）
+            function pushBarcode(code, entry) {
+                if (!listening) return;
+                const data = { name: entry.name, isAlcohol: entry.isAlcohol, isPlush: entry.isPlush, isJackpot: entry.isJackpot };
+                fs.setDoc(fs.doc(barcodesRef, code), { ...data, ...stamp() })
+                    .catch(err => console.warn('バーコードの名前帳に保存できませんでした', err));
+            }
+
             function authErrorMessage(err) {
                 if (err.code === 'auth/unauthorized-domain') return 'このサイトのアドレスが Firebase に登録されていません（Authentication → 設定 → 承認済みドメイン）';
                 if (err.code === 'auth/network-request-failed') return 'ネットにつながらないのでログインできませんでした';
@@ -4965,7 +5265,7 @@
                 location.reload();
             }
 
-            window.stockCloud = { signIn, signOut, pushItems, pushPhoto };
+            window.stockCloud = { signIn, signOut, pushItems, pushPhoto, pushBarcode };
             fa.getRedirectResult(auth).catch(err => onStockCloudState({ message: authErrorMessage(err) }));
             fa.onAuthStateChanged(auth, next => {
                 stopListening();

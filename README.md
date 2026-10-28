@@ -19,6 +19,7 @@
 - 在庫から、期限切れをのぞいて期限が近い順に人数分をおみやげリストへ入れる
 - 抽選が終わって結果一覧を出すと、配った分を在庫から自動で引く（結果一覧から取り消しできる）
 - ログインしていないときの在庫は localStorage、写真は IndexedDB に、この端末だけで保存
+- バーコードで在庫登録: 「バーコードを読む」でスマホ・タブレットのカメラをかざすと、前に入れた商品なら名前・🍺🧸👑が自動で入る。はじめての商品は Open Food Facts（無料）でさがし、なければ手で入れると次から自動で入る（番号の手入力もできる）
 - みんなの在庫: 持ち主のGoogleアカウントでログインすると、どの端末でも同じ在庫と写真を使える（Firebase。下の「みんなの在庫の準備」）
 
 ## 技術構成
@@ -29,6 +30,7 @@
 - Font Awesome アイコン
 - M PLUS Rounded 1c フォント
 - 3Dキャラ表示: [model-viewer](https://modelviewer.dev/)（CDN）
+- バーコード読み取り: ブラウザの BarcodeDetector。ない端末（iPhone/iPad の Safari など）は [barcode-detector](https://github.com/Sec-ant/barcode-detector)（jsDelivr）。カメラは https か localhost で開いたときだけ使える
 
 ## ハロウィン仕様
 
@@ -57,7 +59,7 @@ npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/hwpumpkin_かぼ
 
 しくみ:
 
-- 在庫は `shops/main/items` に1行ずつ、写真は `shops/main/photos` に商品名ごとに入る。メンバーは `shops/main` の `members`
+- 在庫は `shops/main/items` に1行ずつ、写真は `shops/main/photos` に商品名ごとに、バーコードの名前帳は `shops/main/barcodes` に番号ごとに入る。メンバーは `shops/main` の `members`
 - 個数の増減は差分で送るので、2台で同時に配っても両方の分が引かれる
 - ネットが切れている間の変更は端末にためて、つながったら送る。ログアウトすると端末に写した在庫と写真は消える
 - 手元での確認は Firebase エミュレーター（`firebase emulators:start --only auth,firestore`。Java が必要）で、`FIREBASE_CONFIG` を `demo-` で始まるプロジェクトにし、`connectAuthEmulator` / `connectFirestoreEmulator` をつないだコピーを使う

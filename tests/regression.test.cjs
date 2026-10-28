@@ -362,3 +362,25 @@ test('shared stock: joining asks to merge, cloud snapshots replace the copy, and
     assert.equal(a.run('isStockCloudJoined()'), false);
     assert.equal(a.run('loadStock(), stockItems.length'), 0);
 });
+
+test('a scanned barcode remembers the stock name and fills it in next time', async () => {
+    const a = app();
+    await a.run(`applyBarcode('4901234567894')`);
+    assert.equal(a.element('stock-name').value, '', 'an unknown barcode leaves the name for the user to type');
+    a.element('stock-name').value = 'ままどおる';
+    a.element('stock-count').value = '3';
+    a.element('stock-plush').checked = true;
+    a.run('addStockItem()');
+    assert.equal(a.run('pendingBarcode'), '', 'the barcode is used up once the stock is added');
+    assert.deepEqual(JSON.parse(a.run(`JSON.stringify(JSON.parse(localStorage.getItem(BARCODE_KEY)).codes['4901234567894'])`)),
+        { name: 'ままどおる', isAlcohol: false, isPlush: true, isJackpot: false });
+
+    a.run(`barcodeBook.clear(); loadBarcodes()`);
+    await a.run(`applyBarcode('4901234567894')`);
+    assert.equal(a.element('stock-name').value, 'ままどおる');
+    assert.equal(a.element('stock-plush').checked, true);
+    assert.equal(a.run('pendingBarcode'), '4901234567894');
+    a.run(`clearPendingBarcode()`);
+    assert.equal(a.run('pendingBarcode'), '');
+    assert.equal(a.run(`isBarcode('12345')`), false);
+});

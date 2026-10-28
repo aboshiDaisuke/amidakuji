@@ -6,6 +6,7 @@ rules_version = '2';
 // shops/main            … { ownerUid, ownerEmail, members: [メールアドレス], createdAt }
 // shops/main/items/{id} … 在庫1行（商品名・個数・賞味期限・お酒/大きい/あたり）
 // shops/main/photos/{h} … 商品名ごとの写真（小さく縮めた JPEG の data URL）
+// shops/main/barcodes/{番号} … バーコードの名前帳（番号 → 商品名・お酒/大きい/あたり）
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -43,6 +44,13 @@ service cloud.firestore {
         && stamped(d);
     }
 
+    function validBarcode(d) {
+      return d.keys().hasOnly(['name', 'isAlcohol', 'isPlush', 'isJackpot', 'updatedAt', 'updatedBy'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 500
+        && d.isAlcohol is bool && d.isPlush is bool && d.isJackpot is bool
+        && stamped(d);
+    }
+
     match /shops/{shopId} {
       // まだ誰も使っていないか（ドキュメントなし）を確かめられるように、ないときの読み取りは許す
       allow get: if signedIn() && (resource == null || myEmail() in resource.data.members);
@@ -71,6 +79,11 @@ service cloud.firestore {
       match /photos/{photoId} {
         allow read, delete: if isMember(shopId);
         allow create, update: if isMember(shopId) && validPhoto(request.resource.data);
+      }
+
+      match /barcodes/{code} {
+        allow read, delete: if isMember(shopId);
+        allow create, update: if isMember(shopId) && code.matches('[0-9]{8,14}') && validBarcode(request.resource.data);
       }
     }
   }
