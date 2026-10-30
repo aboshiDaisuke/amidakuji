@@ -35,11 +35,13 @@
 
 - 雪の夜の背景（ふる雪・雪の丘ともみの木）、上につるした電飾とオーナメント、キャンディケーン柄の縁と金のリボンのカード、赤・緑・金の配色
 - ギャル2枚（サンタ服で手をふる子・キャンディケーンに乗る子）とロゴは Codex の画像生成で、ハロウィン版の画像を見本にして作りました（`assets/christmas/`。元画像は `素材/キャラ_クリスマス/`、`素材/ロゴ/ロゴ_クリスマス版.png`）
-- くじを引く画面の飾り（プレゼント・雪だるま・ツリー）は three.js（CDN）で組み立てて、ぷかぷか浮かせています。WebGL は1つだけ作り、各飾りの canvas に写しています（iPad で WebGL をいくつも作ると重くなるため）
+- プレゼント・雪だるま・ツリー・キャンディケーン・ベル・オーナメント・星・くつした・ジンジャーブレッドマンの飾りは three.js（CDN）で組み立てて、トップ画面（ヘッダー・ロゴの左右・いくぜボタンの両わき）と、くじを引く画面でぷかぷか浮かせています。WebGL は1つだけ作り、各飾りの canvas に写しています（iPad で WebGL をいくつも作ると重くなるため）
 - ヘッダーの3Dキャラはサンタとトナカイ（`assets/christmas/santa.glb`、`reindeer.glb`）。元データ（約1.5MB）はポリゴン数がもともと少ないので、テクスチャのWebP化とmeshopt圧縮だけで1体あたり約0.25MBにしています
 
+サンタの元データは、帽子の先が後ろで左右2つに分かれていたので、後ろ左のポンポンを頭の中へ寄せて隠したもの（`xmassanta_サンタ_ポンポン1つ.glb`）を使っています。
+
 ```sh
-npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/xmassanta_サンタ.glb assets/christmas/santa.glb \
+npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/xmassanta_サンタ_ポンポン1つ.glb assets/christmas/santa.glb \
   --compress meshopt --texture-compress webp --texture-size 1024 --simplify false
 ```
 
