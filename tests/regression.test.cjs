@@ -18,7 +18,7 @@ function app() {
     const drawing = new Proxy({}, { get: (obj, key) => obj[key] || (() => {}) });
     function element(id) {
         if (!elements.has(id)) {
-            const classes = new Set(['game-panel', 'summary-modal', 'alcohol-modal', 'jackpot-video-layer'].includes(id) ? ['hidden'] : []);
+            const classes = new Set(['game-panel', 'summary-modal', 'alcohol-modal', 'jackpot-layer', 'jackpot-sleigh'].includes(id) ? ['hidden'] : []);
             const el = {
                 value: '', checked: false, textContent: '', innerHTML: '', children: [],
                 style: { setProperty() {} }, offsetWidth: 800, clientWidth: 800,
@@ -156,30 +156,31 @@ test('returning or clearing during animation cancels old result and persistence 
     }
 });
 
-test('returning during jackpot prelude cancels both video and old draw', () => {
+test('returning during jackpot prelude cancels both the Santa run and old draw', () => {
     const a = app();
     a.run(`currentCount=2; bulkItems=[{name:'大当たり',count:2,isJackpot:true}]; generateAmida(); animationDuration=20; startReveal(0,[]);`);
     a.advance(16);
-    assert.equal(a.element('jackpot-video-layer').classList.contains('hidden'), false);
+    assert.equal(a.element('jackpot-layer').classList.contains('hidden'), false);
     a.run('resetView(); bulkItems=[]; generateAmida()');
     a.advance(6000);
-    assert.equal(a.element('jackpot-video-layer').classList.contains('hidden'), true);
+    assert.equal(a.element('jackpot-layer').classList.contains('hidden'), true);
     assert.equal(a.run('paths.length'), 0);
 });
 
-test('jackpot runs prelude, video and the 確定 finale before showing the result; taps skip each stage', () => {
+test('jackpot runs prelude, Santa sleigh run and the 確定 finale before showing the result; taps skip each stage', () => {
     const a = app();
     a.run(`currentCount=2; bulkItems=[{name:'大当たり',count:2,isJackpot:true}]; generateAmida(); animationDuration=20; startReveal(0,[]);`);
     a.advance(16);
-    assert.equal(a.element('jackpot-video-wrap').classList.contains('hidden'), true);
-    a.run('skipJackpotVideo()'); // prelude -> video
-    assert.equal(a.element('jackpot-video-wrap').classList.contains('hidden'), false);
-    a.run('skipJackpotVideo()'); // video -> finale
+    assert.equal(a.element('jackpot-sleigh').classList.contains('hidden'), true);
+    a.run('skipJackpot()'); // prelude -> sleigh
+    assert.equal(a.element('jackpot-sleigh').classList.contains('hidden'), false);
+    a.run('skipJackpot()'); // sleigh -> finale
+    assert.equal(a.element('jackpot-sleigh').classList.contains('hidden'), true);
     assert.equal(a.element('jackpot-finale').classList.contains('hidden'), false);
-    assert.equal(a.element('jackpot-video-layer').classList.contains('hidden'), false);
+    assert.equal(a.element('jackpot-layer').classList.contains('hidden'), false);
     assert.equal(a.run('paths.length'), 0);
     a.advance(2400); // finale ends by itself
-    assert.equal(a.element('jackpot-video-layer').classList.contains('hidden'), true);
+    assert.equal(a.element('jackpot-layer').classList.contains('hidden'), true);
     a.advance(100);
     assert.equal(a.run('paths.length'), 1);
     assert.equal(a.element('result-message').classList.contains('result-jackpot'), true);
