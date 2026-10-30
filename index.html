@@ -6,6 +6,8 @@
     <title>おみやげ配布⭐️あみだくじ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- 抽選画面の3Dの飾り（プレゼント・雪だるま・ツリー）は three.js で組み立てる -->
+    <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
     <!-- 3Dキャラ（assets/christmas/*.glb は meshopt 圧縮済みなのでデコーダーの場所を先に渡す） -->
     <script data-config="model-viewer">self.ModelViewerElement = { meshoptDecoderLocation: 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.22.0/meshopt_decoder.js' };</script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
@@ -1703,7 +1705,20 @@
             .xm-parade .xm-slot.is-santa { width: 34%; }
         }
 
-        /* ---- くじを引く画面の3Dキャラ（盤面・番号・ボタンには重ねない位置だけに置く） ---- */
+        /* ---- くじを引く画面の3Dの飾り（盤面・番号・ボタンには重ねない位置だけに置く） ---- */
+        canvas.xm-toy { display: block; width: 100%; aspect-ratio: 1; touch-action: pan-y; cursor: grab; }
+        canvas.xm-toy:active { cursor: grabbing; }
+        /* プレゼントや雪だるまは、ゆっくり上下にぷかぷか（回転は three.js 側） */
+        .game-pal .xm-float { animation-name: toyFloat; animation-timing-function: ease-in-out; }
+        .game-pal::after { animation-name: toyShadow; }
+        @keyframes toyFloat {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-14px) rotate(2deg); }
+        }
+        @keyframes toyShadow {
+            0%, 100% { transform: scaleX(1); opacity: 0.9; }
+            50% { transform: scaleX(0.7); opacity: 0.45; }
+        }
         .board-frame { position: relative; }
         .game-pal-corner {
             --corner-w: clamp(64px, 10vw, 100px);
@@ -2231,9 +2246,9 @@
             <div class="relative">
                 <p id="board-scroll-hint" class="board-scroll-hint" hidden>↔ 横にスワイプして番号を選んでね</p>
                 <div class="board-frame">
-                    <!-- サンタとトナカイ: 盤面の上の角にちょこんと乗る（くじを引く間も見える） -->
-                    <div class="xm-slot game-pal game-pal-corner is-left" data-say="どれにする〜？" style="--float-delay: -0.4s; --float-dur: 3.6s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/santa.glb" alt="サンタさん（ドラッグで回せます）" camera-orbit="25deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
-                    <div class="xm-slot game-pal game-pal-corner is-right" data-say="あたり 運ぶよ〜" style="--float-delay: -1.6s; --float-dur: 3.2s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/reindeer.glb" alt="トナカイ（ドラッグで回せます）" camera-orbit="-30deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+                    <!-- プレゼントと雪だるま: 盤面の上の角でぷかぷか（くじを引く間も見える） -->
+                    <div class="xm-slot game-pal game-pal-corner is-left" data-toy="present-red" data-say="なにが 入ってるかな？" style="--float-delay: -0.4s; --float-dur: 4.2s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
+                    <div class="xm-slot game-pal game-pal-corner is-right" data-toy="snowman" data-say="さむいね〜 ⛄" style="--float-delay: -1.6s; --float-dur: 4.6s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
                 <div class="canvas-container">
                     <div class="board-scroll" tabindex="0" role="region" aria-label="あみだくじ盤面。横にスクロールできます">
                         <div class="board-content">
@@ -2244,11 +2259,11 @@
                 </div>
                 </div>
                 <div class="game-bottom-row">
-                    <!-- サンタとトナカイ: 盤面の下でぴょこぴょこ -->
+                    <!-- ツリー・プレゼント・雪だるま: 盤面の下でぷかぷか -->
                     <div class="game-pal-row">
-                        <div class="xm-slot game-pal" data-say="つぎ だれ〜？" style="--float-delay: -0.2s; --float-dur: 3.4s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/reindeer.glb" alt="トナカイ（ドラッグで回せます）" camera-orbit="30deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
-                        <div class="xm-slot game-pal" data-say="ドキドキするね" style="--float-delay: -1.3s; --float-dur: 3.8s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/santa.glb" alt="サンタさん（ドラッグで回せます）" camera-orbit="0deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
-                        <div class="xm-slot game-pal" data-say="あたれ〜！" style="--float-delay: -2.1s; --float-dur: 3.0s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/reindeer.glb" alt="トナカイ（ドラッグで回せます）" camera-orbit="-30deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+                        <div class="xm-slot game-pal " data-toy="tree" data-say="つぎ だれ〜？" style="--float-delay: -0.2s; --float-dur: 4.4s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
+                        <div class="xm-slot game-pal " data-toy="present-green" data-say="ドキドキするね" style="--float-delay: -1.3s; --float-dur: 3.9s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
+                        <div class="xm-slot game-pal " data-toy="snowman" data-say="あたれ〜！" style="--float-delay: -2.1s; --float-dur: 4.8s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
                     </div>
                     <div class="game-mascot" aria-hidden="true">
                         <div class="speech-bubble" id="game-mascot-speech">がんばれ〜！</div>
@@ -2318,12 +2333,12 @@
 
     </main>
 
-    <!-- 抽選中だけ出る、画面の左右の余白のサンタとトナカイ（広い画面のみ） -->
-    <div class="game-side-pals" aria-label="サンタとトナカイ">
-        <div class="xm-slot game-pal is-l1" data-say="ホッホッホー！" style="--float-delay: -0.5s; --float-dur: 4.0s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/santa.glb" alt="サンタさん（ドラッグで回せます）" camera-orbit="25deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
-        <div class="xm-slot game-pal is-l2" data-say="シャンシャン♪" style="--float-delay: -2.2s; --float-dur: 3.4s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/reindeer.glb" alt="トナカイ（ドラッグで回せます）" camera-orbit="30deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
-        <div class="xm-slot game-pal is-r1" data-say="ソリ ひくよ〜" style="--float-delay: -1.1s; --float-dur: 3.2s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/reindeer.glb" alt="トナカイ（ドラッグで回せます）" camera-orbit="-30deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
-        <div class="xm-slot game-pal is-r2" data-say="いい子にしてた？" style="--float-delay: -2.8s; --float-dur: 4.2s"><div class="xm-float"><model-viewer class="xm-model" src="assets/christmas/santa.glb" alt="サンタさん（ドラッグで回せます）" camera-orbit="-25deg 80deg auto" min-camera-orbit="auto 55deg auto" max-camera-orbit="auto 105deg auto" field-of-view="24deg" min-field-of-view="10deg" camera-controls disable-zoom disable-pan disable-tap touch-action="pan-y" interaction-prompt="none" interpolation-decay="90" environment-image="neutral" exposure="1.05"></model-viewer></div></div>
+    <!-- 抽選中だけ出る、画面の左右の余白の飾り（広い画面のみ） -->
+    <div class="game-side-pals" aria-hidden="true">
+        <div class="xm-slot game-pal is-l1" data-toy="present-white" data-say="あけてみて〜！" style="--float-delay: -0.5s; --float-dur: 4.4s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
+        <div class="xm-slot game-pal is-l2" data-toy="snowman" data-say="とけちゃう〜" style="--float-delay: -2.2s; --float-dur: 4.8s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
+        <div class="xm-slot game-pal is-r1" data-toy="tree" data-say="キラキラ〜 ✨" style="--float-delay: -1.1s; --float-dur: 4.2s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
+        <div class="xm-slot game-pal is-r2" data-toy="present-red" data-say="いい子にしてた？" style="--float-delay: -2.8s; --float-dur: 4.6s"><div class="xm-float"><canvas class="xm-toy" aria-hidden="true"></canvas></div></div>
     </div>
 
     <footer class="site-footer">
@@ -4807,6 +4822,198 @@
                 }, i * 90);
             });
         };
+    </script>
+    <script type="module" data-role="christmas-toys">
+        // 抽選画面の飾り（プレゼント・雪だるま・ツリー）を three.js で組み立てる。
+        // WebGL は1つだけ作り、飾りごとに描いた絵を各スロットの canvas に写す（iPad で WebGL をいくつも作ると重くなるため）
+        import * as THREE from 'three';
+        import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+        const RENDER_SIZE = 256;
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setPixelRatio(1);
+        renderer.setSize(RENDER_SIZE, RENDER_SIZE, false);
+        renderer.setClearColor(0x000000, 0);
+
+        const scene = new THREE.Scene();
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x8fa6c8, 1.6));
+        const sun = new THREE.DirectionalLight(0xfff4e0, 2.4);
+        sun.position.set(3, 5, 4);
+        scene.add(sun);
+        const rim = new THREE.DirectionalLight(0xbfe3ff, 1.1);
+        rim.position.set(-4, 2, -3);
+        scene.add(rim);
+        const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 50);
+        camera.position.set(0, 0.9, 5.2);
+        camera.lookAt(0, 0, 0);
+
+        const mat = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, ...opts });
+        const mesh = (geometry, material, x = 0, y = 0, z = 0) => {
+            const m = new THREE.Mesh(geometry, material);
+            m.position.set(x, y, z);
+            return m;
+        };
+
+        function makePresent(boxColor, ribbonColor) {
+            const g = new THREE.Group();
+            const box = mat(boxColor, { roughness: 0.45 });
+            const ribbon = mat(ribbonColor, { roughness: 0.3, metalness: 0.35 });
+            g.add(mesh(new RoundedBoxGeometry(1.1, 0.9, 1.1, 4, 0.08), box, 0, -0.1, 0));
+            g.add(mesh(new RoundedBoxGeometry(1.22, 0.26, 1.22, 4, 0.07), box, 0, 0.42, 0));
+            // 箱と ふたに十字のリボン
+            g.add(mesh(new THREE.BoxGeometry(0.22, 0.92, 1.13), ribbon, 0, -0.1, 0));
+            g.add(mesh(new THREE.BoxGeometry(1.13, 0.92, 0.22), ribbon, 0, -0.1, 0));
+            g.add(mesh(new THREE.BoxGeometry(0.24, 0.28, 1.25), ribbon, 0, 0.42, 0));
+            g.add(mesh(new THREE.BoxGeometry(1.25, 0.28, 0.24), ribbon, 0, 0.42, 0));
+            // ちょうちょ結び
+            const loop = new THREE.TorusGeometry(0.2, 0.07, 12, 28);
+            const left = mesh(loop, ribbon, -0.2, 0.72, 0);
+            left.rotation.set(0, 0.35, 0.55);
+            const right = mesh(loop, ribbon, 0.2, 0.72, 0);
+            right.rotation.set(0, -0.35, -0.55);
+            g.add(left, right, mesh(new THREE.SphereGeometry(0.11, 16, 12), ribbon, 0, 0.62, 0));
+            return g;
+        }
+
+        function makeSnowman() {
+            const g = new THREE.Group();
+            const snow = mat(0xffffff, { roughness: 0.85, emissive: 0xdde8f5, emissiveIntensity: 0.25 });
+            const coal = mat(0x1d1d24, { roughness: 0.4 });
+            g.add(mesh(new THREE.SphereGeometry(0.55, 32, 24), snow, 0, -0.45, 0));
+            g.add(mesh(new THREE.SphereGeometry(0.4, 32, 24), snow, 0, 0.3, 0));
+            // 顔: 目・にんじんの鼻・ほっぺ・にっこり口
+            g.add(mesh(new THREE.SphereGeometry(0.05, 12, 10), coal, -0.13, 0.4, 0.35));
+            g.add(mesh(new THREE.SphereGeometry(0.05, 12, 10), coal, 0.13, 0.4, 0.35));
+            const nose = mesh(new THREE.ConeGeometry(0.06, 0.3, 16), mat(0xff8a1f), 0, 0.3, 0.5);
+            nose.rotation.x = Math.PI / 2;
+            g.add(nose);
+            const cheek = mat(0xff9aa8, { roughness: 0.9 });
+            g.add(mesh(new THREE.SphereGeometry(0.06, 12, 10), cheek, -0.24, 0.27, 0.3));
+            g.add(mesh(new THREE.SphereGeometry(0.06, 12, 10), cheek, 0.24, 0.27, 0.3));
+            for (let i = -2; i <= 2; i++) {
+                g.add(mesh(new THREE.SphereGeometry(0.025, 8, 6), coal, i * 0.06, 0.17 + i * i * 0.012, 0.37));
+            }
+            // 赤いマフラー
+            const scarfMat = mat(0xd7263d, { roughness: 0.7 });
+            const scarf = mesh(new THREE.TorusGeometry(0.33, 0.08, 12, 32), scarfMat, 0, 0.0, 0);
+            scarf.rotation.x = Math.PI / 2;
+            g.add(scarf);
+            const tail = mesh(new RoundedBoxGeometry(0.16, 0.42, 0.08, 2, 0.03), scarfMat, 0.2, -0.18, 0.4);
+            tail.rotation.z = 0.25;
+            g.add(tail);
+            // おなかのボタン
+            [-0.25, -0.5].forEach(y => g.add(mesh(new THREE.SphereGeometry(0.055, 12, 10), mat(0x0f6b4a), 0, y, 0.53)));
+            // サンタ帽（先っちょは1本）
+            const hat = new THREE.Group();
+            hat.add(mesh(new THREE.ConeGeometry(0.3, 0.55, 24), mat(0xd7263d), 0, 0.3, 0));
+            const brim = mesh(new THREE.TorusGeometry(0.3, 0.08, 12, 32), snow, 0, 0.03, 0);
+            brim.rotation.x = Math.PI / 2;
+            hat.add(brim, mesh(new THREE.SphereGeometry(0.1, 16, 12), snow, 0, 0.6, 0));
+            hat.position.set(0.04, 0.6, 0);
+            hat.rotation.z = -0.3;
+            g.add(hat);
+            // 木の枝のうで
+            const wood = mat(0x7a4a26, { roughness: 0.9 });
+            [-1, 1].forEach(side => {
+                const arm = mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.6, 8), wood, side * 0.68, -0.25, 0);
+                arm.rotation.z = side * -1.0;
+                g.add(arm);
+            });
+            return g;
+        }
+
+        function makeTree() {
+            const g = new THREE.Group();
+            const green = mat(0x1f8a5a, { roughness: 0.6 });
+            [[0.62, 0.7, -0.35], [0.5, 0.6, 0.05], [0.36, 0.5, 0.42]].forEach(([r, h, y]) => g.add(mesh(new THREE.ConeGeometry(r, h, 28), green, 0, y, 0)));
+            g.add(mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.25, 16), mat(0x7a4a26), 0, -0.78, 0));
+            // オーナメント
+            const colors = [0xd7263d, 0xf2b632, 0x59b8ff, 0xffffff, 0xd7263d, 0xf2b632];
+            [[-0.38, -0.5, 0.36], [0.32, -0.42, 0.42], [0.02, -0.55, 0.55], [-0.24, -0.05, 0.38], [0.28, -0.02, 0.32], [0.05, 0.3, 0.3]].forEach(([x, y, z], i) => {
+                g.add(mesh(new THREE.SphereGeometry(0.075, 14, 10), mat(colors[i], { roughness: 0.2, metalness: 0.4 }), x, y, z));
+            });
+            // てっぺんの星
+            const shape = new THREE.Shape();
+            for (let i = 0; i < 10; i++) {
+                const r = i % 2 ? 0.09 : 0.22;
+                const a = Math.PI / 2 + (i * Math.PI) / 5;
+                i ? shape.lineTo(Math.cos(a) * r, Math.sin(a) * r) : shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+            }
+            const star = new THREE.ExtrudeGeometry(shape, { depth: 0.08, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2 });
+            star.center();
+            g.add(mesh(star, mat(0xffd34d, { metalness: 0.5, roughness: 0.25, emissive: 0xffb300, emissiveIntensity: 0.35 }), 0, 0.82, 0));
+            return g;
+        }
+
+        const MAKERS = {
+            'present-red': () => makePresent(0xd7263d, 0xf2b632),
+            'present-green': () => makePresent(0x168055, 0xd7263d),
+            'present-white': () => makePresent(0xf5f7fb, 0xd7263d),
+            snowman: makeSnowman,
+            tree: makeTree
+        };
+
+        // 大きさをそろえて、まん中に置く
+        function fit(group) {
+            const box = new THREE.Box3().setFromObject(group);
+            const size = box.getSize(new THREE.Vector3());
+            const scale = 1.95 / Math.max(size.x, size.y, size.z);
+            group.scale.setScalar(scale);
+            const center = box.getCenter(new THREE.Vector3()).multiplyScalar(scale);
+            group.position.sub(center);
+            const pivot = new THREE.Group();
+            pivot.add(group);
+            return pivot;
+        }
+
+        const toys = [...document.querySelectorAll('.xm-slot[data-toy]')].map((slot, i) => {
+            const canvas = slot.querySelector('canvas.xm-toy');
+            const pivot = fit(MAKERS[slot.dataset.toy]());
+            pivot.visible = false;
+            scene.add(pivot);
+            const toy = { slot, canvas, ctx: canvas.getContext('2d'), pivot, yaw: (i % 2 ? -0.5 : 0.5), spin: 0.25 + (i % 3) * 0.06, drag: null };
+            // 横ドラッグでくるくる回す（縦はページのスクロール）
+            canvas.addEventListener('pointerdown', event => {
+                toy.drag = { x: event.clientX, yaw: toy.yaw };
+                canvas.setPointerCapture?.(event.pointerId);
+            });
+            canvas.addEventListener('pointermove', event => {
+                if (toy.drag) toy.yaw = toy.drag.yaw + (event.clientX - toy.drag.x) * 0.015;
+            });
+            const endDrag = () => { toy.drag = null; };
+            canvas.addEventListener('pointerup', endDrag);
+            canvas.addEventListener('pointercancel', endDrag);
+            return toy;
+        });
+
+        const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        let last = performance.now();
+        let acc = 0;
+        function frame(now) {
+            requestAnimationFrame(frame);
+            const dt = Math.min(0.1, (now - last) / 1000);
+            last = now;
+            acc += dt;
+            if (acc < 1 / 30) return; // 30fps で十分
+            const step = acc;
+            acc = 0;
+            for (const toy of toys) {
+                // 抽選画面で見えているものだけ描く（display:none だと大きさが0になる。左右の余白の飾りは position:fixed なので offsetParent では判定できない）
+                const rect = toy.canvas.getBoundingClientRect();
+                if (rect.bottom < 0 || rect.top > innerHeight || rect.width === 0) continue;
+                const px = Math.min(RENDER_SIZE, Math.round(rect.width * (window.devicePixelRatio || 1)));
+                if (toy.canvas.width !== px) { toy.canvas.width = px; toy.canvas.height = px; }
+                if (!toy.drag && !reduceMotion) toy.yaw += toy.spin * step;
+                toy.pivot.rotation.y = toy.yaw;
+                toy.pivot.rotation.x = 0.08 * Math.sin(now / 1300 + toy.spin * 10);
+                toy.pivot.visible = true;
+                renderer.render(scene, camera);
+                toy.pivot.visible = false;
+                toy.ctx.clearRect(0, 0, px, px);
+                toy.ctx.drawImage(renderer.domElement, 0, 0, px, px);
+            }
+        }
+        requestAnimationFrame(frame);
     </script>
     <script type="module" data-role="stock-cloud">
         // みんなの在庫: Googleでログインしたメンバーだけが、Firebase（Firestore）の同じ在庫を読み書きする。

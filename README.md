@@ -29,12 +29,14 @@
 - Font Awesome アイコン
 - M PLUS Rounded 1c フォント
 - 3Dキャラ表示: [model-viewer](https://modelviewer.dev/)（CDN）
+- 3Dの飾り: [three.js](https://threejs.org/)（CDN）
 
 ## クリスマス仕様
 
 - 雪の夜の背景（ふる雪・雪の丘ともみの木）、上につるした電飾とオーナメント、キャンディケーン柄の縁と金のリボンのカード、赤・緑・金の配色
 - ギャル2枚（サンタ服で手をふる子・キャンディケーンに乗る子）とロゴは Codex の画像生成で、ハロウィン版の画像を見本にして作りました（`assets/christmas/`。元画像は `素材/キャラ_クリスマス/`、`素材/ロゴ/ロゴ_クリスマス版.png`）
-- 3Dキャラはサンタとトナカイ（`assets/christmas/santa.glb`、`reindeer.glb`）。元データ（約1.5MB）はポリゴン数がもともと少ないので、テクスチャのWebP化とmeshopt圧縮だけで1体あたり約0.25MBにしています
+- くじを引く画面の飾り（プレゼント・雪だるま・ツリー）は three.js（CDN）で組み立てて、ぷかぷか浮かせています。WebGL は1つだけ作り、各飾りの canvas に写しています（iPad で WebGL をいくつも作ると重くなるため）
+- ヘッダーの3Dキャラはサンタとトナカイ（`assets/christmas/santa.glb`、`reindeer.glb`）。元データ（約1.5MB）はポリゴン数がもともと少ないので、テクスチャのWebP化とmeshopt圧縮だけで1体あたり約0.25MBにしています
 
 ```sh
 npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/xmassanta_サンタ.glb assets/christmas/santa.glb \
