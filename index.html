@@ -1715,7 +1715,7 @@
 
         /* ロゴの左右に浮かぶ飾り（ロゴ・電飾・オーナメントにかからない位置） */
         .xm-header-toys { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-        .xm-header-toys .xm-slot { position: absolute; width: clamp(64px, 8vw, 100px); pointer-events: auto; }
+        .xm-header-toys .xm-slot { position: absolute; width: clamp(72px, 9.5vw, 120px); pointer-events: auto; }
         .xm-header-toys .xm-slot::after { display: none; }
         .xm-header-toys .is-h1 { left: 17%; top: 64px; }
         .xm-header-toys .is-h2 { left: 4%; top: 170px; }
@@ -4872,15 +4872,16 @@
         };
     </script>
     <script type="module" data-role="christmas-toys">
-        // 抽選画面の飾り（プレゼント・雪だるま・ツリー）を three.js で組み立てる。
+        // クリスマスの飾り（プレゼント・雪だるま・ツリーなど）を three.js で組み立てる。
         // WebGL は1つだけ作り、飾りごとに描いた絵を各スロットの canvas に写す（iPad で WebGL をいくつも作ると重くなるため）
         import * as THREE from 'three';
         import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-        const RENDER_SIZE = 256;
+        const RENDER_SIZE = 320;
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setPixelRatio(1);
+        renderer.toneMapping = THREE.NeutralToneMapping;
         renderer.setSize(RENDER_SIZE, RENDER_SIZE, false);
         renderer.setClearColor(0x000000, 0);
 
@@ -4899,95 +4900,314 @@
         camera.position.set(0, 0.9, 5.2);
         camera.lookAt(0, 0, 0);
 
-        const mat = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, ...opts });
+        // ---------- 材質とテクスチャ ----------
         const mesh = (geometry, material, x = 0, y = 0, z = 0) => {
             const m = new THREE.Mesh(geometry, material);
             m.position.set(x, y, z);
             return m;
         };
+        const plastic = (color, opts = {}) => new THREE.MeshPhysicalMaterial({ color, roughness: 0.32, clearcoat: 0.6, clearcoatRoughness: 0.2, ...opts });
+        const satin = (color, opts = {}) => new THREE.MeshPhysicalMaterial({ color, roughness: 0.42, metalness: 0.05, side: THREE.DoubleSide, ...opts });
+        const gold = (opts = {}) => new THREE.MeshPhysicalMaterial({ color: 0xf6c453, metalness: 1, roughness: 0.2, ...opts });
+        const coal = new THREE.MeshPhysicalMaterial({ color: 0x1b1b22, roughness: 0.25, clearcoat: 1 });
 
-        function makePresent(boxColor, ribbonColor) {
+        // canvas に描いた絵をテクスチャにする
+        function canvasTexture(size, draw, repeat = [1, 1], color = true) {
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            draw(c.getContext('2d'), size);
+            const t = new THREE.CanvasTexture(c);
+            t.wrapS = t.wrapT = THREE.RepeatWrapping;
+            t.repeat.set(...repeat);
+            t.anisotropy = 4;
+            if (color) t.colorSpace = THREE.SRGBColorSpace;
+            return t;
+        }
+        // こまかい凹凸（雪・毛・クッキーの表面）
+        const noiseBump = canvasTexture(128, (x, s) => {
+            const img = x.createImageData(s, s);
+            for (let i = 0; i < img.data.length; i += 4) {
+                const v = 110 + Math.random() * 145;
+                img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+                img.data[i + 3] = 255;
+            }
+            x.putImageData(img, 0, 0);
+        }, [3, 3], false);
+        const snowMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.75, bumpMap: noiseBump, bumpScale: 0.6, sheen: 1, sheenColor: 0xd6ecff, emissive: 0xdfeefc, emissiveIntensity: 0.18 });
+        const furMat = new THREE.MeshPhysicalMaterial({ color: 0xfffdf8, roughness: 1, bumpMap: noiseBump, bumpScale: 1.4, sheen: 1, sheenColor: 0xffffff, emissive: 0xf2f2f2, emissiveIntensity: 0.12 });
+
+        // 包装紙のもよう
+        const PAPERS = {
+            dots: (bg, fg) => canvasTexture(256, (x, s) => {
+                x.fillStyle = bg; x.fillRect(0, 0, s, s);
+                x.fillStyle = fg;
+                for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+                    x.beginPath(); x.arc((c + (r % 2) * 0.5) * s / 4 + s / 8, r * s / 4 + s / 8, s / 22, 0, Math.PI * 2); x.fill();
+                }
+            }, [1.4, 1.4]),
+            stars: (bg, fg) => canvasTexture(256, (x, s) => {
+                x.fillStyle = bg; x.fillRect(0, 0, s, s);
+                x.fillStyle = fg;
+                const star = (cx, cy, r) => {
+                    x.beginPath();
+                    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5; const rr = i % 2 ? r * 0.45 : r; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+                    x.closePath(); x.fill();
+                };
+                [[0.2, 0.22, 0.09], [0.7, 0.18, 0.06], [0.45, 0.55, 0.1], [0.12, 0.78, 0.06], [0.82, 0.72, 0.08]].forEach(([a, b, r]) => star(a * s, b * s, r * s));
+            }, [1.3, 1.3]),
+            stripes: (bg, fg) => canvasTexture(256, (x, s) => {
+                x.fillStyle = bg; x.fillRect(0, 0, s, s);
+                x.fillStyle = fg;
+                for (let i = -s; i < s * 2; i += s / 4) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + s / 10, 0); x.lineTo(i + s / 10 + s, s); x.lineTo(i + s, s); x.closePath(); x.fill(); }
+            }, [1.2, 1.2]),
+            flakes: (bg, fg) => canvasTexture(256, (x, s) => {
+                x.fillStyle = bg; x.fillRect(0, 0, s, s);
+                x.strokeStyle = fg; x.lineWidth = s / 90; x.lineCap = 'round';
+                const flake = (cx, cy, r) => {
+                    for (let k = 0; k < 6; k++) {
+                        const a = k * Math.PI / 3;
+                        const ex = cx + Math.cos(a) * r, ey = cy + Math.sin(a) * r;
+                        x.beginPath(); x.moveTo(cx, cy); x.lineTo(ex, ey); x.stroke();
+                        const mx = cx + Math.cos(a) * r * 0.6, my = cy + Math.sin(a) * r * 0.6;
+                        [-0.6, 0.6].forEach(d => { x.beginPath(); x.moveTo(mx, my); x.lineTo(mx + Math.cos(a + d) * r * 0.3, my + Math.sin(a + d) * r * 0.3); x.stroke(); });
+                    }
+                };
+                [[0.25, 0.25, 0.11], [0.75, 0.3, 0.08], [0.5, 0.7, 0.12], [0.1, 0.75, 0.07], [0.88, 0.85, 0.07]].forEach(([a, b, r]) => flake(a * s, b * s, r * s));
+            }, [1.2, 1.2])
+        };
+
+        // ---------- リボン（布のような細い帯） ----------
+        // curve にそって、across の向きに幅 width の帯を作る
+        function ribbonStrip(curve, width, across, segments = 48) {
+            const pos = [], nor = [], uv = [], idx = [];
+            const a = across.clone().normalize();
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const p = curve.getPointAt(t), tan = curve.getTangentAt(t);
+                const n = new THREE.Vector3().crossVectors(tan, a).normalize();
+                const w = a.clone().multiplyScalar(width / 2);
+                pos.push(p.x - w.x, p.y - w.y, p.z - w.z, p.x + w.x, p.y + w.y, p.z + w.z);
+                nor.push(n.x, n.y, n.z, n.x, n.y, n.z);
+                uv.push(t, 0, t, 1);
+                if (i < segments) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+            }
+            const g = new THREE.BufferGeometry();
+            g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+            g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+            g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+            g.setIndex(idx);
+            return g;
+        }
+        const V = (x, y, z = 0) => new THREE.Vector3(x, y, z);
+        // ちょうちょ結び（正面向き。輪2つ・たれ2本・結び目）
+        function makeBow(material, size = 1) {
             const g = new THREE.Group();
-            const box = mat(boxColor, { roughness: 0.45 });
-            const ribbon = mat(ribbonColor, { roughness: 0.3, metalness: 0.35 });
-            g.add(mesh(new RoundedBoxGeometry(1.1, 0.9, 1.1, 4, 0.08), box, 0, -0.1, 0));
-            g.add(mesh(new RoundedBoxGeometry(1.22, 0.26, 1.22, 4, 0.07), box, 0, 0.42, 0));
-            // 箱と ふたに十字のリボン
-            g.add(mesh(new THREE.BoxGeometry(0.22, 0.92, 1.13), ribbon, 0, -0.1, 0));
-            g.add(mesh(new THREE.BoxGeometry(1.13, 0.92, 0.22), ribbon, 0, -0.1, 0));
-            g.add(mesh(new THREE.BoxGeometry(0.24, 0.28, 1.25), ribbon, 0, 0.42, 0));
-            g.add(mesh(new THREE.BoxGeometry(1.25, 0.28, 0.24), ribbon, 0, 0.42, 0));
-            // ちょうちょ結び
-            const loop = new THREE.TorusGeometry(0.2, 0.07, 12, 28);
-            const left = mesh(loop, ribbon, -0.2, 0.72, 0);
-            left.rotation.set(0, 0.35, 0.55);
-            const right = mesh(loop, ribbon, 0.2, 0.72, 0);
-            right.rotation.set(0, -0.35, -0.55);
-            g.add(left, right, mesh(new THREE.SphereGeometry(0.11, 16, 12), ribbon, 0, 0.62, 0));
+            const across = V(0, 0, 1);
+            [-1, 1].forEach(side => {
+                const loop = new THREE.CatmullRomCurve3([V(0, 0), V(side * 0.18, 0.2), V(side * 0.42, 0.26), V(side * 0.55, 0.12), V(side * 0.48, -0.04), V(side * 0.22, -0.03)], true, 'catmullrom', 0.5);
+                const m = new THREE.Mesh(ribbonStrip(loop, 0.2, across.clone().applyAxisAngle(V(0, 1, 0), side * 0.35), 64), material);
+                g.add(m);
+                const tail = new THREE.CatmullRomCurve3([V(0, -0.02), V(side * 0.1, -0.18, 0.04), V(side * 0.16, -0.36, 0.08), V(side * 0.26, -0.5, 0.06)]);
+                g.add(new THREE.Mesh(ribbonStrip(tail, 0.17, across, 24), material));
+            });
+            const knot = mesh(new THREE.SphereGeometry(0.1, 20, 14), material);
+            knot.scale.set(1, 0.9, 0.75);
+            g.add(knot);
+            g.scale.setScalar(size);
             return g;
         }
 
+        // ヒイラギの葉（とげのある葉）と赤い実
+        function hollyLeafGeometry() {
+            const s = new THREE.Shape();
+            s.moveTo(0, 0);
+            const pts = [[0.07, 0.06], [0.13, 0.05], [0.12, 0.14], [0.19, 0.17], [0.14, 0.26], [0.19, 0.33], [0.1, 0.36], [0, 0.48]];
+            pts.forEach(([x, y]) => s.lineTo(x, y));
+            [...pts].reverse().slice(1).forEach(([x, y]) => s.lineTo(-x, y));
+            s.lineTo(0, 0);
+            const geo = new THREE.ExtrudeGeometry(s, { depth: 0.012, bevelEnabled: true, bevelSize: 0.01, bevelThickness: 0.012, bevelSegments: 2 });
+            geo.translate(0, 0, -0.006);
+            return geo;
+        }
+        const HOLLY = hollyLeafGeometry();
+        function makeHolly(scale = 1) {
+            const g = new THREE.Group();
+            const leaf = plastic(0x177a4d, { roughness: 0.4, clearcoat: 1 });
+            [[-0.8, 0.25], [0.8, 0.25], [0.1, -0.1]].forEach(([rz, rx]) => {
+                const m = new THREE.Mesh(HOLLY, leaf);
+                m.rotation.set(rx, 0, rz);
+                g.add(m);
+            });
+            const berry = plastic(0xd8152f, { roughness: 0.15, clearcoat: 1 });
+            [[-0.04, 0.03, 0.06], [0.05, 0.04, 0.05], [0.0, -0.03, 0.08]].forEach(([x, y, z]) => g.add(mesh(new THREE.SphereGeometry(0.05, 16, 12), berry, x, y, z)));
+            g.scale.setScalar(scale);
+            return g;
+        }
+
+        // ---------- プレゼント ----------
+        function makePresent(paper, ribbonColor) {
+            const g = new THREE.Group();
+            const paperMat = new THREE.MeshPhysicalMaterial({ map: paper, roughness: 0.45, clearcoat: 0.3 });
+            const ribbon = satin(ribbonColor);
+            const ribbonSolid = satin(ribbonColor, { side: THREE.FrontSide });
+            g.add(mesh(new RoundedBoxGeometry(1.1, 0.86, 1.1, 5, 0.06), paperMat, 0, -0.12, 0));
+            g.add(mesh(new RoundedBoxGeometry(1.2, 0.24, 1.2, 5, 0.06), paperMat, 0, 0.4, 0));
+            // 十字のリボン（箱とふたの表面にぴったり）
+            g.add(mesh(new RoundedBoxGeometry(0.2, 0.88, 1.13, 2, 0.02), ribbonSolid, 0, -0.12, 0));
+            g.add(mesh(new RoundedBoxGeometry(1.13, 0.88, 0.2, 2, 0.02), ribbonSolid, 0, -0.12, 0));
+            g.add(mesh(new RoundedBoxGeometry(0.21, 0.26, 1.23, 2, 0.02), ribbonSolid, 0, 0.4, 0));
+            g.add(mesh(new RoundedBoxGeometry(1.23, 0.26, 0.21, 2, 0.02), ribbonSolid, 0, 0.4, 0));
+            const bow = makeBow(ribbon, 1.05);
+            bow.position.set(0, 0.62, 0.05);
+            bow.rotation.x = -0.25;
+            g.add(bow);
+            // なふだ
+            const tag = mesh(new RoundedBoxGeometry(0.2, 0.28, 0.015, 2, 0.01), new THREE.MeshPhysicalMaterial({ color: 0xfff6e0, roughness: 0.8 }), 0.32, 0.1, 0.57);
+            tag.rotation.z = -0.25;
+            g.add(tag, mesh(new THREE.SphereGeometry(0.02, 8, 6), coal, 0.29, 0.21, 0.58));
+            return g;
+        }
+
+        // ---------- 雪だるま ----------
         function makeSnowman() {
             const g = new THREE.Group();
-            const snow = mat(0xffffff, { roughness: 0.85, emissive: 0xdde8f5, emissiveIntensity: 0.25 });
-            const coal = mat(0x1d1d24, { roughness: 0.4 });
-            g.add(mesh(new THREE.SphereGeometry(0.55, 32, 24), snow, 0, -0.45, 0));
-            g.add(mesh(new THREE.SphereGeometry(0.4, 32, 24), snow, 0, 0.3, 0));
-            // 顔: 目・にんじんの鼻・ほっぺ・にっこり口
-            g.add(mesh(new THREE.SphereGeometry(0.05, 12, 10), coal, -0.13, 0.4, 0.35));
-            g.add(mesh(new THREE.SphereGeometry(0.05, 12, 10), coal, 0.13, 0.4, 0.35));
-            const nose = mesh(new THREE.ConeGeometry(0.06, 0.3, 16), mat(0xff8a1f), 0, 0.3, 0.5);
+            const ball = (r, y) => { const m = mesh(new THREE.SphereGeometry(r, 48, 32), snowMat, 0, y, 0); m.scale.y = 0.92; return m; };
+            g.add(ball(0.56, -0.62), ball(0.42, 0.02), ball(0.32, 0.56));
+            // 顔
+            [-1, 1].forEach(s => {
+                g.add(mesh(new THREE.SphereGeometry(0.045, 16, 12), coal, s * 0.11, 0.64, 0.28));
+                g.add(mesh(new THREE.SphereGeometry(0.014, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }), s * 0.11 + 0.015, 0.66, 0.325));
+                const cheek = mesh(new THREE.CircleGeometry(0.055, 20), new THREE.MeshBasicMaterial({ color: 0xff8fa3, transparent: true, opacity: 0.55 }), s * 0.19, 0.53, 0.262);
+                cheek.lookAt(s * 0.6, 0.53, 1.2);
+                g.add(cheek);
+            });
+            for (let i = -2; i <= 2; i++) g.add(mesh(new THREE.SphereGeometry(0.022, 10, 8), coal, i * 0.055, 0.46 + i * i * 0.011, 0.295));
+            // にんじんの鼻（すじ入り）
+            const carrot = new THREE.LatheGeometry([0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3].map((y, i) => V(Math.max(0.004, 0.055 * (1 - y / 0.3)) * (i % 2 ? 0.92 : 1), y)), 18);
+            const nose = mesh(carrot, plastic(0xff7a1a, { roughness: 0.6, clearcoat: 0.2 }), 0, 0.56, 0.29);
             nose.rotation.x = Math.PI / 2;
             g.add(nose);
-            const cheek = mat(0xff9aa8, { roughness: 0.9 });
-            g.add(mesh(new THREE.SphereGeometry(0.06, 12, 10), cheek, -0.24, 0.27, 0.3));
-            g.add(mesh(new THREE.SphereGeometry(0.06, 12, 10), cheek, 0.24, 0.27, 0.3));
-            for (let i = -2; i <= 2; i++) {
-                g.add(mesh(new THREE.SphereGeometry(0.025, 8, 6), coal, i * 0.06, 0.17 + i * i * 0.012, 0.37));
-            }
-            // 赤いマフラー
-            const scarfMat = mat(0xd7263d, { roughness: 0.7 });
-            const scarf = mesh(new THREE.TorusGeometry(0.33, 0.08, 12, 32), scarfMat, 0, 0.0, 0);
-            scarf.rotation.x = Math.PI / 2;
-            g.add(scarf);
-            const tail = mesh(new RoundedBoxGeometry(0.16, 0.42, 0.08, 2, 0.03), scarfMat, 0.2, -0.18, 0.4);
-            tail.rotation.z = 0.25;
+            // ボタン
+            [0.16, 0.0, -0.16].forEach(y => g.add(mesh(new THREE.SphereGeometry(0.04, 14, 10), coal, 0, y, 0.39 + (y < 0 ? -0.01 : 0))));
+            // しましまのマフラー（あみ目もよう）
+            const knit = canvasTexture(128, (x, s) => {
+                x.fillStyle = '#d7263d'; x.fillRect(0, 0, s, s);
+                x.fillStyle = '#ffffff'; x.fillRect(0, s * 0.42, s, s * 0.16);
+                x.strokeStyle = 'rgba(0,0,0,0.18)'; x.lineWidth = 2;
+                for (let i = 0; i < s; i += 8) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 4, s); x.stroke(); }
+            }, [8, 1]);
+            const scarfMat = new THREE.MeshPhysicalMaterial({ map: knit, roughness: 0.9, sheen: 1, sheenColor: 0xffc4cc, bumpMap: noiseBump, bumpScale: 0.6 });
+            const wrap = mesh(new THREE.TorusGeometry(0.3, 0.085, 16, 48), scarfMat, 0, 0.29, 0);
+            wrap.rotation.x = Math.PI / 2;
+            wrap.scale.set(1, 1, 1.2);
+            g.add(wrap);
+            const tail = mesh(new RoundedBoxGeometry(0.15, 0.46, 0.06, 3, 0.025), scarfMat, 0.2, 0.06, 0.34);
+            tail.rotation.set(0.2, 0, 0.18);
             g.add(tail);
-            // おなかのボタン
-            [-0.25, -0.5].forEach(y => g.add(mesh(new THREE.SphereGeometry(0.055, 12, 10), mat(0x0f6b4a), 0, y, 0.53)));
-            // サンタ帽（先っちょは1本）
-            const hat = new THREE.Group();
-            hat.add(mesh(new THREE.ConeGeometry(0.3, 0.55, 24), mat(0xd7263d), 0, 0.3, 0));
-            const brim = mesh(new THREE.TorusGeometry(0.3, 0.08, 12, 32), snow, 0, 0.03, 0);
-            brim.rotation.x = Math.PI / 2;
-            hat.add(brim, mesh(new THREE.SphereGeometry(0.1, 16, 12), snow, 0, 0.6, 0));
-            hat.position.set(0.04, 0.6, 0);
-            hat.rotation.z = -0.3;
-            g.add(hat);
-            // 木の枝のうで
-            const wood = mat(0x7a4a26, { roughness: 0.9 });
-            [-1, 1].forEach(side => {
-                const arm = mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.6, 8), wood, side * 0.68, -0.25, 0);
-                arm.rotation.z = side * -1.0;
+            for (let k = 0; k < 4; k++) g.add(mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.06, 6), scarfMat, 0.21 + k * 0.035 - 0.05, -0.2, 0.39));
+            // 枝のうで（小枝つき）
+            const wood = new THREE.MeshPhysicalMaterial({ color: 0x6b3f1f, roughness: 0.9, bumpMap: noiseBump, bumpScale: 0.8 });
+            [-1, 1].forEach(s => {
+                const arm = new THREE.Group();
+                arm.add(mesh(new THREE.CylinderGeometry(0.02, 0.032, 0.62, 8), wood, 0, 0.31, 0));
+                const twig = mesh(new THREE.CylinderGeometry(0.012, 0.018, 0.2, 6), wood, 0.06, 0.5, 0);
+                twig.rotation.z = -0.7;
+                const twig2 = mesh(new THREE.CylinderGeometry(0.01, 0.016, 0.16, 6), wood, -0.05, 0.6, 0);
+                twig2.rotation.z = 0.6;
+                arm.add(twig, twig2);
+                arm.position.set(s * 0.36, 0.08, 0);
+                arm.rotation.z = s * -1.05;
                 g.add(arm);
             });
+            // サンタ帽（先は1本・ポンポン1つ）
+            const hat = new THREE.Group();
+            const felt = new THREE.MeshPhysicalMaterial({ color: 0xd7263d, roughness: 0.8, sheen: 1, sheenColor: 0xff9aa8 });
+            const cone = new THREE.CatmullRomCurve3([V(0, 0), V(0.03, 0.16), V(0.13, 0.28), V(0.27, 0.32), V(0.38, 0.22), V(0.43, 0.06)]);
+            const hatGeo = new THREE.TubeGeometry(cone, 32, 1, 24, false);
+            const p = hatGeo.attributes.position, tmp = V(0, 0);
+            for (let i = 0; i < p.count; i++) {
+                const t = Math.floor(i / 25) / 32;
+                const c = cone.getPointAt(t);
+                tmp.set(p.getX(i), p.getY(i), p.getZ(i)).sub(c).multiplyScalar(0.27 * Math.pow(1 - t, 1.3) + 0.03).add(c);
+                p.setXYZ(i, tmp.x, tmp.y, tmp.z);
+            }
+            hatGeo.computeVertexNormals();
+            hat.add(new THREE.Mesh(hatGeo, felt));
+            const brim = mesh(new THREE.TorusGeometry(0.27, 0.07, 16, 40), furMat, 0, 0.0, 0);
+            brim.rotation.x = Math.PI / 2;
+            hat.add(brim, mesh(new THREE.SphereGeometry(0.085, 20, 14), furMat, 0.43, 0.03, 0));
+            hat.position.set(0, 0.8, 0);
+            hat.rotation.z = 0.08;
+            g.add(hat);
             return g;
         }
 
+        // ---------- ツリー ----------
         function makeTree() {
             const g = new THREE.Group();
-            const green = mat(0x1f8a5a, { roughness: 0.6 });
-            [[0.62, 0.7, -0.35], [0.5, 0.6, 0.05], [0.36, 0.5, 0.42]].forEach(([r, h, y]) => g.add(mesh(new THREE.ConeGeometry(r, h, 28), green, 0, y, 0)));
-            g.add(mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.25, 16), mat(0x7a4a26), 0, -0.78, 0));
-            // オーナメント
-            const colors = [0xd7263d, 0xf2b632, 0x59b8ff, 0xffffff, 0xd7263d, 0xf2b632];
-            [[-0.38, -0.5, 0.36], [0.32, -0.42, 0.42], [0.02, -0.55, 0.55], [-0.24, -0.05, 0.38], [0.28, -0.02, 0.32], [0.05, 0.3, 0.3]].forEach(([x, y, z], i) => {
-                g.add(mesh(new THREE.SphereGeometry(0.075, 14, 10), mat(colors[i], { roughness: 0.2, metalness: 0.4 }), x, y, z));
+            const needles = canvasTexture(128, (x, s) => {
+                x.fillStyle = '#15693f'; x.fillRect(0, 0, s, s);
+                for (let i = 0; i < 260; i++) {
+                    x.strokeStyle = Math.random() < 0.6 ? 'rgba(6,50,28,0.6)' : 'rgba(90,180,120,0.3)';
+                    x.lineWidth = 1.5;
+                    const px = Math.random() * s, py = Math.random() * s;
+                    x.beginPath(); x.moveTo(px, py); x.lineTo(px + (Math.random() - 0.5) * 6, py + 8); x.stroke();
+                }
+            }, [4, 2]);
+            const green = new THREE.MeshPhysicalMaterial({ map: needles, roughness: 0.75, bumpMap: noiseBump, bumpScale: 0.8, sheen: 0.6, sheenColor: 0x9be8b8 });
+            // 段ごとに、すそが枝先みたいにぎざぎざの円すい
+            const tiers = [[0.78, 0.62, -0.55], [0.64, 0.56, -0.18], [0.5, 0.5, 0.16], [0.35, 0.44, 0.46]];
+            tiers.forEach(([r, h, y], k) => {
+                const geo = new THREE.ConeGeometry(r, h, 64, 3, true);
+                const p = geo.attributes.position;
+                for (let i = 0; i < p.count; i++) {
+                    const vy = p.getY(i);
+                    if (vy > -h / 2 + 0.001) continue;
+                    const a = Math.atan2(p.getZ(i), p.getX(i));
+                    const wave = Math.sin(a * (9 - k));
+                    const rr = r * (1 + 0.07 * wave);
+                    p.setXYZ(i, Math.cos(a) * rr, vy - 0.05 * (wave + 1) / 2, Math.sin(a) * rr);
+                }
+                geo.computeVertexNormals();
+                const tier = mesh(geo, green, 0, y, 0);
+                g.add(tier);
+                // 底のふた
+                const cap = mesh(new THREE.CircleGeometry(r * 0.96, 48), green, 0, y - h / 2 + 0.01, 0);
+                cap.rotation.x = Math.PI / 2;
+                g.add(cap);
             });
-            // てっぺんの星
-            const star = new THREE.ExtrudeGeometry(makeStarShape(0.22, 0.09), { depth: 0.08, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2 });
+            // 金のモールと電飾: 段のすそに沿って、たるませながら1周
+            const bulbColors = [0xff4d5e, 0xffd447, 0x43d68f, 0x59b8ff, 0xff8ad8];
+            tiers.forEach(([r, h, y], k) => {
+                const yb = y - h / 2 + 0.1, rr = r * 0.86, loops = 7 - k;
+                const festoon = new THREE.CatmullRomCurve3(Array.from({ length: 96 }, (_, i) => {
+                    const a = (i / 96) * Math.PI * 2;
+                    const sag = Math.abs(Math.sin(a * loops / 2));
+                    return V(Math.cos(a) * rr * (1 + 0.04 * sag), yb - 0.06 * sag, Math.sin(a) * rr * (1 + 0.04 * sag));
+                }), true);
+                g.add(new THREE.Mesh(new THREE.TubeGeometry(festoon, 200, 0.02, 8, true), gold({ roughness: 0.3 })));
+                const n = 10 - k * 2;
+                for (let i = 0; i < n; i++) {
+                    const a = (i / n) * Math.PI * 2 + k * 0.4, c = bulbColors[(i + k) % bulbColors.length];
+                    g.add(mesh(new THREE.SphereGeometry(0.03, 10, 8), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 1.8 }), Math.cos(a) * (r * (0.5 + 0.06 / h) + 0.01), y - 0.06, Math.sin(a) * (r * (0.5 + 0.06 / h) + 0.01)));
+                }
+            });
+            const ballColors = [0xd7263d, 0xf6c453, 0x2f6fd6, 0xd7263d, 0xffffff, 0xf6c453, 0xd7263d, 0x2f6fd6];
+            [[0.4, -0.92, 0.74], [1.6, -0.92, 0.72], [2.8, -0.9, 0.74], [4.0, -0.92, 0.72], [5.2, -0.92, 0.74], [1.0, -0.54, 0.6], [2.4, -0.54, 0.6], [4.4, -0.56, 0.6], [1.8, -0.2, 0.46], [3.6, -0.2, 0.46], [5.6, -0.2, 0.46], [0.6, 0.14, 0.32], [3.0, 0.14, 0.32]].forEach(([a, y, r], i) => {
+                const c = ballColors[i % ballColors.length];
+                g.add(mesh(new THREE.SphereGeometry(0.06, 18, 14), plastic(c, { metalness: 0.35, roughness: 0.15, clearcoat: 1 }), Math.cos(a) * r, y, Math.sin(a) * r));
+            });
+            // てっぺんの星（光る）
+            const star = new THREE.ExtrudeGeometry(makeStarShape(0.2, 0.085), { depth: 0.05, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 3 });
             star.center();
-            g.add(mesh(star, mat(0xffd34d, { metalness: 0.5, roughness: 0.25, emissive: 0xffb300, emissiveIntensity: 0.35 }), 0, 0.82, 0));
+            g.add(mesh(star, gold({ emissive: 0xffc23a, emissiveIntensity: 0.6, roughness: 0.15 }), 0, 0.84, 0));
+            // みき・植木ばち
+            g.add(mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.2, 16), new THREE.MeshPhysicalMaterial({ color: 0x7a4a26, roughness: 0.9 }), 0, -0.9, 0));
+            const pot = new THREE.LatheGeometry([V(0, 0), V(0.2, 0), V(0.25, 0.22), V(0.27, 0.24), V(0.27, 0.28), V(0, 0.28)], 32);
+            g.add(mesh(pot, plastic(0xd7263d), 0, -1.22, 0));
+            const band = mesh(new THREE.TorusGeometry(0.262, 0.018, 8, 40), gold(), 0, -0.97, 0);
+            band.rotation.x = Math.PI / 2;
+            g.add(band);
             return g;
         }
 
@@ -4996,179 +5216,238 @@
             for (let i = 0; i < 10; i++) {
                 const r = i % 2 ? inner : outer;
                 const a = Math.PI / 2 + (i * Math.PI) / 5;
-                i ? shape.lineTo(Math.cos(a) * r, Math.sin(a) * r) : shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+                // 角を少し丸める
+                const px = Math.cos(a) * r, py = Math.sin(a) * r;
+                i ? shape.lineTo(px, py) : shape.moveTo(px, py);
             }
+            shape.closePath();
             return shape;
         }
 
+        // ---------- 星（にっこり顔） ----------
         function makeStar() {
-            const geo = new THREE.ExtrudeGeometry(makeStarShape(0.9, 0.42), { depth: 0.22, bevelEnabled: true, bevelSize: 0.1, bevelThickness: 0.12, bevelSegments: 5 });
+            const geo = new THREE.ExtrudeGeometry(makeStarShape(0.9, 0.44), { depth: 0.16, bevelEnabled: true, bevelSize: 0.16, bevelThickness: 0.18, bevelSegments: 8 });
             geo.center();
             const g = new THREE.Group();
-            g.add(mesh(geo, mat(0xffd34d, { metalness: 0.45, roughness: 0.25, emissive: 0xffa000, emissiveIntensity: 0.3 })));
-            // にっこり顔
-            const ink = mat(0x5a3200, { roughness: 0.5 });
-            g.add(mesh(new THREE.SphereGeometry(0.06, 12, 10), ink, -0.17, 0.06, 0.24));
-            g.add(mesh(new THREE.SphereGeometry(0.06, 12, 10), ink, 0.17, 0.06, 0.24));
-            const smile = mesh(new THREE.TorusGeometry(0.11, 0.025, 8, 20, Math.PI), ink, 0, -0.06, 0.24);
+            g.add(mesh(geo, gold({ color: 0xffd04d, metalness: 0.55, roughness: 0.18, clearcoat: 1, emissive: 0xffa000, emissiveIntensity: 0.15 })));
+            const z = 0.27;
+            [-1, 1].forEach(s => {
+                const eye = mesh(new THREE.SphereGeometry(0.075, 16, 12), coal, s * 0.19, 0.08, z);
+                eye.scale.set(0.8, 1.1, 0.5);
+                g.add(eye, mesh(new THREE.SphereGeometry(0.022, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }), s * 0.19 + 0.02, 0.12, z + 0.035));
+                const cheek = mesh(new THREE.CircleGeometry(0.07, 20), new THREE.MeshBasicMaterial({ color: 0xff7f6e, transparent: true, opacity: 0.6 }), s * 0.33, -0.04, z - 0.005);
+                g.add(cheek);
+            });
+            const smile = mesh(new THREE.TorusGeometry(0.09, 0.022, 8, 20, Math.PI), coal, 0, -0.03, z);
             smile.rotation.z = Math.PI;
             g.add(smile);
+            // まわりのキラキラ
+            const sparkle = new THREE.ExtrudeGeometry(makeStarShape(0.12, 0.03), { depth: 0.02, bevelEnabled: false });
+            sparkle.center();
+            [[-0.9, 0.8], [0.95, 0.55], [0.7, -0.95]].forEach(([x, y]) => g.add(mesh(sparkle, new THREE.MeshBasicMaterial({ color: 0xfff3b0 }), x, y, 0)));
             return g;
         }
 
-        // 赤白しましまのテクスチャ（キャンディケーン用）
-        function stripeTexture() {
-            const c = document.createElement('canvas');
-            c.width = 128; c.height = 128;
-            const x = c.getContext('2d');
-            x.fillStyle = '#ffffff'; x.fillRect(0, 0, 128, 128);
-            x.fillStyle = '#d7263d';
-            for (let i = -128; i < 256; i += 64) {
-                x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 28, 0); x.lineTo(i + 28 + 128, 128); x.lineTo(i + 128, 128); x.closePath(); x.fill();
-            }
-            const t = new THREE.CanvasTexture(c);
-            t.wrapS = t.wrapT = THREE.RepeatWrapping;
-            t.repeat.set(10, 1);
-            t.colorSpace = THREE.SRGBColorSpace;
-            return t;
-        }
-
+        // ---------- キャンディケーン ----------
         function makeCandyCane() {
+            const tex = canvasTexture(256, (x, s) => {
+                x.fillStyle = '#ffffff'; x.fillRect(0, 0, s, s);
+                const band = (off, w, col) => {
+                    x.fillStyle = col;
+                    for (let i = -s; i < s * 2; i += s / 2) { x.beginPath(); x.moveTo(i + off, 0); x.lineTo(i + off + w, 0); x.lineTo(i + off + w + s, s); x.lineTo(i + off + s, s); x.closePath(); x.fill(); }
+                };
+                band(0, s * 0.16, '#d7263d');
+                band(s * 0.2, s * 0.03, '#1f9a5a');
+                band(s * 0.26, s * 0.05, '#d7263d');
+            }, [7, 1]);
             const path = new THREE.CurvePath();
-            path.add(new THREE.LineCurve3(new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 0.45, 0)));
-            path.add(new THREE.CubicBezierCurve3(new THREE.Vector3(0, 0.45, 0), new THREE.Vector3(0, 0.95, 0), new THREE.Vector3(0.6, 0.95, 0), new THREE.Vector3(0.6, 0.45, 0)));
-            path.add(new THREE.LineCurve3(new THREE.Vector3(0.6, 0.45, 0), new THREE.Vector3(0.6, 0.3, 0)));
+            path.add(new THREE.LineCurve3(V(0, -0.75), V(0, 0.4)));
+            path.add(new THREE.CubicBezierCurve3(V(0, 0.4), V(0, 0.98), V(0.66, 0.98), V(0.66, 0.4)));
+            path.add(new THREE.LineCurve3(V(0.66, 0.4), V(0.66, 0.25)));
             const g = new THREE.Group();
-            g.add(new THREE.Mesh(new THREE.TubeGeometry(path, 120, 0.16, 20, false), new THREE.MeshStandardMaterial({ map: stripeTexture(), roughness: 0.25 })));
-            const capMat = mat(0xffffff, { roughness: 0.25 });
-            g.add(mesh(new THREE.SphereGeometry(0.16, 16, 12), capMat, 0, -1, 0), mesh(new THREE.SphereGeometry(0.16, 16, 12), mat(0xd7263d, { roughness: 0.25 }), 0.6, 0.3, 0));
-            // 緑のリボン
-            const ribbon = mat(0x168055, { roughness: 0.35 });
-            const loop = new THREE.TorusGeometry(0.13, 0.05, 10, 24);
-            const l = mesh(loop, ribbon, -0.14, 0.15, 0.08); l.rotation.set(0, 0.3, 0.6);
-            const r = mesh(loop, ribbon, 0.14, 0.15, 0.08); r.rotation.set(0, -0.3, -0.6);
-            g.add(l, r, mesh(new THREE.SphereGeometry(0.07, 12, 10), ribbon, 0, 0.1, 0.1));
+            const caneMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.15, clearcoat: 1, clearcoatRoughness: 0.05 });
+            g.add(new THREE.Mesh(new THREE.TubeGeometry(path, 160, 0.2, 28, false), caneMat));
+            const end = new THREE.SphereGeometry(0.2, 24, 16);
+            g.add(mesh(end, caneMat, 0, -0.75, 0), mesh(end, caneMat, 0.66, 0.25, 0));
+            const bow = makeBow(satin(0x177a4d), 0.7);
+            bow.position.set(0.02, 0.12, 0.21);
+            g.add(bow);
+            const holly = makeHolly(0.55);
+            holly.position.set(0.02, 0.22, 0.26);
+            g.add(holly);
             return g;
         }
 
-        function makeOrnament(color, bandColor) {
-            const g = new THREE.Group();
-            g.add(mesh(new THREE.SphereGeometry(0.7, 40, 28), mat(color, { roughness: 0.18, metalness: 0.45 })));
-            const band = mat(bandColor, { roughness: 0.3, metalness: 0.5 });
-            [-0.18, 0.18].forEach(y => {
-                const ring = mesh(new THREE.TorusGeometry(Math.sqrt(0.49 - y * y) + 0.005, 0.035, 10, 48), band, 0, y, 0);
-                ring.rotation.x = Math.PI / 2;
-                g.add(ring);
+        // ---------- オーナメント ----------
+        function makeOrnament(base, accent) {
+            const tex = canvasTexture(512, (x, s) => {
+                const grd = x.createLinearGradient(0, 0, 0, s);
+                grd.addColorStop(0, base); grd.addColorStop(1, base);
+                x.fillStyle = grd; x.fillRect(0, 0, s, s);
+                // 金のラメ帯
+                x.fillStyle = accent;
+                x.fillRect(0, s * 0.36, s, s * 0.035);
+                x.fillRect(0, s * 0.6, s, s * 0.035);
+                for (let i = 0; i < 400; i++) { x.fillStyle = `rgba(255,240,190,${Math.random() * 0.9})`; x.fillRect(Math.random() * s, s * 0.405 + Math.random() * s * 0.19, 2, 2); }
+                // 雪の結晶
+                x.strokeStyle = '#ffffff'; x.lineWidth = 5; x.lineCap = 'round';
+                for (let k = 0; k < 4; k++) {
+                    const cx = (k + 0.5) * s / 4, cy = s * 0.5, r = s * 0.06;
+                    for (let j = 0; j < 6; j++) { const a = j * Math.PI / 3; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); x.stroke(); }
+                }
             });
-            const gold = mat(0xf2b632, { roughness: 0.25, metalness: 0.7 });
-            g.add(mesh(new THREE.CylinderGeometry(0.17, 0.2, 0.18, 20), gold, 0, 0.74, 0));
-            const hook = mesh(new THREE.TorusGeometry(0.1, 0.025, 8, 20), gold, 0, 0.92, 0);
-            g.add(hook);
-            // 白い雪の結晶もよう
-            const snow = mat(0xffffff, { roughness: 0.4 });
-            for (let k = 0; k < 3; k++) {
-                const bar = mesh(new THREE.BoxGeometry(0.24, 0.035, 0.03), snow, 0, 0, 0.69);
-                bar.rotation.z = (k * Math.PI) / 3;
-                g.add(bar);
-            }
+            tex.wrapT = THREE.ClampToEdgeWrapping;
+            const g = new THREE.Group();
+            g.add(mesh(new THREE.SphereGeometry(0.7, 64, 40), new THREE.MeshPhysicalMaterial({ map: tex, metalness: 0.3, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.03 })));
+            // 口金（みぞ入り）と針金の輪
+            const capPts = [V(0, 0), V(0.2, 0), V(0.21, 0.03), V(0.2, 0.05), V(0.21, 0.08), V(0.2, 0.1), V(0.21, 0.13), V(0.19, 0.16), V(0.12, 0.2), V(0, 0.2)];
+            g.add(mesh(new THREE.LatheGeometry(capPts, 32), gold(), 0, 0.64, 0));
+            g.add(mesh(new THREE.TorusGeometry(0.09, 0.016, 8, 24), gold(), 0, 0.92, 0));
             return g;
         }
 
+        // ---------- ベル ----------
         function makeBell() {
             const g = new THREE.Group();
-            const pts = [[0, 0.62], [0.12, 0.6], [0.24, 0.5], [0.3, 0.3], [0.34, 0.05], [0.42, -0.2], [0.56, -0.38], [0.6, -0.46], [0.52, -0.48], [0, -0.44]].map(([x, y]) => new THREE.Vector2(x, y));
-            const gold = mat(0xf2b632, { roughness: 0.22, metalness: 0.75 });
-            g.add(new THREE.Mesh(new THREE.LatheGeometry(pts, 40), gold));
-            g.add(mesh(new THREE.SphereGeometry(0.12, 16, 12), gold, 0, -0.52, 0));
-            // 赤いリボンとヒイラギ
-            const red = mat(0xd7263d, { roughness: 0.35 });
-            const loop = new THREE.TorusGeometry(0.17, 0.06, 10, 24);
-            const l = mesh(loop, red, -0.2, 0.68, 0); l.rotation.set(0, 0.3, 0.6);
-            const r = mesh(loop, red, 0.2, 0.68, 0); r.rotation.set(0, -0.3, -0.6);
-            g.add(l, r, mesh(new THREE.SphereGeometry(0.09, 12, 10), red, 0, 0.64, 0));
-            const leaf = mat(0x168055, { roughness: 0.5 });
-            [-1, 1].forEach(side => {
-                const lf = mesh(new THREE.SphereGeometry(0.16, 16, 8), leaf, side * 0.16, 0.56, 0.12);
-                lf.scale.set(1, 0.42, 0.25);
-                lf.rotation.z = side * -0.5;
-                g.add(lf);
-            });
-            [[-0.04, 0.6], [0.05, 0.57]].forEach(([x, y]) => g.add(mesh(new THREE.SphereGeometry(0.05, 10, 8), red, x, y, 0.2)));
+            const prof = [[0, 0.6], [0.1, 0.59], [0.2, 0.54], [0.27, 0.44], [0.3, 0.3], [0.32, 0.12], [0.36, -0.06], [0.44, -0.22], [0.55, -0.34], [0.62, -0.4], [0.63, -0.44], [0.6, -0.46], [0.5, -0.44], [0.4, -0.42], [0, -0.38]];
+            const metal = gold({ roughness: 0.16 });
+            g.add(new THREE.Mesh(new THREE.LatheGeometry(prof.map(([x, y]) => new THREE.Vector2(x, y)), 64), metal));
+            const band = mesh(new THREE.TorusGeometry(0.355, 0.035, 12, 64), metal, 0, -0.04, 0);
+            band.rotation.x = Math.PI / 2;
+            g.add(band);
+            g.add(mesh(new THREE.SphereGeometry(0.12, 20, 14), metal, 0, -0.48, 0));
+            g.add(mesh(new THREE.TorusGeometry(0.08, 0.02, 8, 20), metal, 0, 0.66, 0));
+            const bow = makeBow(satin(0xd7263d), 0.85);
+            bow.position.set(0, 0.6, 0.18);
+            g.add(bow);
+            const holly = makeHolly(0.75);
+            holly.position.set(0, 0.62, 0.24);
+            g.add(holly);
             return g;
         }
 
-        function makeGingerbread() {
-            const g = new THREE.Group();
-            const cookie = mat(0xb9773d, { roughness: 0.75 });
-            const flat = (m, sz = 0.45) => { m.scale.z = sz; return m; };
-            g.add(flat(mesh(new THREE.SphereGeometry(0.32, 28, 20), cookie, 0, 0.62, 0)));
-            g.add(flat(mesh(new THREE.CapsuleGeometry(0.3, 0.36, 8, 20), cookie, 0, 0.0, 0)));
-            [-1, 1].forEach(side => {
-                const arm = flat(mesh(new THREE.CapsuleGeometry(0.12, 0.38, 6, 14), cookie, side * 0.42, 0.18, 0));
-                arm.rotation.z = side * 1.15;
-                const leg = flat(mesh(new THREE.CapsuleGeometry(0.14, 0.34, 6, 14), cookie, side * 0.19, -0.52, 0));
-                leg.rotation.z = side * 0.25;
-                g.add(arm, leg);
-            });
-            // アイシング・ボタン・顔
-            const icing = mat(0xffffff, { roughness: 0.5 });
-            [-1, 1].forEach(side => {
-                const wave = mesh(new THREE.TorusGeometry(0.08, 0.018, 6, 16, Math.PI), icing, side * 0.56, 0.26, 0.07);
-                wave.rotation.z = side * 1.15;
-                g.add(wave);
-                g.add(mesh(new THREE.SphereGeometry(0.035, 10, 8), mat(0x1d1d24), side * 0.1, 0.68, 0.14));
-            });
-            const smile = mesh(new THREE.TorusGeometry(0.1, 0.02, 8, 18, Math.PI), icing, 0, 0.58, 0.14);
-            smile.rotation.z = Math.PI;
-            g.add(smile);
-            [0xd7263d, 0x168055, 0xd7263d].forEach((c, k) => g.add(mesh(new THREE.SphereGeometry(0.055, 12, 10), mat(c, { roughness: 0.3 }), 0, 0.16 - k * 0.17, 0.14)));
-            return g;
-        }
-
+        // ---------- くつした ----------
         function makeStocking() {
             const shape = new THREE.Shape();
-            shape.moveTo(-0.3, 0.55);
-            shape.lineTo(0.3, 0.55);
+            shape.moveTo(-0.3, 0.5);
+            shape.lineTo(0.3, 0.5);
             shape.lineTo(0.3, -0.12);
-            shape.quadraticCurveTo(0.32, -0.32, 0.6, -0.36);
-            shape.quadraticCurveTo(0.86, -0.42, 0.78, -0.64);
-            shape.quadraticCurveTo(0.7, -0.8, 0.3, -0.76);
-            shape.quadraticCurveTo(-0.3, -0.72, -0.3, -0.3);
-            shape.lineTo(-0.3, 0.55);
-            const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.22, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.1, bevelSegments: 5, curveSegments: 24 });
+            shape.quadraticCurveTo(0.32, -0.3, 0.6, -0.34);
+            shape.quadraticCurveTo(0.88, -0.4, 0.8, -0.64);
+            shape.quadraticCurveTo(0.72, -0.8, 0.3, -0.76);
+            shape.quadraticCurveTo(-0.32, -0.72, -0.3, -0.28);
+            shape.lineTo(-0.3, 0.5);
+            // ニットのもよう（赤地に白と緑の模様段）
+            const knit = canvasTexture(256, (x, s) => {
+                x.fillStyle = '#c91f35'; x.fillRect(0, 0, s, s);
+                x.fillStyle = '#ffffff';
+                x.fillRect(0, s * 0.2, s, s * 0.05); x.fillRect(0, s * 0.42, s, s * 0.05);
+                for (let i = 0; i < 8; i++) { const cx = (i + 0.5) * s / 8; x.beginPath(); x.moveTo(cx, s * 0.27); x.lineTo(cx + s / 24, s * 0.335); x.lineTo(cx, s * 0.4); x.lineTo(cx - s / 24, s * 0.335); x.closePath(); x.fill(); }
+                x.fillStyle = '#177a4d'; x.fillRect(0, s * 0.62, s, s * 0.08);
+                x.strokeStyle = 'rgba(0,0,0,0.15)'; x.lineWidth = 2;
+                for (let i = 0; i < s; i += 6) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, s); x.stroke(); }
+            }, [1.6, 1.6]);
+            const sock = new THREE.MeshPhysicalMaterial({ map: knit, roughness: 0.85, sheen: 1, sheenColor: 0xffb3bd, bumpMap: noiseBump, bumpScale: 0.6 });
+            const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.22, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.1, bevelSegments: 6, curveSegments: 32 });
             geo.translate(0, 0, -0.11);
             const g = new THREE.Group();
-            g.add(new THREE.Mesh(geo, mat(0xd7263d, { roughness: 0.7 })));
-            const fur = mat(0xffffff, { roughness: 0.95, emissive: 0xdde8f5, emissiveIntensity: 0.2 });
-            g.add(mesh(new RoundedBoxGeometry(0.84, 0.3, 0.5, 4, 0.12), fur, 0, 0.62, 0));
-            // つま先とかかとの白
-            const toe = mesh(new THREE.SphereGeometry(0.2, 16, 12), fur, 0.68, -0.6, 0);
-            toe.scale.set(1, 0.9, 0.9);
-            g.add(toe);
-            // ひもとヒイラギ
-            g.add(mesh(new THREE.TorusGeometry(0.1, 0.025, 8, 20), mat(0xf2b632, { metalness: 0.6, roughness: 0.3 }), -0.32, 0.82, 0));
-            const leaf = mat(0x168055, { roughness: 0.5 });
-            [-1, 1].forEach(side => {
-                const lf = mesh(new THREE.SphereGeometry(0.14, 16, 8), leaf, side * 0.13, 0.68, 0.27);
-                lf.scale.set(1, 0.42, 0.25);
-                lf.rotation.z = side * -0.4;
-                g.add(lf);
+            g.add(new THREE.Mesh(geo, sock));
+            // つま先とかかとの緑
+            const toe = new THREE.Shape();
+            toe.moveTo(0.52, -0.33); toe.quadraticCurveTo(0.88, -0.4, 0.8, -0.64); toe.quadraticCurveTo(0.74, -0.78, 0.5, -0.77); toe.quadraticCurveTo(0.6, -0.55, 0.52, -0.33);
+            const toeGeo = new THREE.ExtrudeGeometry(toe, { depth: 0.24, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.1, bevelSegments: 6, curveSegments: 24 });
+            toeGeo.translate(0, 0, -0.12);
+            const patch = new THREE.MeshPhysicalMaterial({ color: 0x177a4d, roughness: 0.85, sheen: 1, sheenColor: 0x9be8b8, bumpMap: noiseBump, bumpScale: 0.6 });
+            g.add(new THREE.Mesh(toeGeo, patch));
+            // ふわふわの口
+            g.add(mesh(new RoundedBoxGeometry(0.86, 0.3, 0.52, 5, 0.14), furMat, 0, 0.56, 0));
+            // 中からのぞくキャンディケーンとプレゼント
+            const peek = makeCandyCane();
+            peek.scale.setScalar(0.32);
+            peek.position.set(-0.14, 0.86, -0.05);
+            peek.rotation.z = 0.2;
+            g.add(peek);
+            const box = makePresent(PAPERS.dots('#2f6fd6', '#ffffff'), 0xf6c453);
+            box.scale.setScalar(0.24);
+            box.position.set(0.14, 0.76, 0);
+            box.rotation.set(0, 0.4, -0.15);
+            g.add(box);
+            // つりさげひも
+            g.add(mesh(new THREE.TorusGeometry(0.09, 0.022, 8, 24), satin(0xf6c453), -0.38, 0.72, 0));
+            return g;
+        }
+
+        // ---------- ジンジャーブレッドマン ----------
+        function makeGingerbread() {
+            const g = new THREE.Group();
+            const dough = canvasTexture(128, (x, s) => {
+                x.fillStyle = '#b8732f'; x.fillRect(0, 0, s, s);
+                for (let i = 0; i < 300; i++) { x.fillStyle = Math.random() < 0.5 ? 'rgba(120,60,20,0.35)' : 'rgba(230,170,100,0.3)'; x.beginPath(); x.arc(Math.random() * s, Math.random() * s, Math.random() * 2.2, 0, 7); x.fill(); }
+            }, [2, 2]);
+            const cookie = new THREE.MeshPhysicalMaterial({ map: dough, roughness: 0.8, bumpMap: noiseBump, bumpScale: 1.2 });
+            // ひとつながりの形を押し出して、角を丸くする
+            const s = new THREE.Shape();
+            s.absarc(0, 0.62, 0.3, -1.1, Math.PI + 1.1, false);
+            s.quadraticCurveTo(-0.3, 0.32, -0.52, 0.34);
+            s.quadraticCurveTo(-0.74, 0.3, -0.7, 0.14);
+            s.quadraticCurveTo(-0.66, 0.02, -0.3, 0.06);
+            s.lineTo(-0.3, -0.24);
+            s.quadraticCurveTo(-0.46, -0.66, -0.4, -0.78);
+            s.quadraticCurveTo(-0.3, -0.92, -0.14, -0.78);
+            s.quadraticCurveTo(-0.05, -0.5, 0, -0.42);
+            s.quadraticCurveTo(0.05, -0.5, 0.14, -0.78);
+            s.quadraticCurveTo(0.3, -0.92, 0.4, -0.78);
+            s.quadraticCurveTo(0.46, -0.66, 0.3, -0.24);
+            s.lineTo(0.3, 0.06);
+            s.quadraticCurveTo(0.66, 0.02, 0.7, 0.14);
+            s.quadraticCurveTo(0.74, 0.3, 0.52, 0.34);
+            s.quadraticCurveTo(0.3, 0.32, Math.cos(-1.1) * 0.3, 0.62 + Math.sin(-1.1) * 0.3);
+            const geo = new THREE.ExtrudeGeometry(s, { depth: 0.12, bevelEnabled: true, bevelSize: 0.06, bevelThickness: 0.07, bevelSegments: 6, curveSegments: 32 });
+            geo.translate(0, 0, -0.06);
+            g.add(new THREE.Mesh(geo, cookie));
+            // アイシング（白い線）
+            const icing = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.35, clearcoat: 0.6 });
+            const z = 0.135;
+            const zig = (pts) => g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(([a, b]) => V(a, b, z))), 40, 0.018, 8, false), icing));
+            const wave = (x0, y0, x1, y1) => zig(Array.from({ length: 7 }, (_, i) => {
+                const t = i / 6, nx = -(y1 - y0), ny = x1 - x0, l = Math.hypot(nx, ny), amp = (i % 2 ? 0.035 : -0.035);
+                return [x0 + (x1 - x0) * t + nx / l * amp, y0 + (y1 - y0) * t + ny / l * amp];
+            }));
+            wave(-0.6, 0.12, -0.6, 0.32);
+            wave(0.6, 0.12, 0.6, 0.32);
+            wave(-0.38, -0.66, -0.18, -0.74);
+            wave(0.38, -0.66, 0.18, -0.74);
+            const smile = new THREE.CatmullRomCurve3([V(-0.11, 0.56, z), V(0, 0.5, z), V(0.11, 0.56, z)]);
+            g.add(new THREE.Mesh(new THREE.TubeGeometry(smile, 20, 0.017, 8, false), icing));
+            [-1, 1].forEach(k => g.add(mesh(new THREE.SphereGeometry(0.04, 12, 10), coal, k * 0.1, 0.68, z)));
+            // グミのボタン
+            [0xd7263d, 0x1fa060, 0xf6c453].forEach((c, k) => {
+                const drop = mesh(new THREE.SphereGeometry(0.06, 16, 12), new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.1, clearcoat: 1, transmission: 0.2 }), 0, 0.12 - k * 0.17, z);
+                drop.scale.z = 0.6;
+                g.add(drop);
             });
-            g.add(mesh(new THREE.SphereGeometry(0.06, 10, 8), mat(0xd7263d, { roughness: 0.3 }), 0, 0.66, 0.32));
+            // ちょうネクタイ
+            const tie = satin(0xd7263d, { side: THREE.FrontSide });
+            [-1, 1].forEach(k => {
+                const wing = mesh(new THREE.ConeGeometry(0.07, 0.14, 12), tie, k * 0.07, 0.29, z);
+                wing.rotation.z = k * Math.PI / 2;
+                g.add(wing);
+            });
+            g.add(mesh(new THREE.SphereGeometry(0.035, 10, 8), tie, 0, 0.29, z + 0.01));
             return g;
         }
 
         const MAKERS = {
-            'present-red': () => makePresent(0xd7263d, 0xf2b632),
-            'present-green': () => makePresent(0x168055, 0xd7263d),
-            'present-white': () => makePresent(0xf5f7fb, 0xd7263d),
-            'present-gold': () => makePresent(0xf2b632, 0xd7263d),
+            'present-red': () => makePresent(PAPERS.dots('#d7263d', '#ffffff'), 0xf6c453),
+            'present-green': () => makePresent(PAPERS.stars('#177a4d', '#ffd34d'), 0xd7263d),
+            'present-white': () => makePresent(PAPERS.flakes('#f7f9fc', '#7fb2e6'), 0xd7263d),
+            'present-gold': () => makePresent(PAPERS.stripes('#f2b632', '#fff1c4'), 0xd7263d),
             snowman: makeSnowman,
             tree: makeTree,
             star: makeStar,
             candycane: makeCandyCane,
-            'ornament-red': () => makeOrnament(0xd7263d, 0xf2b632),
-            'ornament-green': () => makeOrnament(0x168055, 0xffd34d),
+            'ornament-red': () => makeOrnament('#c8102e', '#f6c453'),
+            'ornament-green': () => makeOrnament('#13704a', '#f6c453'),
             bell: makeBell,
             gingerbread: makeGingerbread,
             stocking: makeStocking
@@ -5187,12 +5466,15 @@
             return pivot;
         }
 
+        const SWAY = new Set(['star', 'gingerbread', 'stocking', 'snowman']);
         const toys = [...document.querySelectorAll('.xm-slot[data-toy]')].map((slot, i) => {
             const canvas = slot.querySelector('canvas.xm-toy');
             const pivot = fit(MAKERS[slot.dataset.toy]());
             pivot.visible = false;
             scene.add(pivot);
-            const toy = { slot, canvas, ctx: canvas.getContext('2d'), pivot, yaw: (i % 2 ? -0.5 : 0.5), spin: 0.25 + (i % 3) * 0.06, drag: null };
+            // 顔や絵が正面にある飾りは、1回転させると裏の無地が見えるので、左右にゆらゆらさせるだけにする
+            const sway = SWAY.has(slot.dataset.toy);
+            const toy = { slot, canvas, ctx: canvas.getContext('2d'), pivot, sway, phase: i * 1.7, yaw: sway ? 0 : (i % 2 ? -0.5 : 0.5), spin: 0.25 + (i % 3) * 0.06, drag: null };
             // 横ドラッグでくるくる回す（縦はページのスクロール）
             canvas.addEventListener('pointerdown', event => {
                 toy.drag = { x: event.clientX, yaw: toy.yaw };
@@ -5224,8 +5506,11 @@
                 if (rect.bottom < 0 || rect.top > innerHeight || rect.width === 0) continue;
                 const px = Math.min(RENDER_SIZE, Math.round(rect.width * (window.devicePixelRatio || 1)));
                 if (toy.canvas.width !== px) { toy.canvas.width = px; toy.canvas.height = px; }
-                if (!toy.drag && !reduceMotion) toy.yaw += toy.spin * step;
-                toy.pivot.rotation.y = toy.yaw;
+                if (!toy.drag && !reduceMotion) {
+                    if (toy.sway) toy.yaw *= 0.96; // ドラッグで回したぶんは、ゆっくり正面へもどる
+                    else toy.yaw += toy.spin * step;
+                }
+                toy.pivot.rotation.y = toy.yaw + (toy.sway && !reduceMotion ? 0.5 * Math.sin(now / 1500 + toy.phase) : 0);
                 toy.pivot.rotation.x = 0.08 * Math.sin(now / 1300 + toy.spin * 10);
                 toy.pivot.visible = true;
                 renderer.render(scene, camera);
