@@ -30,16 +30,18 @@
 - M PLUS Rounded 1c フォント
 - 3Dキャラ表示: [model-viewer](https://modelviewer.dev/)（CDN）
 
-## ハロウィン仕様
+## クリスマス仕様
 
-- 3Dキャラは `assets/halloween/*.glb` にあります。元データ（約60MB）を gltf-transform でポリゴン数を減らし、テクスチャをWebP化・meshopt圧縮して、1体あたり約0.6MBにしています
-- 元データは `素材/3Dキャラ元データ/` にあります（Gitには入れていません）。作り直すときは次を実行します（`hwpumpkin_…glb` → `pumpkin.glb`）
+- 雪の夜の背景（ふる雪・雪の丘ともみの木）、上につるした電飾とオーナメント、キャンディケーン柄の縁と金のリボンのカード、赤・緑・金の配色
+- ギャル2枚（サンタ服で手をふる子・キャンディケーンに乗る子）とロゴは Codex の画像生成で、ハロウィン版の画像を見本にして作りました（`assets/christmas/`。元画像は `素材/キャラ_クリスマス/`、`素材/ロゴ/ロゴ_クリスマス版.png`）
+- 3Dキャラはサンタとトナカイ（`assets/christmas/santa.glb`、`reindeer.glb`）。元データ（約1.5MB）はポリゴン数がもともと少ないので、テクスチャのWebP化とmeshopt圧縮だけで1体あたり約0.25MBにしています
 
 ```sh
-npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/hwpumpkin_かぼちゃのおばけ.glb assets/halloween/pumpkin.glb \
-  --compress meshopt --texture-compress webp --texture-size 1024 \
-  --simplify-ratio 0.04 --simplify-error 0.001
+npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/xmassanta_サンタ.glb assets/christmas/santa.glb \
+  --compress meshopt --texture-compress webp --texture-size 1024 --simplify false
 ```
+
+ハロウィン版の画像と3Dデータは `halloween` ブランチに残っています。
 
 ## みんなの在庫の準備（Firebase）
 
@@ -111,16 +113,20 @@ iPadでは「iPad向け」を選び、番号をタップして抽選します。
 - 広報キャラクターイラストをヘッダーに配置
 - レスポンシブ対応（aspect-ratioベースのCanvas表示）
 
-## 通常版とハロウィン版の切り替え
+## 通常版・ハロウィン版・クリスマス版の切り替え
 
-- 通常版は `main` ブランチ、ハロウィン版は `halloween` ブランチにあります
-- 公開サイト（GitHub Pages）は、どちらのブランチを公開するかで切り替えます
+- 通常版は `main`、ハロウィン版は `halloween`、クリスマス版は `christmas` ブランチにあります
+- 公開サイト（GitHub Pages）は、どのブランチを公開するかで切り替えます
 
 ```sh
+# クリスマス版を公開
+gh api -X PUT repos/aboshiDaisuke/amidakuji/pages -f "source[branch]=christmas" -f "source[path]=/"
 # ハロウィン版を公開
 gh api -X PUT repos/aboshiDaisuke/amidakuji/pages -f "source[branch]=halloween" -f "source[path]=/"
 # 通常版に戻す
 gh api -X PUT repos/aboshiDaisuke/amidakuji/pages -f "source[branch]=main" -f "source[path]=/"
+# 切り替えたあと、作り直しを頼む（切り替えだけでは作り直されないことがある）
+gh api -X POST repos/aboshiDaisuke/amidakuji/pages/builds
 ```
 
 GitHub の Settings → Pages → Branch でも同じ切り替えができます。反映まで1〜2分かかります。
@@ -129,8 +135,8 @@ GitHub の Settings → Pages → Branch でも同じ切り替えができます
 
 `素材/` には、サイトでは直接使っていない元画像をまとめています。この端末だけに置いていて、Gitには入れていません。
 
-- `ロゴ/`: 初代・ギャル版・ハロウィン版のロゴの元画像
-- `キャラ_初代/`、`キャラ_ギャル/`、`キャラ_ハロウィン/`: キャラクターの元画像（三面図やポーズ違い）
-- `3Dキャラ元データ/`: おばけ3Dキャラの元データ（1体約60MB）
+- `ロゴ/`: 初代・ギャル版・ハロウィン版・クリスマス版のロゴの元画像
+- `キャラ_初代/`、`キャラ_ギャル/`、`キャラ_ハロウィン/`、`キャラ_クリスマス/`: キャラクターの元画像（三面図やポーズ違い）
+- `3Dキャラ元データ/`: おばけ3Dキャラ（1体約60MB）と、サンタ・トナカイ3Dキャラ（1体約1.5MB）の元データ
 - `スクショ/`: 画面確認用のスクリーンショット
 - `動画/`: 今は使っていないヘッダー用の動画（大当たり演出の `あたり.mp4` はサイトで使うのでルートに置いたまま）
