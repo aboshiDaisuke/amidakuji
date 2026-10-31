@@ -36,12 +36,12 @@
 - 雪の夜の背景（ふる雪・雪の丘ともみの木）、上につるした電飾とオーナメント、キャンディケーン柄の縁と金のリボンのカード、赤・緑・金の配色
 - ギャル2枚（サンタ服で手をふる子・キャンディケーンに乗る子）とロゴは Codex の画像生成で、ハロウィン版の画像を見本にして作りました（`assets/christmas/`。元画像は `素材/キャラ_クリスマス/`、`素材/ロゴ/ロゴ_クリスマス版.png`）
 - プレゼント・雪だるま・ツリー・キャンディケーン・ベル・オーナメント・星・くつした・ジンジャーブレッドマンの飾りは three.js（CDN）で組み立てて、トップ画面（ヘッダー・ロゴの左右・いくぜボタンの両わき）と、くじを引く画面でぷかぷか浮かせています。WebGL は1つだけ作り、各飾りの canvas に写しています（iPad で WebGL をいくつも作ると重くなるため）
-- ヘッダーの3Dキャラはサンタとトナカイ（`assets/christmas/santa.glb`、`reindeer.glb`）。元データ（約1.5MB）はポリゴン数がもともと少ないので、テクスチャのWebP化とmeshopt圧縮だけで1体あたり約0.25MBにしています
+- ヘッダーの3Dキャラはサンタとトナカイ（`assets/christmas/santa.glb`、`reindeer.glb`）。テクスチャのWebP化とmeshopt圧縮で、1体あたり約0.25〜0.36MBにしています
 
-サンタの帽子は、左右に分かれていた先端とポンポンを取り除き、片側へ自然に垂れる先端・白い縁・ポンポン1つの形に作り直しています。顔や服のテクスチャは元データを使っています。修正版は `素材/3Dキャラ元データ/xmassanta_サンタ_帽子修正版.glb`、再生成用の Blender スクリプトは同じフォルダーの `サンタ_帽子修正.py` です。
+サンタは未修正の元データ（`素材/3Dキャラ元データ/xmassanta_サンタ.glb`）から、後ろ左の余分な先端とポンポンだけを取り除き、接合部を滑らかにつないでいます。修正側の赤白の境界と白い縁の丸みも整えています。元の帽子の形とテクスチャを保った修正版は `xmassanta_サンタ_先端修正版.glb` です。
 
 ```sh
-npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/xmassanta_サンタ_帽子修正版.glb assets/christmas/santa.glb \
+npx @gltf-transform/cli optimize 素材/3Dキャラ元データ/xmassanta_サンタ_先端修正版.glb assets/christmas/santa.glb \
   --compress meshopt --texture-compress webp --texture-size 1024 --simplify false
 ```
 
