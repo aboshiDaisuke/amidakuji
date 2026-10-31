@@ -1,0 +1,50 @@
+# 2026-11-01 0:00(日本時間)に、公開サイトをハロウィン版からクリスマス版へ切り替える。
+# 公開サイトがクリスマス版になったのを確かめたら、鍵(PAGES_ADMIN_TOKEN)を消し、この予約も止める。
+name: クリスマス版へ自動切り替え
+
+on:
+  schedule:
+    - cron: '30 14 31 10 *'   # 23:30 JST から待機して 0:00 に切り替え
+    - cron: '50 14 31 10 *'   # 予備
+    - cron: '30 15 31 10 *'   # 予備(0:30 JST)
+    - cron: '0 */2 1 11 *'    # 予備(11/1 中は2時間ごと)
+  workflow_dispatch:
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ secrets.PAGES_ADMIN_TOKEN }}
+      REPO: ${{ github.repository }}
+      SITE: https://aboshidaisuke.github.io/amidakuji/
+    steps:
+      - name: 切り替え
+        run: |
+          set -eu
+          if [ -z "$GH_TOKEN" ]; then echo "鍵がない(もう切り替え済み)"; exit 0; fi
+          cur=$(gh api "repos/$REPO/pages" --jq .source.branch)
+          echo "現在の公開ブランチ: $cur"
+          target=$(date -d '2026-11-01T00:00:00+09:00' +%s)
+          until_target=$(( target - $(date +%s) ))
+          if [ "$until_target" -gt 3600 ]; then echo "まだ早い(あと ${until_target} 秒)"; exit 0; fi
+          if [ "$until_target" -gt 0 ]; then echo "0時まで ${until_target} 秒待つ"; sleep "$until_target"; fi
+          if [ "$(date +%s)" -gt "$(date -d '2026-11-08T00:00:00+09:00' +%s)" ]; then echo "期限切れ"; exit 0; fi
+
+          if [ "$cur" != christmas ]; then
+            gh api -X PUT "repos/$REPO/pages" -f "source[branch]=christmas" -f "source[path]=/"
+            gh api -X POST "repos/$REPO/pages/builds" > /dev/null || true
+            echo "christmas に切り替えた"
+          fi
+
+          for i in $(seq 1 40); do
+            if curl -fsSL "$SITE?t=$(date +%s)" | grep -q logo-christmas; then
+              echo "公開サイトがクリスマス版になったのを確認"
+              gh workflow disable xmas-switch.yml -R "$REPO" || true
+              gh secret delete PAGES_ADMIN_TOKEN -R "$REPO" || true
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "20分待ってもクリスマス版を確認できず"
+          exit 1
